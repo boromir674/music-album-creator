@@ -12,11 +12,12 @@ class YoutubeDownloader:
         args = self._args[:-1] + ['{}/{}'.format(directory, self._args[-1])] + [video_url]
         self.suceeded = None
         if verbose:
-            print('Downloading...')
+            print("Downloading '{}' ..".format(video_url))
         if spawn:
             child = subprocess.Popen(args, stderr=subprocess.STDOUT, **self._debug_flag_hash[debug])
         else:
-            rc = subprocess.run(args, stderr=subprocess.STDOUT, **self._debug_flag_hash[debug]).returncode
+            # rc = subprocess.run(args, stderr=subprocess.STDOUT, **self._debug_flag_hash[debug]).returncode
+            rc = subprocess.run(args, stderr=subprocess.PIPE, **self._debug_flag_hash[debug]).returncode
             if rc != 0:
                 raise DownloadError("Failed to download url '{}'. Perhaps url doesn't exist.".format(video_url))
 
