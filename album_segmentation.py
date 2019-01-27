@@ -80,8 +80,8 @@ class AudioSegmenter:
 
     def _check_data(self, data):
         for i, d in enumerate(data[:-1]):
-            assert d[1] < d[2]
-            assert d[2] <= data[i+1][1]
+            assert int(d[1]) < int(d[2])
+            assert int(d[2]) <= int(data[i+1][1])
 
     def _parse_data(self, data, album_file):
         for i, d in enumerate(data[:-1]):

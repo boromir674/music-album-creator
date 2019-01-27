@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 
+import re
 import os
 import sys
 import glob
@@ -42,14 +43,7 @@ def main(input_tracks_file, debug):
         shutil.rmtree(directory)
     os.mkdir(directory)
 
-
-    # t.createListCompleter(["ab", "aa", "bcd", "bdf"])
-
-    # readline.set_completer_delims('\t')
-    # readline.parse_and_bind("tab: complete")
-
-    # readline.set_completer(t.listCompleter)
-    # ans = input("Complete from list ")
+    regex = re.compile('(?:\d{1,2}(?:\.[ \t]*|[\t ]+))?([\w ]+) ?- ?((?:\d?\d:)*\d\d)')
 
     if debug:
         album_file = _debug(directory)
@@ -70,13 +64,15 @@ def main(input_tracks_file, debug):
         else:
             sleep(0.70)
             while 1:
-                lines = _input_data_dialog()
+                lines = _input_data_dialog(multiline=True)
+                print('LINES\n', lines)
                 try:
                     audio_segmenter.segment_from_list(album_file, lines, verbose=True, debug=False, sleep_seconds=0)
                     break
                 except TrackTimestampsSequenceError as e:
                     print(e)
-    _create_album_folder(album_file, directory)
+    _create_album_folder_dialog(album_file, directory)
+
 
 def _copy_tracks(from_directory, track_names, destination_directory):
     for track in track_names:
@@ -87,7 +83,8 @@ def _copy_tracks(from_directory, track_names, destination_directory):
             shutil.copyfile(os.path.join(from_directory, track), destination_file_path)
     print("Album tracks reside in '{}'".format(destination_directory))
 
-def _create_album_folder(album_file, directory):
+
+def _create_album_folder_dialog(album_file, directory):
     tracks = [_ for _ in os.listdir(directory) if _ != os.path.basename(album_file)]
     print('\n\nThese are the tracks created:\n')
     print('\n'.join(sorted([' {}'.format(t) for t in tracks])), '\n')
@@ -146,20 +143,41 @@ class TabCompleter:
         self.listCompleter = listCompleter
 
 
-def _input_data_dialog():
-    lines = []
-    track_number = 1
-    print('Please input data, line by line, specifying the track name (extension is\n'
-          'inferred from album file if found there) and the start timestamp, in the\n'
-          'format: "track_name hh:mm:ss". Press return with no data to exit.\n')
-    while True:
-        line = input('track {} data: '.format(track_number))
-        if line:
-            lines.append(line.strip().split())
-            track_number += 1
-        else:
-            break
-    print()
+def _input_data_dialog(multiline=False):
+    if multiline:
+        print("Enter/Paste your tracks timestamps. Each line should represent a single track. Ctrl-D or Ctrl-Z ( windows ) to save it.")
+
+        def input_lines(prompt=None):
+            """Yields input lines from user until EOFError is raised."""
+            while True:
+                try:
+                    yield input() if prompt is None else input(prompt)
+                except EOFError:
+                    break
+                else:
+                    prompt = None  # Only display prompt while reading first line.
+
+        def multiline_input(prompt=None):
+            """Reads a multi-line input from the user."""
+
+            return os.linesep.join(input_lines(prompt=prompt))
+
+        res = multiline_input()
+        lines = _parse_track_information(res)
+    else:
+        track_number = 1
+        lines = []
+        print('Please input data, line by line, specifying the track name (extension is\n'
+              'inferred from album file if found there) and the start timestamp, in the\n'
+              'format: "track_name hh:mm:ss". Press return with no data to exit.\n')
+        while True:
+            line = input('track {} data: '.format(track_number))
+            if line:
+                lines.append(line.strip().split())
+                track_number += 1
+            else:
+                break
+        print()
     return lines
 
 def _debug(directory):
@@ -174,13 +192,19 @@ def _debug(directory):
     album_file = os.path.join(directory, os.listdir(directory)[0])
 
     audio_segmenter = AudioSegmenter(target_directory=directory)
-    lines = [['First-ten','00:00'],
-             ['Second-forty', '00:10'],
-             ['Third', '00:50']]
+    lines = [['First-ten','0:00'],
+             ['Second gav', '1:10'],
+             ['Third', '01:50']]
     audio_segmenter.segment_from_list(album_file, lines, sleep_seconds=1, debug=False, verbose=True)
     return album_file
-    # _create_album_folder(album_file, directory)
+    # _create_album_folder_dialog(album_file, directory)
 
+def _parse_track_information(tracks_row_strings):
+    print("DEBUG\n", tracks_row_strings)
+    regex = re.compile('(?:\d{1,2}(?:\.[ \t]*|[\t ]+))?([\w ]+) - ((?:\d?\d:)*\d\d)')
+    _ = [list(_) for _ in regex.findall(tracks_row_strings)]
+    print(_)
+    return _
 
 if __name__ == '__main__':
     t = TabCompleter()
