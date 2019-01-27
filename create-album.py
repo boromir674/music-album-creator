@@ -65,7 +65,6 @@ def main(input_tracks_file, debug):
             sleep(0.70)
             while 1:
                 lines = _input_data_dialog(multiline=True)
-                print('LINES\n', lines)
                 try:
                     audio_segmenter.segment_from_list(album_file, lines, verbose=True, debug=False, sleep_seconds=0)
                     break
@@ -180,6 +179,7 @@ def _input_data_dialog(multiline=False):
         print()
     return lines
 
+
 def _debug(directory):
     ratm_testify_url = 'https://www.youtube.com/watch?v=Q3dvbM6Pias'
     try:
@@ -199,12 +199,12 @@ def _debug(directory):
     return album_file
     # _create_album_folder_dialog(album_file, directory)
 
+
 def _parse_track_information(tracks_row_strings):
-    print("DEBUG\n", tracks_row_strings)
-    regex = re.compile('(?:\d{1,2}(?:\.[ \t]*|[\t ]+))?([\w ]+) - ((?:\d?\d:)*\d\d)')
+    regex = re.compile('(?:\d{1,2}(?:\.[ \t]*|[\t ]+))?([\w ]+)(?:[\t ]*-[\t ]*|[\t ]+)((?:\d?\d:)*\d\d)')
     _ = [list(_) for _ in regex.findall(tracks_row_strings)]
-    print(_)
     return _
+
 
 if __name__ == '__main__':
     t = TabCompleter()
