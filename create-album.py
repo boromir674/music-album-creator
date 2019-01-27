@@ -3,11 +3,12 @@
 import os
 import sys
 import shutil
+from time import sleep
 
 import click
 
 
-from downloading import youtube
+from downloading import youtube, DownloadError
 from album_segmentation import AudioSegmenter
 # from .tracks_parsing import parser
 
@@ -47,7 +48,7 @@ def main(input_tracks_file, debug):
               'album, other wise the operations below will fail.\n')
         video_url = input('   video url: ')
         print()
-        youtube.download(video_url, directory, spawn=False)  # force waiting before continuing execution, by not spawning a separate process
+        youtube.download(video_url, directory, spawn=False, verbose=True, debug=True)  # force waiting before continuing execution, by not spawning a separate process
 
         album_file = os.path.join(directory, os.listdir(directory)[0])
 
@@ -66,32 +67,42 @@ def main(input_tracks_file, debug):
                 else:
                     break
             audio_segmenter.segment_from_list(album_file, lines)
+        _create_album_folder(album_file, directory)
 
-        tracks = [_ for _ in os.listdir(directory) if _ != os.path.basename(album_file)]
-        print('\n\nThese are the tracks created:\n')
-        print('\n'.join([' {}'.format(t) for t in tracks]), '\n')
 
-        # TODO replace with click expression
+def _create_album_folder(album_file, directory):
+    tracks = [_ for _ in os.listdir(directory) if _ != os.path.basename(album_file)]
+    print('\n\nThese are the tracks created:\n')
+    print('\n'.join(sorted([' {}'.format(t) for t in tracks])), '\n')
+
+    # TODO replace with click expression
+    while 1:
         answer = input("Copy them to a destination directory? yes/no: ")
         if answer.lower() == 'yes' or answer.lower() == 'y':
             destination_directory = input('destination directory: ')
-            os.makedirs(destination_directory)
-            for track in tracks:
-                destination_file_path = os.path.join(destination_directory, track)
-                if os.path.isfile(destination_file_path):
-                    print(" File '{}' already exists. Skipping".format(os.path.basename(track), destination_directory))
-                else:
-                    shutil.copyfile(os.path.join(directory, track), destination_file_path)
+            try:
+                os.makedirs(destination_directory)
+                for track in tracks:
+                    destination_file_path = os.path.join(destination_directory, track)
+                    if os.path.isfile(destination_file_path):
+                        print(" File '{}' already exists. Skipping".format(os.path.basename(track),
+                                                                           destination_directory))
+                    else:
+                        shutil.copyfile(os.path.join(directory, track), destination_file_path)
+                break
+            except PermissionError:
+                print("You don't have permision to create a directory in path '{}'".format(destination_directory))
 
 
 def _debug(directory):
     ratm_testify_url = 'https://www.youtube.com/watch?v=Q3dvbM6Pias'
-    rc = youtube.download(ratm_testify_url, directory,
-                     spawn=False, debug=False)  # force waiting before continuing execution, by not spawning a separate process
-    if rc != 0:
-        print('rc:', rc)
-        print('Video download failed')
+    try:
+        youtube.download(ratm_testify_url, directory,
+                     spawn=False, debug=True, verbose=True)  # force waiting before continuing execution, by not spawning a separate process
+    except DownloadError as e:
+        print(e)
         sys.exit(1)
+
     album_file = os.path.join(directory, os.listdir(directory)[0])
 
     audio_segmenter = AudioSegmenter(target_directory=directory)
@@ -99,10 +110,8 @@ def _debug(directory):
              ['Second-forty', '00:10'],
              ['Third', '00:50']]
     audio_segmenter.segment_from_list(album_file, lines)
+    _create_album_folder(album_file, directory)
 
-    tracks = [_ for _ in os.listdir(directory) if _ != os.path.basename(album_file)]
-    print('\n\nThese are the tracks created:\n')
-    print('\n'.join(sorted([' {}'.format(t) for t in tracks])), '\n')
 
 
 if __name__ == '__main__':

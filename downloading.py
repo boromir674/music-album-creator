@@ -14,22 +14,19 @@ class YoutubeDownloader:
         if verbose:
             print('Downloading...')
         if spawn:
-            child = subprocess.Popen(args, stderr=subprocess.STDOUT, universal_newlines=True)
-            stdout_string = child.communicate()[0]
-            if debug:
-                print(stdout_string)
-            rc = child.returncode
+            child = subprocess.Popen(args, stderr=subprocess.STDOUT, **self._debug_flag_hash[debug])
         else:
             rc = subprocess.run(args, stderr=subprocess.STDOUT, **self._debug_flag_hash[debug]).returncode
-        return rc
-        # if rc == 0 or rc == '0':
-        #     self.suceeded = True
-        # else:
-        #     self.suceeded = False
+            if rc != 0:
+                raise DownloadError("Failed to download url '{}'. Perhaps url doesn't exist.".format(video_url))
 
     @classmethod
     def cmd(cls, video_url):
         return cls._cmd.format(url=video_url)
+
+class DownloadError(Exception):
+    def __init__(self, msg):
+        super().__init__(msg)
 
 youtube = YoutubeDownloader()
 

@@ -1,6 +1,7 @@
 import os
 import sys
 import subprocess
+from time import sleep
 
 
 class AudioSegmenter:
@@ -10,6 +11,7 @@ class AudioSegmenter:
     def __init__(self, target_directory='/tmp'):
         self._track_index_generator = None
         self._dir = target_directory
+
     @property
     def target_directory(self):
         return self._dir
@@ -40,6 +42,7 @@ class AudioSegmenter:
         exit_code = 0
         i = 0
         while exit_code == 0 and i < len(data) - 1:
+            sleep(0.6)
             data[i][0] = self._track_file(album_file)(data[i][0])
             data[i][1] = self._convert(data[i][1])
             data[i].append(self._convert(data[i+1][1]))
