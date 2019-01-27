@@ -78,6 +78,14 @@ def main(input_tracks_file, debug):
                     print(e)
     _create_album_folder(album_file, directory)
 
+def _copy_tracks(from_directory, track_names, destination_directory):
+    for track in track_names:
+        destination_file_path = os.path.join(destination_directory, track)
+        if os.path.isfile(destination_file_path):
+            print(" File '{}' already exists. Skipping".format(os.path.basename(track), destination_directory))
+        else:
+            shutil.copyfile(os.path.join(from_directory, track), destination_file_path)
+    print("Album tracks reside in '{}'".format(destination_directory))
 
 def _create_album_folder(album_file, directory):
     tracks = [_ for _ in os.listdir(directory) if _ != os.path.basename(album_file)]
@@ -89,21 +97,22 @@ def _create_album_folder(album_file, directory):
         if answer.lower() == 'yes' or answer.lower() == 'y':
             destination_directory = input('destination directory: ')
             # destination_directory = input('destination directory: ')
+            if os.path.isdir(destination_directory):
+                answer = input("Directory '{}' exists; copy them anyway? yes/no: ".format(destination_directory))
+                if answer.lower() == 'no' or answer.lower() == 'n':
+                    continue
+                _copy_tracks(directory, tracks, destination_directory)
+                break
             try:
                 os.makedirs(destination_directory)
-                for track in tracks:
-                    destination_file_path = os.path.join(destination_directory, track)
-                    if os.path.isfile(destination_file_path):
-                        print(" File '{}' already exists. Skipping".format(os.path.basename(track), destination_directory))
-                    else:
-                        shutil.copyfile(os.path.join(directory, track), destination_file_path)
-                print("Album tracks reside in '{}'".format(destination_directory))
+                _copy_tracks(directory, tracks, destination_directory)
                 break
             except PermissionError:
                 print("You don't have permision to create a directory in path '{}'".format(destination_directory))
             except FileNotFoundError:
                 print("The selected destination directory '{}' is not valid.".format(destination_directory))
         else:
+            print("Album tracks reside in '{}'".format(directory))
             break
 
 class TabCompleter:
