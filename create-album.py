@@ -97,9 +97,12 @@ def _create_album_folder(album_file, directory):
                         print(" File '{}' already exists. Skipping".format(os.path.basename(track), destination_directory))
                     else:
                         shutil.copyfile(os.path.join(directory, track), destination_file_path)
+                print("Album tracks reside in '{}'".format(destination_directory))
                 break
             except PermissionError:
                 print("You don't have permision to create a directory in path '{}'".format(destination_directory))
+            except FileNotFoundError:
+                print("The selected destination directory '{}' is not valid.".format(destination_directory))
         else:
             break
 
@@ -136,13 +139,15 @@ class TabCompleter:
 
 def _input_data_dialog():
     lines = []
+    track_number = 1
     print('Please input data, line by line, specifying the track name (extension is\n'
           'inferred from album file if found there) and the start timestamp, in the\n'
           'format: "track_name hh:mm:ss". Press return with no data to exit.\n')
     while True:
-        line = input('track data: ')
+        line = input('track {} data: '.format(track_number))
         if line:
             lines.append(line.strip().split())
+            track_number += 1
         else:
             break
     print()
