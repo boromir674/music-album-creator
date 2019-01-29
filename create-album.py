@@ -96,21 +96,23 @@ def _create_album_folder_dialog(album_file, directory):
         answer = input("Copy them to a destination directory? yes/no: ")
         if answer.lower() == 'yes' or answer.lower() == 'y':
             destination_directory = input('destination directory: ')
-            # destination_directory = input('destination directory: ')
-            if os.path.isdir(destination_directory):
-                answer = input("Directory '{}' exists; copy them anyway? yes/no: ".format(destination_directory))
-                if answer.lower() == 'no' or answer.lower() == 'n':
-                    continue
-                _copy_tracks(directory, tracks, destination_directory)
-                break
+
             try:
                 os.makedirs(destination_directory)
+            except FileExistsError:
+                answer = input("Directory '{}' exists. Copy the tracks there? yes/no: ".format(destination_directory))
+                if answer.lower() == 'no' or answer.lower() == 'n':
+                    continue
+            except FileNotFoundError:
+                print("The selected destination directory '{}' is not valid.".format(destination_directory))
+                continue
+            except PermissionError:
+                print("You don't have permision to create a directory in path '{}'".format(destination_directory))
+            try:
                 _copy_tracks(directory, tracks, destination_directory)
                 break
             except PermissionError:
-                print("You don't have permision to create a directory in path '{}'".format(destination_directory))
-            except FileNotFoundError:
-                print("The selected destination directory '{}' is not valid.".format(destination_directory))
+                print("Can't copy tracks to '{}' folder. You don't have write permissions in this directory".format(destination_directory))
         else:
             print("Album tracks reside in '{}'".format(directory))
             break
@@ -221,8 +223,8 @@ def _format(duration):  # in seconds
 
 
 if __name__ == '__main__':
-    t = TabCompleter()
+    completer = TabCompleter()
     readline.set_completer_delims('\t')
     readline.parse_and_bind("tab: complete")
-    readline.set_completer(t.pathCompleter)
+    readline.set_completer(completer.pathCompleter)
     main()
