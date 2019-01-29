@@ -3,11 +3,13 @@
 import re
 import os
 import sys
+import time
 import glob
 import shutil
 import readline
 from time import sleep
 
+import mutagen
 import click
 
 
@@ -85,8 +87,10 @@ def _copy_tracks(from_directory, track_names, destination_directory):
 
 def _create_album_folder_dialog(album_file, directory):
     tracks = [_ for _ in os.listdir(directory) if _ != os.path.basename(album_file)]
-    print('\n\nThese are the tracks created:\n')
-    print('\n'.join(sorted([' {}'.format(t) for t in tracks])), '\n')
+    durations = [_format(getattr(mutagen.File(os.path.join(directory, t)).info, 'length', 0)) for t in tracks]
+    max_row_length = max(len(_[0]) + len(_[1]) for _ in zip(tracks, durations))
+    print("\n\nThese are the tracks created from '{}' album with duration {}:\n".format(os.path.basename(album_file), _format(getattr(mutagen.File(album_file).info, 'length', 0))))
+    print('\n'.join(sorted([' {}{}  {}'.format(t, (max_row_length - len(t) - len(d)) * ' ', d) for t, d in zip(tracks, durations)])), '\n')
 
     while 1:
         answer = input("Copy them to a destination directory? yes/no: ")
@@ -201,9 +205,19 @@ def _debug(directory):
 
 
 def _parse_track_information(tracks_row_strings):
-    regex = re.compile('(?:\d{1,2}(?:\.[ \t]*|[\t ]+))?([\w ]+)(?:[\t ]*-[\t ]*|[\t ]+)((?:\d?\d:)*\d\d)')
+    regex = re.compile('(?:\d{1,2}(?:\.[ \t]*|[\t ]+))?([\w ]*\w)(?:[\t ]*-[\t ]*|[\t ]+)((?:\d?\d:)*\d\d)')
     _ = [list(_) for _ in regex.findall(tracks_row_strings)]
     return _
+
+def _format(duration):  # in seconds
+    if not duration:
+        return ''
+    res = time.strftime('%H:%M:%S', time.gmtime(duration))
+    regex = re.compile('^0(?:0:?)*')
+    substring = regex.match(res).group()
+    return res.replace(substring, '')
+
+
 
 
 if __name__ == '__main__':
