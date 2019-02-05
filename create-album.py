@@ -7,14 +7,16 @@ import time
 import glob
 import shutil
 import readline
+import subprocess
 from time import sleep
-
 import mutagen
 import click
 
 
 from downloading import youtube, DownloadError
 from album_segmentation import AudioSegmenter, TrackTimestampsSequenceError, FfmpegCommandError
+from metadata import MetadataDealer
+
 # from .tracks_parsing import parser
 
 
@@ -29,23 +31,30 @@ from album_segmentation import AudioSegmenter, TrackTimestampsSequenceError, Ffm
 # @click.option('--_debug', prompt='Your name please')
 # def hello(name):
 #     click.echo('Hello %s!' % name)
+# @click.option('--album-dir', '--a-d', required=True, help="The directory where a music album resides. Currently only mp3 "
+#                                                           "files are supported as contents of the directory. Namely only "
+#                                                           "such files will be apprehended as tracks of the album.")
 
 
 @click.command()
 @click.option(
     '--input_tracks_file',
     type=click.File('r'),
-    help='File in which there is tracks information necessary to _segment a music ablum into tracks.'
+    help='File in which there is tracks information necessary to segment a music ablum into tracks.'
          'If not provided, a prompt will allow you to type the input tracks information.',
 )
+@click.option('--track_name/--no-track_name', default=True, show_default=True, help='Whether to extract the track names from the mp3 files and write them as metadata correspondingly')
+@click.option('--track_number/--no-track_number', default=True, show_default=True, help='Whether to extract the track numbers from the mp3 files and write them as metadata correspondingly')
+@click.option('--artist', '-a', help="If given, then value shall be used as the PTE1 tag: 'Lead performer(s)/Soloist(s)'.  In the music player 'clementine' it corresponds to the 'artist' column (and not the 'Album artist column) ")
+@click.option('--album_artist', help="If given, then value shall be used as the TPE2 tag: 'Band/orchestra/accompaniment'.  In the music player 'clementine' it corresponds to the 'Album artist' column")
 @click.option('--debug', '-d', is_flag=True)
-def main(input_tracks_file, debug):
+def main(input_tracks_file, track_name, track_number, artist, album_artist, debug):
     directory = '/tmp/gav'
     if os.path.isdir(directory):
         shutil.rmtree(directory)
     os.mkdir(directory)
 
-    regex = re.compile('(?:\d{1,2}(?:\.[ \t]*|[\t ]+))?([\w ]+) ?- ?((?:\d?\d:)*\d\d)')
+    # regex = re.compile('(?:\d{1,2}(?:\.[ \t]*|[\t ]+))?([\w ]+) ?- ?((?:\d?\d:)*\d\d)')
 
     if debug:
         album_file = _debug(directory)
@@ -62,7 +71,8 @@ def main(input_tracks_file, debug):
 
         audio_segmenter = AudioSegmenter(target_directory=directory)
         if input_tracks_file:
-            audio_segmenter.segment_from_file_handler(album_file, input_tracks_file, verbose=True, debug=False, sleep_seconds=0)
+            lines = _parse_track_information(input_tracks_file.read())
+            audio_segmenter.segment_from_list(album_file, lines, verbose=True, debug=False, sleep_seconds=0)
         else:
             sleep(0.70)
             while 1:
@@ -72,7 +82,9 @@ def main(input_tracks_file, debug):
                     break
                 except TrackTimestampsSequenceError as e:
                     print(e)
-    _create_album_folder_dialog(album_file, directory)
+    album_dir = _create_album_folder_dialog(album_file, directory)
+    md = MetadataDealer()
+    md.set_album_metadata(album_dir, track_number=track_number, track_name=track_name, artist=artist, album_artist=album_artist, verbose=True)
 
 
 def _copy_tracks(from_directory, track_names, destination_directory):
@@ -96,7 +108,6 @@ def _create_album_folder_dialog(album_file, directory):
         answer = input("Copy them to a destination directory? yes/no: ")
         if answer.lower() == 'yes' or answer.lower() == 'y':
             destination_directory = input('destination directory: ')
-
             try:
                 os.makedirs(destination_directory)
             except FileExistsError:
@@ -115,7 +126,8 @@ def _create_album_folder_dialog(album_file, directory):
                 print("Can't copy tracks to '{}' folder. You don't have write permissions in this directory".format(destination_directory))
         else:
             print("Album tracks reside in '{}'".format(directory))
-            break
+            return
+    return destination_directory
 
 class TabCompleter:
     """
@@ -150,7 +162,8 @@ class TabCompleter:
 
 def _input_data_dialog(multiline=False):
     if multiline:
-        print("Enter/Paste your tracks timestamps. Each line should represent a single track. Ctrl-D or Ctrl-Z ( windows ) to save it.")
+        print("Enter/Paste your tracks timestamps. Each line should represent a single track. Go cursor to lst empty line "
+              "below your text and press Ctrl-D or Ctrl-Z (windows) to save it.")
 
         def input_lines(prompt=None):
             """Yields input lines from user until EOFError is raised."""
@@ -185,6 +198,12 @@ def _input_data_dialog(multiline=False):
         print()
     return lines
 
+def _parse_track_information(tracks_row_strings):
+    """Returns parsed track title and timestamp in hh:mm:ss for each of the input's list elements. Skips potentially found track number as a natural order is assumed"""
+    regex = re.compile('(?:\d{1,2}(?:\.[ \t]*|[\t ]+))?([\w ]*\w)(?:[\t ]*-[\t ]*|[\t ]+)((?:\d?\d:)*\d\d)')
+    _ = [list(_) for _ in regex.findall(tracks_row_strings)]
+    return _
+
 
 def _debug(directory):
     ratm_testify_url = 'https://www.youtube.com/watch?v=Q3dvbM6Pias'
@@ -206,11 +225,6 @@ def _debug(directory):
     # _create_album_folder_dialog(album_file, directory)
 
 
-def _parse_track_information(tracks_row_strings):
-    regex = re.compile('(?:\d{1,2}(?:\.[ \t]*|[\t ]+))?([\w ]*\w)(?:[\t ]*-[\t ]*|[\t ]+)((?:\d?\d:)*\d\d)')
-    _ = [list(_) for _ in regex.findall(tracks_row_strings)]
-    return _
-
 def _format(duration):  # in seconds
     if not duration:
         return ''
@@ -218,7 +232,6 @@ def _format(duration):  # in seconds
     regex = re.compile('^0(?:0:?)*')
     substring = regex.match(res).group()
     return res.replace(substring, '')
-
 
 
 
