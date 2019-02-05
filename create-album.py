@@ -3,11 +3,13 @@
 import re
 import os
 import sys
+import time
 import glob
 import shutil
 import readline
 from time import sleep
 
+import mutagen
 import click
 
 
@@ -85,28 +87,32 @@ def _copy_tracks(from_directory, track_names, destination_directory):
 
 def _create_album_folder_dialog(album_file, directory):
     tracks = [_ for _ in os.listdir(directory) if _ != os.path.basename(album_file)]
-    print('\n\nThese are the tracks created:\n')
-    print('\n'.join(sorted([' {}'.format(t) for t in tracks])), '\n')
+    durations = [_format(getattr(mutagen.File(os.path.join(directory, t)).info, 'length', 0)) for t in tracks]
+    max_row_length = max(len(_[0]) + len(_[1]) for _ in zip(tracks, durations))
+    print("\n\nThese are the tracks created from '{}' album with duration {}:\n".format(os.path.basename(album_file), _format(getattr(mutagen.File(album_file).info, 'length', 0))))
+    print('\n'.join(sorted([' {}{}  {}'.format(t, (max_row_length - len(t) - len(d)) * ' ', d) for t, d in zip(tracks, durations)])), '\n')
 
     while 1:
         answer = input("Copy them to a destination directory? yes/no: ")
         if answer.lower() == 'yes' or answer.lower() == 'y':
             destination_directory = input('destination directory: ')
-            # destination_directory = input('destination directory: ')
-            if os.path.isdir(destination_directory):
-                answer = input("Directory '{}' exists; copy them anyway? yes/no: ".format(destination_directory))
-                if answer.lower() == 'no' or answer.lower() == 'n':
-                    continue
-                _copy_tracks(directory, tracks, destination_directory)
-                break
+
             try:
                 os.makedirs(destination_directory)
+            except FileExistsError:
+                answer = input("Directory '{}' exists. Copy the tracks there? yes/no: ".format(destination_directory))
+                if answer.lower() == 'no' or answer.lower() == 'n':
+                    continue
+            except FileNotFoundError:
+                print("The selected destination directory '{}' is not valid.".format(destination_directory))
+                continue
+            except PermissionError:
+                print("You don't have permision to create a directory in path '{}'".format(destination_directory))
+            try:
                 _copy_tracks(directory, tracks, destination_directory)
                 break
             except PermissionError:
-                print("You don't have permision to create a directory in path '{}'".format(destination_directory))
-            except FileNotFoundError:
-                print("The selected destination directory '{}' is not valid.".format(destination_directory))
+                print("Can't copy tracks to '{}' folder. You don't have write permissions in this directory".format(destination_directory))
         else:
             print("Album tracks reside in '{}'".format(directory))
             break
@@ -201,14 +207,24 @@ def _debug(directory):
 
 
 def _parse_track_information(tracks_row_strings):
-    regex = re.compile('(?:\d{1,2}(?:\.[ \t]*|[\t ]+))?([\w ]+)(?:[\t ]*-[\t ]*|[\t ]+)((?:\d?\d:)*\d\d)')
+    regex = re.compile('(?:\d{1,2}(?:\.[ \t]*|[\t ]+))?([\w ]*\w)(?:[\t ]*-[\t ]*|[\t ]+)((?:\d?\d:)*\d\d)')
     _ = [list(_) for _ in regex.findall(tracks_row_strings)]
     return _
 
+def _format(duration):  # in seconds
+    if not duration:
+        return ''
+    res = time.strftime('%H:%M:%S', time.gmtime(duration))
+    regex = re.compile('^0(?:0:?)*')
+    substring = regex.match(res).group()
+    return res.replace(substring, '')
+
+
+
 
 if __name__ == '__main__':
-    t = TabCompleter()
+    completer = TabCompleter()
     readline.set_completer_delims('\t')
     readline.parse_and_bind("tab: complete")
-    readline.set_completer(t.pathCompleter)
+    readline.set_completer(completer.pathCompleter)
     main()
