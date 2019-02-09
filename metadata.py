@@ -6,15 +6,33 @@ from functools import reduce
 import mutagen
 from mutagen import mp3
 from mutagen.id3 import ID3, TPE1, TPE2, TRCK, TIT2, TALB, TDRC
+from collections import defaultdict
 
 # The main notable classes in mutagen are FileType, StreamInfo, Tags, Metadata and for error handling the MutagenError exception.
 
 
+class MetadataDealerType(type):
 
-class MetadataDealer:
+    @staticmethod
+    def __parse_year(year):
+        if year == '':
+            return ''
+        c = re.match('0*(\d+)', year)
+        if not c:
+            raise InvalidInputYearError("Input year tag '{}' is invalid".format(year))
+        return re.match('0*(\d+)', year).group(1)
+
+    def __new__(mcs, name, bases, attributes):
+        x = super().__new__(mcs, name, bases, attributes)
+        x._filters = defaultdict(lambda : lambda y: y, track_number=lambda y: mcs.__parse_year(y))
+        return x
+
+
+class MetadataDealer(metaclass=MetadataDealerType):
 
     #############
     # simply add keys and constructor pairs to enrich the support of the API for writting tags/frames to audio files
+    # you can use the cls._filters to add a new post processing filter as shown in MetadataDealerType constructor above
     _d = {'artist': TPE1,  # 4.2.1   TPE1    [#TPE1 Lead performer(s)/Soloist(s)]  ; taken from http://id3.org/id3v2.3.0
                              # in clementine temrs, it affects the 'Artist' tab but not the 'Album artist'
           'album_artist': TPE2,  # 4.2.1   TPE2    [#TPE2 Band/orchestra/accompaniment]
@@ -32,21 +50,9 @@ class MetadataDealer:
 
     reg = re.compile(r'(?:(\d{1,2})(?:[ \t]*[\-\.][ \t]*|[ \t]+)|^)?((?:\w+\b[ \t])*?\w+)(?:\.\w+)')  # use to parse track file names like "1. Loyal to the Pack.mp3"
 
-    @staticmethod
-    def gg(year):
-        if year == '':
-            return ''
-        c = re.match('0*(\d+)', year)
-        if not c:
-            raise InvalidInputYearError("Input year tag '{}' is invalid".format(year))
-        return re.match('0*(\d+)', year).group(1)
-
-    filters = {'year': gg}
-
-
     def set_album_metadata(self, album_directory, track_number=True, track_name=True, artist='', album_artist='', album='', year='', verbose=False):
         self._write_metadata(album_directory, track_number=track_number, track_name=track_name, artist=artist,
-                             album_artist=album_artist, album=album, year=year, verbose=verbose)
+                             album_artist=album_artist, album=album, year=str(year), verbose=verbose)
 
     def _write_metadata(self, album_directory, verbose=False, **kwargs):
         files = glob.glob('{}/*.mp3'.format(album_directory))
@@ -54,10 +60,6 @@ class MetadataDealer:
         for file in files:
             self.write_metadata(file, **dict(self._filter_auto_inferred(self._infer_track_number_n_name(file), **kwargs),
                                              **{k: kwargs.get(k, '') for k in self._d.keys()}))
-            # {'artist': kwargs.get('artist', ''),
-            #                                     'album_artist': kwargs.get('album_artist', '')
-            #                                     }))
-            # dd = {k: kwargs.get(k, '') for k, in self._d.items()}
 
     @classmethod
     def write_metadata(cls, file, **kwargs):
@@ -68,8 +70,8 @@ class MetadataDealer:
         audio = ID3(file)
         for k,v in kwargs.items():
             if bool(v):
-                audio.add(cls._all[k](encoding=3, text=u'{}'.format(cls.filters.get(k, lambda x: x)(v))))
-                print("set '{}' with {}: {}={}".format(file, k, cls._all[k].__name__, v))
+                audio.add(cls._all[k](encoding=3, text=u'{}'.format(cls._filters[k](v))))
+                print("set '{}' with {}: {}={}".format(file, k, cls._all[k].__name__, cls._filters[k](v)))
         audio.save()
 
     def _filter_auto_inferred(self, d, **kwargs):
@@ -113,7 +115,7 @@ def main(album_dir, track_name, track_number, artist, album_artist):
 def test():
     al = '/data/projects/music-album-creator/lttp'
     md = MetadataDealer()
-    md.set_album_metadata(al, track_name=True, track_number=True, artist='gg', album_artist='navi', verbose=True)
+    md.set_album_metadata(al, track_name=True, track_number=True, artist='gg', album_artist='navi', album='alb', year='2009', verbose=True)
 
 if __name__ == '__main__':
     main()

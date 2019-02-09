@@ -16,24 +16,7 @@ import click
 from downloading import youtube, DownloadError
 from album_segmentation import AudioSegmenter, TrackTimestampsSequenceError, FfmpegCommandError
 from metadata import MetadataDealer
-
-# from .tracks_parsing import parser
-
-
-
-# @click.command()
-# @click.option('--name', prompt='Your name please')
-# def hello(name):
-#     click.echo('Hello %s!' % name)
-
-
-# @click.command()
-# @click.option('--_debug', prompt='Your name please')
-# def hello(name):
-#     click.echo('Hello %s!' % name)
-# @click.option('--album-dir', '--a-d', required=True, help="The directory where a music album resides. Currently only mp3 "
-#                                                           "files are supported as contents of the directory. Namely only "
-#                                                           "such files will be apprehended as tracks of the album.")
+from frontend.metadata_dialogs import *
 
 
 @click.command()
@@ -56,11 +39,12 @@ def main(tracks_info, track_name, track_number, artist, album_artist, debug, url
         shutil.rmtree(directory)
     os.mkdir(directory)
     music_dir = '/media/kostas/freeagent/m'
-    #####
-
+    ###
 
     if debug:
         audio_files = _debug(directory)
+        album_file = os.path.join(directory, os.listdir(directory)[0])
+        guessed_info = _parse_artist_n_album(album_file)
     else:
         print('\n###################\n## ALBUM CREATOR ##\n###################\n\n')
         print('Please input a url corresponding to a music album uploaded as a youtube video.\n'
@@ -70,18 +54,23 @@ def main(tracks_info, track_name, track_number, artist, album_artist, debug, url
             video_url = input('   video url: ')
         else:
             video_url = url
+
         print('\n')
         youtube.download(video_url, directory, spawn=False, verbose=False, debug=True)  # force waiting before continuing execution, by not spawning a separate process
+
+        print('\n')
 
         album_file = os.path.join(directory, os.listdir(directory)[0])
         print('{}\n'.format(_format(getattr(mutagen.File(album_file).info, 'length', 0))))
         guessed_info = _parse_artist_n_album(album_file)
+        print('GEUSSES', guessed_info)
         audio_segmenter = AudioSegmenter(target_directory=directory)
-        if tracks_info:
+
+        sleep(0.70)
+        if tracks_info:  # if file given with tracks information (titles and timestamps in hh:mm:ss format)
             lines = _parse_track_information(tracks_info.read())
             audio_files = audio_segmenter.segment_from_list(album_file, lines, verbose=True, debug=False, sleep_seconds=0)
         else:
-            sleep(0.70)
             while 1:
                 lines = _input_data_dialog(multiline=True)
                 try:
@@ -89,11 +78,22 @@ def main(tracks_info, track_name, track_number, artist, album_artist, debug, url
                     break
                 except TrackTimestampsSequenceError as e:
                     print(e)
-    album_dir = _store_album_dialog(audio_files, directory)
+
+    durations = [_format(getattr(mutagen.File(os.path.join(directory, t)).info, 'length', 0)) for t in audio_files]
+    max_row_length = max(len(_[0]) + len(_[1]) for _ in zip(audio_files, durations))
+    print("\n\nThese are the tracks created from '{}' album\n".format(os.path.dirname(audio_files[0])))
+    print('\n'.join(sorted(
+        [' {}{}  {}'.format(t, (max_row_length - len(t) - len(d)) * ' ', d) for t, d in zip(audio_files, durations)])), '\n')
+
+    album_dir = store_album_dialog(audio_files, music_lib=music_dir, **guessed_info)
+
     md = MetadataDealer()
-    md.set_album_metadata(album_dir, track_number=track_number, track_name=track_name, artist=artist, album_artist=album_artist, verbose=True)
+    answers = interactive(**guessed_info)
+    md.set_album_metadata(album_dir, track_number=track_number, track_name=track_name, artist=answers['artist'],
+                          album_artist=answers['album-artist'], album=answers['album'], year=answers['year'], verbose=True)
 
 
+##### MULTILINE INPUT TRACK NAMES AND TIMESTAMPS (hh:mm:ss)
 def _input_data_dialog(multiline=False):
     """Returns a list of lists. Each inner list """
     if multiline:
@@ -141,48 +141,6 @@ def _parse_track_information(tracks_row_strings):
     _ = [list(_) for _ in regex.findall(tracks_row_strings)]
     return _
 
-
-def _copy_tracks(track_files, destination_directory):
-    for track in track_files:
-        destination_file_path = os.path.join(destination_directory, os.path.basename(track))
-        if os.path.isfile(destination_file_path):
-            print(" File '{}' already exists in '{}'. Skipping".format(os.path.basename(track), destination_directory), destination_directory)
-        else:
-            shutil.copyfile(track, destination_file_path)
-    print("Album tracks reside in '{}'".format(destination_directory))
-
-
-def _store_album_dialog(tracks, directory, music_lib='', artist='', album=''):
-    print('tracks', tracks)
-    durations = [_format(getattr(mutagen.File(os.path.join(directory, t)).info, 'length', 0)) for t in tracks]
-    max_row_length = max(len(_[0]) + len(_[1]) for _ in zip(tracks, durations))
-    print("\n\nThese are the tracks created from '{}' album\n".format(os.path.dirname(tracks[0])))
-    print('\n'.join(sorted([' {}{}  {}'.format(t, (max_row_length - len(t) - len(d)) * ' ', d) for t, d in zip(map(os.path.basename, tracks), durations)])), '\n')
-
-    while 1:
-        answer = input("Copy them to a destination directory? yes/no: ")
-        if answer.lower() == 'yes' or answer.lower() == 'y':
-            destination_directory = input('destination directory: ')
-            try:
-                os.makedirs(destination_directory)
-            except FileExistsError:
-                answer = input("Directory '{}' exists. Copy the tracks there? yes/no: ".format(destination_directory))
-                if answer.lower() == 'no' or answer.lower() == 'n':
-                    continue
-            except FileNotFoundError:
-                print("The selected destination directory '{}' is not valid.".format(destination_directory))
-                continue
-            except PermissionError:
-                print("You don't have permision to create a directory in path '{}'".format(destination_directory))
-            try:
-                _copy_tracks(tracks, destination_directory)
-                break
-            except PermissionError:
-                print("Can't copy tracks to '{}' folder. You don't have write permissions in this directory".format(destination_directory))
-        else:
-            print("Album tracks reside in '{}'".format(directory))
-            return
-    return destination_directory
 
 class TabCompleter:
     """
@@ -278,7 +236,7 @@ def _debug(directory):
 
 def _format(duration):  # in seconds
     if not duration:
-        return ''
+        return '0:00'
     res = time.strftime('%H:%M:%S', time.gmtime(duration))
     regex = re.compile('^0(?:0:?)*')
     substring = regex.match(res).group()
