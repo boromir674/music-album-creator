@@ -46,6 +46,7 @@ class AudioSegmenter:
         self._track_index_generator = iter((lambda x: str(x) if 9 < x else '0'+str(x))(_) for _ in range(1, 100))
         exit_code = 0
         data = self._parse_data(data, album_file)
+        audio_files = [x[1] for x in data]
         try:
             self._check_data(data)
         except AssertionError:
@@ -60,15 +61,16 @@ class AudioSegmenter:
         exit_code = self._segment(album_file, *data[-1], **kwargs)
         if exit_code != 0:
             raise FfmpegCommandError("Command '{}' failed".format(' '.join(self._args)))
+        return audio_files
 
     def segment_from_file(self, album_file, tracks_file, **kwargs):
         with open(tracks_file, 'r') as f:
             data = [_.strip().split() for _ in f.readlines()]
         self.segment_from_list(album_file, data, **kwargs)
 
-    def segment_from_file_handler(self, album_file, tracks_file_handler, **kwargs):
-        data = [_.strip().split() for _ in tracks_file_handler.readlines()]
-        self.segment_from_list(album_file, data, **kwargs)
+    # def segment_from_file_handler(self, album_file, tracks_file_handler, **kwargs):
+    #     data = [_.strip().split() for _ in tracks_file_handler.readlines()]
+    #     self.segment_from_list(album_file, data, **kwargs)
 
     @staticmethod
     def _convert(timestamp):

@@ -49,15 +49,17 @@ from metadata import MetadataDealer
 @click.option('--album_artist', help="If given, then value shall be used as the TPE2 tag: 'Band/orchestra/accompaniment'.  In the music player 'clementine' it corresponds to the 'Album artist' column")
 @click.option('--debug', '-d', is_flag=True)
 def main(input_tracks_file, track_name, track_number, artist, album_artist, debug):
+    ## CONFIG of the 'app' ##
     directory = '/tmp/gav'
     if os.path.isdir(directory):
         shutil.rmtree(directory)
     os.mkdir(directory)
+    music_dir = '/media/kostas/freeagent/m'
+    #####
 
-    # regex = re.compile('(?:\d{1,2}(?:\.[ \t]*|[\t ]+))?([\w ]+) ?- ?((?:\d?\d:)*\d\d)')
 
     if debug:
-        album_file = _debug(directory)
+        audio_files = _debug(directory)
     else:
         print('\n###################\n## ALBUM CREATOR ##\n###################\n\n')
         print('Please input a url corresponding to a music album uploaded as a youtube video.\n'
@@ -66,23 +68,24 @@ def main(input_tracks_file, track_name, track_number, artist, album_artist, debu
         video_url = input('   video url: ')
         print()
         youtube.download(video_url, directory, spawn=False, verbose=False, debug=True)  # force waiting before continuing execution, by not spawning a separate process
-        print()
-        album_file = os.path.join(directory, os.listdir(directory)[0])
 
+        album_file = os.path.join(directory, os.listdir(directory)[0])
+        print('\n{}\n'.format(_format(getattr(mutagen.File(album_file).info, 'length', 0))))
+        guessed_info = _parse_artist_n_album(album_file)
         audio_segmenter = AudioSegmenter(target_directory=directory)
         if input_tracks_file:
             lines = _parse_track_information(input_tracks_file.read())
-            audio_segmenter.segment_from_list(album_file, lines, verbose=True, debug=False, sleep_seconds=0)
+            audio_files = audio_segmenter.segment_from_list(album_file, lines, verbose=True, debug=False, sleep_seconds=0)
         else:
             sleep(0.70)
             while 1:
                 lines = _input_data_dialog(multiline=True)
                 try:
-                    audio_segmenter.segment_from_list(album_file, lines, verbose=True, debug=False, sleep_seconds=0)
+                    audio_files = audio_segmenter.segment_from_list(album_file, lines, verbose=True, debug=False, sleep_seconds=0)
                     break
                 except TrackTimestampsSequenceError as e:
                     print(e)
-    album_dir = _create_album_folder_dialog(album_file, directory)
+    album_dir = _store_album_dialog(audio_files, directory)
     md = MetadataDealer()
     md.set_album_metadata(album_dir, track_number=track_number, track_name=track_name, artist=artist, album_artist=album_artist, verbose=True)
 
@@ -97,11 +100,10 @@ def _copy_tracks(from_directory, track_names, destination_directory):
     print("Album tracks reside in '{}'".format(destination_directory))
 
 
-def _create_album_folder_dialog(album_file, directory):
-    tracks = [_ for _ in os.listdir(directory) if _ != os.path.basename(album_file)]
+def _store_album_dialog(tracks, directory, music_lib='', artist='', album=''):
     durations = [_format(getattr(mutagen.File(os.path.join(directory, t)).info, 'length', 0)) for t in tracks]
     max_row_length = max(len(_[0]) + len(_[1]) for _ in zip(tracks, durations))
-    print("\n\nThese are the tracks created from '{}' album with duration {}:\n".format(os.path.basename(album_file), _format(getattr(mutagen.File(album_file).info, 'length', 0))))
+    print("\n\nThese are the tracks created from '{}' album\n".format(os.path.dirname(tracks[0])))
     print('\n'.join(sorted([' {}{}  {}'.format(t, (max_row_length - len(t) - len(d)) * ' ', d) for t, d in zip(tracks, durations)])), '\n')
 
     while 1:
@@ -204,6 +206,44 @@ def _parse_track_information(tracks_row_strings):
     _ = [list(_) for _ in regex.findall(tracks_row_strings)]
     return _
 
+def _parse_artist_n_album(youtube_file):
+    """
+    Can parse patters:
+     - Artist Album Year\n
+     - Album Year\n
+     - Artist Album\n
+     - Album\n
+    :param youtube_file:
+    :return: the exracted values as a dictionary having maximally keys: {'artist', 'album', 'year'}
+    :rtype: dict
+    """
+    sep1 = '[\t ]*[\-\.][\t ]*'
+    sep2 = '[\t \-\.]+'
+    year = '\(?(\d{4})\)?'
+    art = '([\w ]*\w)'
+    alb = '([\w ]*\w)'
+    _reg = lambda x: re.compile(str('{}'*len(x)).format(*x))
+
+    reg1 = _reg([art, sep1, alb, sep2, year])
+    m1 = reg1.search(youtube_file)
+    if m1:
+        return {'artist': m1.group(1), 'album': m1.group(2), 'year': m1.group(3)}
+
+    m1 = _reg([alb, sep2, year]).search(youtube_file)
+    if m1:
+        return {'album': m1.group(1), 'year': m1.group(2)}
+
+    reg2 = _reg([art, sep1, alb])
+    m2 = reg2.search(youtube_file)
+    if m2:
+        return {'artist': m2.group(1), 'album': m2.group(2)}
+
+    reg3 = _reg([alb])
+    m3 = reg3.search(youtube_file)
+    if m3:
+        return {'album': m3.group(1)}
+    return {}
+
 
 def _debug(directory):
     ratm_testify_url = 'https://www.youtube.com/watch?v=Q3dvbM6Pias'
@@ -220,9 +260,9 @@ def _debug(directory):
     lines = [['First-ten','0:00'],
              ['Second gav', '1:10'],
              ['Third', '01:50']]
-    audio_segmenter.segment_from_list(album_file, lines, sleep_seconds=1, debug=False, verbose=True)
-    return album_file
-    # _create_album_folder_dialog(album_file, directory)
+    audio_files = audio_segmenter.segment_from_list(album_file, lines, sleep_seconds=1, debug=False, verbose=True)
+    return audio_files
+    # _store_album_dialog(album_file, directory)
 
 
 def _format(duration):  # in seconds

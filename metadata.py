@@ -16,7 +16,7 @@ class MetadataDealer:
     _d = {'artist': TPE1,  # 4.2.1   TPE1    [#TPE1 Lead performer(s)/Soloist(s)]  ; taken from http://id3.org/id3v2.3.0
                              # in clementine temrs, it affects the 'Artist' tab but not the 'Album artist'
           'album_artist': TPE2}  # 4.2.1   TPE2    [#TPE2 Band/orchestra/accompaniment]
-                                   # in clementine temrs, it affects the 'Artist' tab but not the 'Album artist'
+                                   # in clementine terms, it affects the 'Artist' tab but not the 'Album artist'
 
     # supported metadata to try and infer automatically
     _auto_data = [('track_number', TRCK),  # 4.2.1   TRCK    [#TRCK Track number/Position in set]
