@@ -5,7 +5,7 @@ import click
 from functools import reduce
 import mutagen
 from mutagen import mp3
-from mutagen.id3 import ID3, TPE1, TPE2, TRCK, TIT2
+from mutagen.id3 import ID3, TPE1, TPE2, TRCK, TIT2, TALB, TDRC
 
 # The main notable classes in mutagen are FileType, StreamInfo, Tags, Metadata and for error handling the MutagenError exception.
 
@@ -13,10 +13,16 @@ from mutagen.id3 import ID3, TPE1, TPE2, TRCK, TIT2
 
 class MetadataDealer:
 
+    #############
+    # simply add keys and constructor pairs to enrich the support of the API for writting tags/frames to audio files
     _d = {'artist': TPE1,  # 4.2.1   TPE1    [#TPE1 Lead performer(s)/Soloist(s)]  ; taken from http://id3.org/id3v2.3.0
                              # in clementine temrs, it affects the 'Artist' tab but not the 'Album artist'
-          'album_artist': TPE2}  # 4.2.1   TPE2    [#TPE2 Band/orchestra/accompaniment]
+          'album_artist': TPE2,  # 4.2.1   TPE2    [#TPE2 Band/orchestra/accompaniment]
                                    # in clementine terms, it affects the 'Artist' tab but not the 'Album artist'
+          'album': TALB,  # 4.2.1   TALB    [#TALB Album/Movie/Show title]
+          'year': TDRC  # TDRC (recording time) consolidates TDAT (date), TIME (time), TRDA (recording dates), and TYER (year).
+
+          }
 
     # supported metadata to try and infer automatically
     _auto_data = [('track_number', TRCK),  # 4.2.1   TRCK    [#TRCK Track number/Position in set]
@@ -41,15 +47,13 @@ class MetadataDealer:
 
     @classmethod
     def write_metadata(cls, file, **kwargs):
-        assert all(map(lambda x: x[0] in cls._all.keys(), kwargs.items()))
-
+        if not all(map(lambda x: x[0] in cls._all.keys(), kwargs.items())):
+            raise RuntimeError("Some of the input keys [{}] used to request the addition of metadata, do not correspoond"
+                               " to a tag/frame of the supported [{}]".format(', '.join(kwargs.keys()), ' '.join(cls._d)))
         audio = ID3(file)
-        # audio.add(TIT2(encoding=3, text=u"An example"))
-        # metadata = mutagen.mp3.MP3(file)
         for k,v in kwargs.items():
             if bool(v):
                 audio.add(cls._all[k](encoding=3, text=u'{}'.format(v)))
-                # audio[cls._all[k]].text = [v]
                 print("set '{}' with {}: {}={}".format(file, k, cls._all[k].__name__, v))
         audio.save()
 
@@ -95,11 +99,3 @@ def test():
 
 if __name__ == '__main__':
     main()
-    # test()
-
-    #
-    # from mutagen.mp3 import MP3
-    #
-    # f = MP3('/media/kostas/freeagent/m/Planet Of Zeus/Loyal To The Pack/01 - Loyal to the Pack.mp3')
-    #
-    # print(dir(f))
