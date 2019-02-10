@@ -38,7 +38,7 @@ from metadata import MetadataDealer
 
 @click.command()
 @click.option(
-    '--input_tracks_file',
+    '--tracks_info', '-t_i',
     type=click.File('r'),
     help='File in which there is tracks information necessary to segment a music ablum into tracks.'
          'If not provided, a prompt will allow you to type the input tracks information.',
@@ -48,7 +48,8 @@ from metadata import MetadataDealer
 @click.option('--artist', '-a', help="If given, then value shall be used as the PTE1 tag: 'Lead performer(s)/Soloist(s)'.  In the music player 'clementine' it corresponds to the 'artist' column (and not the 'Album artist column) ")
 @click.option('--album_artist', help="If given, then value shall be used as the TPE2 tag: 'Band/orchestra/accompaniment'.  In the music player 'clementine' it corresponds to the 'Album artist' column")
 @click.option('--debug', '-d', is_flag=True)
-def main(input_tracks_file, track_name, track_number, artist, album_artist, debug):
+@click.option('--url', '-u', help='the youtube video url')
+def main(tracks_info, track_name, track_number, artist, album_artist, debug, url):
     ## CONFIG of the 'app' ##
     directory = '/tmp/gav'
     if os.path.isdir(directory):
@@ -65,16 +66,19 @@ def main(input_tracks_file, track_name, track_number, artist, album_artist, debu
         print('Please input a url corresponding to a music album uploaded as a youtube video.\n'
               'The video must have timestamps indicating the start of each track within the music\n'
               'album, other wise the operations below will fail.\n')
-        video_url = input('   video url: ')
-        print()
+        if not url:
+            video_url = input('   video url: ')
+        else:
+            video_url = url
+        print('\n')
         youtube.download(video_url, directory, spawn=False, verbose=False, debug=True)  # force waiting before continuing execution, by not spawning a separate process
 
         album_file = os.path.join(directory, os.listdir(directory)[0])
-        print('\n{}\n'.format(_format(getattr(mutagen.File(album_file).info, 'length', 0))))
+        print('{}\n'.format(_format(getattr(mutagen.File(album_file).info, 'length', 0))))
         guessed_info = _parse_artist_n_album(album_file)
         audio_segmenter = AudioSegmenter(target_directory=directory)
-        if input_tracks_file:
-            lines = _parse_track_information(input_tracks_file.read())
+        if tracks_info:
+            lines = _parse_track_information(tracks_info.read())
             audio_files = audio_segmenter.segment_from_list(album_file, lines, verbose=True, debug=False, sleep_seconds=0)
         else:
             sleep(0.70)
@@ -90,79 +94,8 @@ def main(input_tracks_file, track_name, track_number, artist, album_artist, debu
     md.set_album_metadata(album_dir, track_number=track_number, track_name=track_name, artist=artist, album_artist=album_artist, verbose=True)
 
 
-def _copy_tracks(from_directory, track_names, destination_directory):
-    for track in track_names:
-        destination_file_path = os.path.join(destination_directory, track)
-        if os.path.isfile(destination_file_path):
-            print(" File '{}' already exists. Skipping".format(os.path.basename(track), destination_directory))
-        else:
-            shutil.copyfile(os.path.join(from_directory, track), destination_file_path)
-    print("Album tracks reside in '{}'".format(destination_directory))
-
-
-def _store_album_dialog(tracks, directory, music_lib='', artist='', album=''):
-    durations = [_format(getattr(mutagen.File(os.path.join(directory, t)).info, 'length', 0)) for t in tracks]
-    max_row_length = max(len(_[0]) + len(_[1]) for _ in zip(tracks, durations))
-    print("\n\nThese are the tracks created from '{}' album\n".format(os.path.dirname(tracks[0])))
-    print('\n'.join(sorted([' {}{}  {}'.format(t, (max_row_length - len(t) - len(d)) * ' ', d) for t, d in zip(tracks, durations)])), '\n')
-
-    while 1:
-        answer = input("Copy them to a destination directory? yes/no: ")
-        if answer.lower() == 'yes' or answer.lower() == 'y':
-            destination_directory = input('destination directory: ')
-            try:
-                os.makedirs(destination_directory)
-            except FileExistsError:
-                answer = input("Directory '{}' exists. Copy the tracks there? yes/no: ".format(destination_directory))
-                if answer.lower() == 'no' or answer.lower() == 'n':
-                    continue
-            except FileNotFoundError:
-                print("The selected destination directory '{}' is not valid.".format(destination_directory))
-                continue
-            except PermissionError:
-                print("You don't have permision to create a directory in path '{}'".format(destination_directory))
-            try:
-                _copy_tracks(directory, tracks, destination_directory)
-                break
-            except PermissionError:
-                print("Can't copy tracks to '{}' folder. You don't have write permissions in this directory".format(destination_directory))
-        else:
-            print("Album tracks reside in '{}'".format(directory))
-            return
-    return destination_directory
-
-class TabCompleter:
-    """
-    A tab completer that can either complete from
-    the filesystem or from a list.
-    """
-    def pathCompleter(self, text, state):
-        """
-        This is the tab completer for systems paths.
-        Only tested on *nix systems
-        """
-        line = readline.get_line_buffer().split()
-        return [x for x in glob.glob(text + '*')][state]
-
-    def createListCompleter(self, ll):
-        """
-        This is a closure that creates a method that autocompletes from the given list.
-        Since the autocomplete function can't be given a list to complete from
-        a closure is used to create the listCompleter function with a list to complete
-        from.
-        """
-        def listCompleter(text, state):
-            line = readline.get_line_buffer()
-
-            if not line:
-                return [c + " " for c in ll][state]
-
-            else:
-                return [c + " " for c in ll if c.startswith(line)][state]
-        self.listCompleter = listCompleter
-
-
 def _input_data_dialog(multiline=False):
+    """Returns a list of lists. Each inner list """
     if multiline:
         print("Enter/Paste your tracks timestamps. Each line should represent a single track. Go cursor to lst empty line "
               "below your text and press Ctrl-D or Ctrl-Z (windows) to save it.")
@@ -201,10 +134,88 @@ def _input_data_dialog(multiline=False):
     return lines
 
 def _parse_track_information(tracks_row_strings):
-    """Returns parsed track title and timestamp in hh:mm:ss for each of the input's list elements. Skips potentially found track number as a natural order is assumed"""
-    regex = re.compile('(?:\d{1,2}(?:\.[ \t]*|[\t ]+))?([\w ]*\w)(?:[\t ]*-[\t ]*|[\t ]+)((?:\d?\d:)*\d\d)')
+    """Returns parsed track; title and timestamp in hh:mm:ss for each of the input's list elements. Skips potentially found track number as a natural order is assumed\n
+        Returs a list of lists. Each inner list holds the captured groups in the parenthesis'"""
+    regex = re.compile('(?:\d{1,2}[ \t]*[\.\-,][ \t]*|[\t ]+)?([\w ]*\w)(?:[\t ]*[\-\.][\t ]*|[\t ]+)((?:\d?\d:)*\d\d)')
+    # regex = re.compile(r'(?:(?:\d{1,2})(?:[ \t]*[,\-\.][ \t]*|[ \t]+)|^)?(?:(?:\w+\b[ \t])*\w+)(?:[\t ]*[\-.][\t ]*|[\t ]+)((?:\d?\d:)*\d\d)')
     _ = [list(_) for _ in regex.findall(tracks_row_strings)]
     return _
+
+
+def _copy_tracks(track_files, destination_directory):
+    for track in track_files:
+        destination_file_path = os.path.join(destination_directory, os.path.basename(track))
+        if os.path.isfile(destination_file_path):
+            print(" File '{}' already exists in '{}'. Skipping".format(os.path.basename(track), destination_directory), destination_directory)
+        else:
+            shutil.copyfile(track, destination_file_path)
+    print("Album tracks reside in '{}'".format(destination_directory))
+
+
+def _store_album_dialog(tracks, directory, music_lib='', artist='', album=''):
+    print('tracks', tracks)
+    durations = [_format(getattr(mutagen.File(os.path.join(directory, t)).info, 'length', 0)) for t in tracks]
+    max_row_length = max(len(_[0]) + len(_[1]) for _ in zip(tracks, durations))
+    print("\n\nThese are the tracks created from '{}' album\n".format(os.path.dirname(tracks[0])))
+    print('\n'.join(sorted([' {}{}  {}'.format(t, (max_row_length - len(t) - len(d)) * ' ', d) for t, d in zip(map(os.path.basename, tracks), durations)])), '\n')
+
+    while 1:
+        answer = input("Copy them to a destination directory? yes/no: ")
+        if answer.lower() == 'yes' or answer.lower() == 'y':
+            destination_directory = input('destination directory: ')
+            try:
+                os.makedirs(destination_directory)
+            except FileExistsError:
+                answer = input("Directory '{}' exists. Copy the tracks there? yes/no: ".format(destination_directory))
+                if answer.lower() == 'no' or answer.lower() == 'n':
+                    continue
+            except FileNotFoundError:
+                print("The selected destination directory '{}' is not valid.".format(destination_directory))
+                continue
+            except PermissionError:
+                print("You don't have permision to create a directory in path '{}'".format(destination_directory))
+            try:
+                _copy_tracks(tracks, destination_directory)
+                break
+            except PermissionError:
+                print("Can't copy tracks to '{}' folder. You don't have write permissions in this directory".format(destination_directory))
+        else:
+            print("Album tracks reside in '{}'".format(directory))
+            return
+    return destination_directory
+
+class TabCompleter:
+    """
+    A tab completer that can either complete from
+    the filesystem or from a list.
+    """
+    def pathCompleter(self, text, state):
+        """
+        This is the tab completer for systems paths.
+        Only tested on *nix systems
+        """
+        line = readline.get_line_buffer().split()
+        return [x for x in glob.glob(text + '*')][state]
+
+    def createListCompleter(self, ll):
+        """
+        This is a closure that creates a method that autocompletes from the given list.
+        Since the autocomplete function can't be given a list to complete from
+        a closure is used to create the listCompleter function with a list to complete
+        from.
+        """
+        def listCompleter(text, state):
+            line = readline.get_line_buffer()
+
+            if not line:
+                print('CC1', c)
+                return [c + " " for c in ll][state]
+
+            else:
+                print('CC2', c)
+                return [c + " " for c in ll if c.startswith(line)][state]
+        self.listCompleter = listCompleter
+
 
 def _parse_artist_n_album(youtube_file):
     """
@@ -257,7 +268,7 @@ def _debug(directory):
     album_file = os.path.join(directory, os.listdir(directory)[0])
 
     audio_segmenter = AudioSegmenter(target_directory=directory)
-    lines = [['First-ten','0:00'],
+    lines = [['First ten','0:00'],
              ['Second gav', '1:10'],
              ['Third', '01:50']]
     audio_files = audio_segmenter.segment_from_list(album_file, lines, sleep_seconds=1, debug=False, verbose=True)
@@ -272,7 +283,6 @@ def _format(duration):  # in seconds
     regex = re.compile('^0(?:0:?)*')
     substring = regex.match(res).group()
     return res.replace(substring, '')
-
 
 
 if __name__ == '__main__':

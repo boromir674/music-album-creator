@@ -32,28 +32,43 @@ class MetadataDealer:
 
     reg = re.compile(r'(?:(\d{1,2})(?:[ \t]*[\-\.][ \t]*|[ \t]+)|^)?((?:\w+\b[ \t])*?\w+)(?:\.\w+)')  # use to parse track file names like "1. Loyal to the Pack.mp3"
 
+    @staticmethod
+    def gg(year):
+        if year == '':
+            return ''
+        c = re.match('0*(\d+)', year)
+        if not c:
+            raise InvalidInputYearError("Input year tag '{}' is invalid".format(year))
+        return re.match('0*(\d+)', year).group(1)
 
-    def set_album_metadata(self, album_directory, track_number=True, track_name=True, artist='', album_artist='', verbose=False):
-        self._write_metadata(album_directory, verbose=verbose, track_number=track_number, track_name=track_name, artist=artist, album_artist=album_artist)
+    filters = {'year': gg}
+
+
+    def set_album_metadata(self, album_directory, track_number=True, track_name=True, artist='', album_artist='', album='', year='', verbose=False):
+        self._write_metadata(album_directory, track_number=track_number, track_name=track_name, artist=artist,
+                             album_artist=album_artist, album=album, year=year, verbose=verbose)
 
     def _write_metadata(self, album_directory, verbose=False, **kwargs):
         files = glob.glob('{}/*.mp3'.format(album_directory))
         print('FILES\n', list(map(os.path.basename, files)))
         for file in files:
             self.write_metadata(file, **dict(self._filter_auto_inferred(self._infer_track_number_n_name(file), **kwargs),
-                                             **{'artist': kwargs.get('artist', ''),
-                                                'album_artist': kwargs.get('album_artist', '')
-                                                }))
+                                             **{k: kwargs.get(k, '') for k in self._d.keys()}))
+            # {'artist': kwargs.get('artist', ''),
+            #                                     'album_artist': kwargs.get('album_artist', '')
+            #                                     }))
+            # dd = {k: kwargs.get(k, '') for k, in self._d.items()}
 
     @classmethod
     def write_metadata(cls, file, **kwargs):
+        print(kwargs)
         if not all(map(lambda x: x[0] in cls._all.keys(), kwargs.items())):
             raise RuntimeError("Some of the input keys [{}] used to request the addition of metadata, do not correspoond"
                                " to a tag/frame of the supported [{}]".format(', '.join(kwargs.keys()), ' '.join(cls._d)))
         audio = ID3(file)
         for k,v in kwargs.items():
             if bool(v):
-                audio.add(cls._all[k](encoding=3, text=u'{}'.format(v)))
+                audio.add(cls._all[k](encoding=3, text=u'{}'.format(cls.filters.get(k, lambda x: x)(v))))
                 print("set '{}' with {}: {}={}".format(file, k, cls._all[k].__name__, v))
         audio.save()
 
@@ -66,18 +81,21 @@ class MetadataDealer:
                     pass
         return d
 
+    #     return {k[0]: re.search(self.reg, file_name).group(i+1) for i,k in enumerate(self._auto_data)}
     def _infer_track_number_n_name(self, file_name):
-        
-        return {k[0]: re.search(self.reg, file_name).group(i+1) for i,k in enumerate(self._auto_data)}
+        r = {}
+        print('FILE:', file_name)
+        for i, tt in enumerate(self._auto_data):
+            c = re.search(self.reg, file_name)
+            print('KEY: {} group index: {}, matched: {}'.format(tt[0], i+1, c.group(i+1)))
+            r[tt[0]] = c.group(i+1)
+        # return {k:re.search(self.reg, file_name).group(i+1) for i,k in enumerate(self._auto_data)}
+        return r
 
-    # def _infer_track_number_n_name_test(self, file_name):
-    #     r = {}
-    #     print('FILE:', file_name)
-    #     for i, k in enumerate(self._auto_data):
-    #         c = re.search(self.reg, file_name)
-    #         # print('KEY: {} gr {}'.format(k, i+1), c.group(i+1))
-    #     return {k:re.search(self.reg, file_name).group(i+1) for i,k in enumerate(self._auto_data)}
 
+class InvalidInputYearError(Exception):
+    def __init__(self, msg):
+        super().__init__(msg)
 
 @click.command()
 @click.option('--album-dir', required=True, help="The directory where a music album resides. Currently only mp3 "
