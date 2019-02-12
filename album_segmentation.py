@@ -37,15 +37,12 @@ class AudioSegmenter:
         # exit_code = subprocess.call(self._args)
         return exit_code
 
-    def _track_file(self, album_file):
-        return lambda y: os.path.join(self._dir, '{} - {}{}'.format(next(self._track_index_generator),
-                                                                  y,
-                                                                  (lambda x: '.' + x.split('.')[-1] if len(x.split('.')) > 1 else '')(album_file)))
 
     def segment_from_list(self, album_file, data, **kwargs):
         self._track_index_generator = iter((lambda x: str(x) if 9 < x else '0'+str(x))(_) for _ in range(1, 100))
         exit_code = 0
         data = self._parse_data(data, album_file)
+        audio_files = [x[0] for x in data]
         try:
             self._check_data(data)
         except AssertionError:
@@ -60,15 +57,16 @@ class AudioSegmenter:
         exit_code = self._segment(album_file, *data[-1], **kwargs)
         if exit_code != 0:
             raise FfmpegCommandError("Command '{}' failed".format(' '.join(self._args)))
+        return audio_files
 
     def segment_from_file(self, album_file, tracks_file, **kwargs):
         with open(tracks_file, 'r') as f:
             data = [_.strip().split() for _ in f.readlines()]
         self.segment_from_list(album_file, data, **kwargs)
 
-    def segment_from_file_handler(self, album_file, tracks_file_handler, **kwargs):
-        data = [_.strip().split() for _ in tracks_file_handler.readlines()]
-        self.segment_from_list(album_file, data, **kwargs)
+    # def segment_from_file_handler(self, album_file, tracks_file_handler, **kwargs):
+    #     data = [_.strip().split() for _ in tracks_file_handler.readlines()]
+    #     self.segment_from_list(album_file, data, **kwargs)
 
     @staticmethod
     def _convert(timestamp):
@@ -84,6 +82,12 @@ class AudioSegmenter:
             assert int(d[2]) <= int(data[i+1][1])
 
     def _parse_data(self, data, album_file):
+        """
+        :param list of lists data: each inner list should contain track title (no need for number and without extension) and starting time stamp in hh:mm:ss format
+        :param str album_file:
+        :return: each iner list contains track title and timestamp in seconds
+        :rtype: list of lists
+        """
         for i, d in enumerate(data[:-1]):
             data[i][0] = self._track_file(album_file)(data[i][0])
             data[i][1] = self._convert(data[i][1])
@@ -91,6 +95,12 @@ class AudioSegmenter:
         data[-1][0] = self._track_file(album_file)(data[-1][0])
         data[-1][1] = self._convert(data[-1][1])
         return data
+
+    def _track_file(self, album_file):
+        return lambda y: os.path.join(self._dir, '{} - {}{}'.format(next(self._track_index_generator),
+                                                                  y,
+                                                                  (lambda x: '.' + x.split('.')[-1] if len(x.split('.')) > 1 else '')(album_file)))
+
 
 class FfmpegCommandError(Exception):
     def __init__(self, msg):
