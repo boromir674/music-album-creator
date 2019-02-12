@@ -2,13 +2,22 @@ import subprocess
 
 
 class YoutubeDownloader:
-    """Downloads youtube videos in the same directory as this script/module belongs to"""
+
     _cmd = 'youtube-dl --extract-audio --audio-quality 0 --audio-format mp3 -o "%(title)s.%(ext)s" "{url}"'
     _args = ['youtube-dl', '--extract-audio', '--audio-quality', '0', '--audio-format', 'mp3', '-o', '%(title)s.%(ext)s']
     _debug_flag_hash = {True: {},
                         False: {'stdout': subprocess.PIPE}}
 
     def download(self, video_url, directory, spawn=True, verbose=True, debug=False):
+        """
+        Downloads a video from youtube given a url converts it to mp3 and stores in input directory.\n
+        :param str video_url:
+        :param str directory:
+        :param bool spawn:
+        :param bool verbose:
+        :param bool debug:
+        :return:
+        """
         args = self._args[:-1] + ['{}/{}'.format(directory, self._args[-1])] + [video_url]
         self.suceeded = None
         if verbose:
