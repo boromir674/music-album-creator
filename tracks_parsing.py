@@ -71,8 +71,13 @@ class SParser:
 
     @classmethod
     def parse_tracks_user_input(cls, tracks_row_strings):
-        """Returns parsed track; title and timestamp in hh:mm:ss for each of the input's list elements. Skips potentially found track number as a natural order is assumed\n
-            Returs a list of lists. Each inner list holds the captured groups in the parenthesis'"""
+        """
+        Returns parsed tracks: track_title and timestamp in hh:mm:ss format given the multiline string. Ignores potentially
+        found track numbers in the start of each line  Returs a list of lists. Each inner list holds the captured groups in the parenthesis'\n
+        :param str tracks_row_strings:
+        :return: a list of lists with each inner list corresponding to each input string row and having 2 elements: the track name and the timestamp
+        :rtype: list
+        """
         regex   = re.compile('(?:\d{1,2}[ \t]*[\.\-,][ \t]*|[\t ]+)?([\w ]*\w)' + cls.sep + '((?:\d?\d:)*\d\d)')
         # regex = re.compile('(?:\d{1,2}(?:[ \t]*[\.\-,][ \t]*|[\t ])+)?([\w ]*\w)' + cls.sep + '((?:\d?\d:)*\d\d)')
 
