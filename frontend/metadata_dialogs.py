@@ -10,20 +10,24 @@ from tracks_parsing import SParser
 
 
 ##### MULTILINE INPUT TRACK NAMES AND TIMESTAMPS (hh:mm:ss)
-def track_information_type_dialog():
+def track_information_type_dialog(prediction=''):
     """Returns a parser of track hh:mm:ss multiline string"""
+    choices = ['Timestamps', 'Durations']
+    if prediction == 'durations':
+        choices = ['Durations', 'Timestamps']
     questions = [
         {
             'type': 'list',  ## navigate with arrows through choices
             'name': 'how-to-input-tracks',
             # type of is the format you prefer to input for providing the necessary information to segment an album
             'message': 'What does the expected "hh:mm:ss" input represent?',
-            'choices': ['Timestamps', 'Duration'],
+            'choices': choices,
+
         }
     ]
     answers = prompt(questions)
     if answers['how-to-input-tracks'] == 'Timestamps':
-        parser = SParser.get_instance().parse_tracks_user_input
+        parser = SParser.get_instance().parse_tracks_hhmmss
     else:
         parser = SParser.get_instance().convert_to_timestamps
     return parser

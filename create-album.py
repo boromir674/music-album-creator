@@ -3,7 +3,6 @@
 import re
 import os
 import sys
-import time
 import glob
 import shutil
 import readline
@@ -17,6 +16,7 @@ from downloading import youtube, DownloadError
 from album_segmentation import AudioSegmenter, TrackTimestampsSequenceError, FfmpegCommandError
 from metadata import MetadataDealer
 from tracks_parsing import SParser
+from format_classification import FormatClassifier
 from frontend.metadata_dialogs import track_information_type_dialog, interactive_track_info_input_dialog, \
     store_album_dialog, interactive_metadata_dialogs
 
@@ -59,7 +59,7 @@ def main(tracks_info, track_name, track_number, artist, album_artist, debug, url
             video_url = url
 
         print('\n')
-        youtube.download(video_url, directory, spawn=False, verbose=False, debug=True)  # force waiting before continuing execution, by not spawning a separate process
+        youtube.download(video_url, directory, spawn=False, verbose=False, debug=False)  # force waiting before continuing execution, by not spawning a separate process
 
         print('\n')
 
@@ -70,21 +70,25 @@ def main(tracks_info, track_name, track_number, artist, album_artist, debug, url
         audio_segmenter = AudioSegmenter(target_directory=directory)
 
         ### RECEIVE TRACKS INFORMATION
-        sleep(0.70)
+        fc = FormatClassifier.load("/data/projects/music-album-creator/format_classification/data/model.pickle")
+        sleep(0.50)
         if tracks_info:  # if file given with tracks information (titles and timestamps in hh:mm:ss format)  # FROM FILE
-            lines = SParser.get_instance().parse_tracks_user_input(tracks_info.read())
+            lines = SParser.parse_tracks_hhmmss(tracks_info.read())
+        else:
+            lines = interactive_track_info_input_dialog(SParser.parse_tracks_hhmmss)
+
+        durations_flag = track_information_type_dialog(prediction=fc.is_durations([_[1] for _ in lines]))
+
+        if durations_flag:
+            lines = SParser.hhmmss_to_timestamps(lines)
+
+        try:
             audio_files = audio_segmenter.segment_from_list(album_file, lines, verbose=True, debug=False, sleep_seconds=0)
-        else:  # FROM USER INPUT
-            while 1:
-                parser = track_information_type_dialog()
+        except TrackTimestampsSequenceError as e:
+            print(e)
+
                 # TODO capture ctrl-D to signal possible change of type from timestamp to durations and vice-versa...
                 # in order to put the above statement outside of while loop
-                lines = interactive_track_info_input_dialog(parser)
-                try:
-                    audio_files = audio_segmenter.segment_from_list(album_file, lines, verbose=True, debug=False, sleep_seconds=0)
-                    break
-                except TrackTimestampsSequenceError as e:
-                    print(e)
 
     durations = [SParser.get_instance().format(getattr(mutagen.File(os.path.join(directory, t)).info, 'length', 0)) for t in audio_files]
     max_row_length = max(len(_[0]) + len(_[1]) for _ in zip(audio_files, durations))
