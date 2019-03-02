@@ -78,7 +78,7 @@ class SParser:
         :return: a list of lists with each inner list corresponding to each input string row and having 2 elements: the track name and the timestamp
         :rtype: list
         """
-        regex   = re.compile('(?:\d{1,2}[ \t]*[\.\-,][ \t]*|[\t ]+)?([\w ]*\w)' + cls.sep + '((?:\d?\d:)*\d\d)')
+        regex   = re.compile('(?:\d{1,2}[ \t]*[\.\-,][ \t]*|[\t ]+)?([\w ]*\w)' + cls.sep + '((?:\d?\d:)*\d?\d)')
         # regex = re.compile('(?:\d{1,2}(?:[ \t]*[\.\-,][ \t]*|[\t ])+)?([\w ]*\w)' + cls.sep + '((?:\d?\d:)*\d\d)')
 
         return [list(_) for _ in regex.findall(tracks_row_strings)]

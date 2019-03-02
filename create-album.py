@@ -43,7 +43,6 @@ def main(tracks_info, track_name, track_number, artist, album_artist, debug, url
     music_dir = '/media/kostas/freeagent/m'
     ###
 
-
     if debug:
         audio_files = _debug(directory)
         album_file = os.path.join(directory, os.listdir(directory)[0])
