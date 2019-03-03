@@ -66,10 +66,6 @@ class SParser:
         return SParser()
 
     @classmethod
-    def _parse_line(cls):
-        pass
-
-    @classmethod
     def parse_tracks_hhmmss(cls, tracks_row_strings):
         """
         Returns parsed tracks: track_title and timestamp in hh:mm:ss format given the multiline string. Ignores potentially
@@ -135,15 +131,6 @@ class SParser:
         # print('in-tm', timestamp, 'DD', [(i, _) for i, _ in enumerate(reversed(timestamp.split(':')))])
         return sum([60**i * int(x) for i, x in enumerate(reversed(timestamp.split(':')))])
 
-    # @staticmethod
-    # def time_format(duration):  # in seconds
-    #     if not duration:
-    #         return '0:00'
-    #     res = time.strftime('%H:%M:%S', time.gmtime(duration))
-    #     regex = re.compile('^0(?:0:?)*')
-    #     substring = regex.match(res).group()
-    #     return res.replace(substring, '')
-    #
     @staticmethod
     def time_format(seconds):
         return time.strftime('%H:%M:%S', time.gmtime(seconds))

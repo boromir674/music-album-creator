@@ -12,7 +12,7 @@ import mutagen
 import click
 
 
-from downloading import youtube, DownloadError
+from downloading import DownloadError, YoutubeDownloader as youtube
 from album_segmentation import AudioSegmenter, TrackTimestampsSequenceError, FfmpegCommandError
 from metadata import MetadataDealer
 from tracks_parsing import SParser
@@ -50,48 +50,57 @@ def main(tracks_info, track_name, track_number, artist, album_artist, debug, url
     else:
         print('\n###################\n## ALBUM CREATOR ##\n###################\n\n')
         print('Please input a url corresponding to a music album uploaded as a youtube video.\n')
-              # 'The video must have timestamps indicating the start of each track within the music\n'
-              # 'album, other wise the operations below will fail.\n')
+        # 'The video must have timestamps indicating the start of each track within the music\n'
+        # 'album, other wise the operations below will fail.\n')
         if not url:
             video_url = input('   video url: ')
         else:
             video_url = url
 
         print('\n')
-        youtube.download(video_url, directory, spawn=False, verbose=False, debug=False)  # force waiting before continuing execution, by not spawning a separate process
+
+        youtube.download(video_url, directory, spawn=False, verbose=True, supress_stdout=False)  # force waiting before continuing execution, by not spawning a separate process
 
         print('\n')
 
         album_file = os.path.join(directory, os.listdir(directory)[0])
         # print('{}\n'.format(_format(getattr(mutagen.File(album_file).info, 'length', 0))))
         guessed_info = SParser.get_instance().parse_album_info(album_file)
-        # print('Automatically parsed information:', guessed_info)
+        print('Automatically parsed information:', guessed_info)
         audio_segmenter = AudioSegmenter(target_directory=directory)
 
         ### RECEIVE TRACKS INFORMATION
         fc = FormatClassifier.load("/data/projects/music-album-creator/format_classification/data/model.pickle")
         sleep(0.50)
-        if tracks_info:  # if file given with tracks information (titles and timestamps in hh:mm:ss format)  # FROM FILE
-            lines = SParser.parse_tracks_hhmmss(tracks_info.read())
+        if tracks_info:
+            with open(tracks_info, 'r') as f:
+                tracks_string = f.read().strip()
         else:
-            lines = interactive_track_info_input_dialog(SParser.parse_tracks_hhmmss)
+            tracks_string = interactive_track_info_input_dialog().strip()
+        try:
+            tracks_data = audio_segmenter.parse_hhmmss_string(tracks_string)
+        except WrongTimestampFormat as e:
+            print(e)
+            sys.exit(1)
 
-        durations_flag = track_information_type_dialog(prediction=fc.is_durations([_[1] for _ in lines]))
+        predicted_label = fc.is_durations([_[1] for _ in tracks_data])
+        # print('Predicted class {}; 0: timestamp input, 1:duration input'.format(predicted_label))
+        answer = track_information_type_dialog(prediction={1:'durations'}.get(int(predicted_label), 'timestamps'))
 
-        if durations_flag:
-            lines = SParser.hhmmss_to_timestamps(lines)
+        if answer.startswith('Durations'):
+            tracks_data = audio_segmenter.duration_data_to_timestamp_data(tracks_data)
 
         try:
-            audio_files = audio_segmenter.segment_from_list(album_file, lines, verbose=True, debug=False, sleep_seconds=0)
+            audio_files = audio_segmenter.segment_from_list(album_file, tracks_data, supress_stdout=True, verbose=True, sleep_seconds=0.4)
         except TrackTimestampsSequenceError as e:
             print(e)
+            sys.exit(1)
+            # TODO capture ctrl-D to signal possible change of type from timestamp to durations and vice-versa...
+            # in order to put the above statement outside of while loop
 
-                # TODO capture ctrl-D to signal possible change of type from timestamp to durations and vice-versa...
-                # in order to put the above statement outside of while loop
-
-    durations = [SParser.get_instance().format(getattr(mutagen.File(os.path.join(directory, t)).info, 'length', 0)) for t in audio_files]
+    durations = [SParser.get_instance().time_format(getattr(mutagen.File(os.path.join(directory, t)).info, 'length', 0)) for t in audio_files]
     max_row_length = max(len(_[0]) + len(_[1]) for _ in zip(audio_files, durations))
-    print("\n\nThese are the tracks created from '{}' album\n".format(os.path.dirname(audio_files[0])))
+    print("\n\nThese are the tracks created.\n".format(os.path.dirname(audio_files[0])))
     print('\n'.join(sorted([' {}{}  {}'.format(t, (max_row_length - len(t) - len(d)) * ' ', d) for t, d in zip(audio_files, durations)])), '\n')
 
     ### STORE TRACKS IN DIR in MUSIC LIBRARY ROOT

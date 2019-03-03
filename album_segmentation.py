@@ -4,7 +4,7 @@ import re
 import os
 import sys
 import subprocess
-from time import sleep, strftime
+import time
 from tracks_parsing import SParser
 
 
@@ -27,8 +27,9 @@ class AudioSegmenter:
     def target_directory(self, directory_path):
         self._dir = directory_path
 
-    def _parse_string(self, tracks):
-        regex = re.compile('(?:\d{1,2}[ \t]*[\.\-,][ \t]*|[\t ]+)?([\w ]*\w)' + self.sep + '((?:\d?\d:)*\d?\d)$')
+    @classmethod
+    def _parse_string(cls, tracks):
+        regex = re.compile('(?:\d{1,2}[ \t]*[\.\-,][ \t]*|[\t ]+)?([\w ]*\w)' + cls.sep + '((?:\d?\d:)*\d?\d)$')
         for i, line in enumerate(_.strip() for _ in tracks.split('\n')):
             if line == '':
                 continue
@@ -36,6 +37,31 @@ class AudioSegmenter:
                 yield list(regex.search(line).groups())
             else:
                 raise WrongTimestampFormat("Couldn't parse line {}: '{}'. Please use a format as 'trackname - 3:45'".format(i+1, line))
+
+    @classmethod
+    def parse_hhmmss_string(cls, tracks):
+        return [_ for _ in cls._parse_string(tracks)]
+
+    @classmethod
+    def duration_data_to_timestamp_data(cls, duration_data):
+        return [list(_) for _ in cls._gen_timestamp_data(duration_data)]
+
+    @staticmethod
+    def _gen_timestamp_data(duration_data):
+        """
+        :param list of lists duration_data: each inner list has as 1st element a track name and as 2nd the track duration in hh:mm:s format
+        :return: list of lists with timestamps instead of durations ready to feed for segmentation
+        :rtype: list
+        """
+        i = 1
+        p = Timestamp('0:00')
+        yield duration_data[0][0], str(p)
+        while i < len(duration_data):
+            yield duration_data[i][0], str(p + Timestamp(duration_data[i-1][1]))
+            p += Timestamp(duration_data[i-1][1])
+            i += 1
+
+
 
     def segment_from_file(self, album_file, tracks_file, supress_stdout=True, verbose=False, sleep_seconds=0.45):
         with open(tracks_file, 'r') as f:
@@ -61,7 +87,7 @@ class AudioSegmenter:
         audio_files = [x[0] for x in data]
         i = 0
         while exit_code == 0 and i < len(data) - 1:
-            sleep(sleep_seconds)
+            time.sleep(sleep_seconds)
             exit_code = self._segment(album_file, *data[i], supress_stdout=supress_stdout, verbose=verbose)
             i += 1
         if exit_code != 0:
@@ -152,6 +178,8 @@ class Timestamp:
         return int(other) < int(self)
     def __ge__(self, other):
         return int(other) <= int(self)
+    def __add__(self, other):
+        return Timestamp.from_duration(int(self) + int(other))
     def __sub__(self, other):
         return Timestamp.from_duration(int(self) - int(other))
 
