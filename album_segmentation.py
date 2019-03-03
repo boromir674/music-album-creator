@@ -3,8 +3,10 @@
 import re
 import os
 import sys
-import subprocess
 import time
+import subprocess
+from warnings import warn
+
 from tracks_parsing import SParser
 
 
@@ -61,14 +63,12 @@ class AudioSegmenter:
             p += Timestamp(duration_data[i-1][1])
             i += 1
 
-
-
     def segment_from_file(self, album_file, tracks_file, supress_stdout=True, verbose=False, sleep_seconds=0.45):
         with open(tracks_file, 'r') as f:
             list_of_lists = [x for x in self._parse_string(f.read().strip())]
         self.segment_from_list(album_file, list_of_lists, supress_stdout=supress_stdout, verbose=verbose, sleep_seconds=sleep_seconds)
 
-    def segment_from_list(self, album_file, data, supress_stdout=True, verbose=False, sleep_seconds=0.45):
+    def segment_from_list(self, album_file, data, supress_stdout=True, verbose=False, sleep_seconds=0):
         """
 
         :param str album_file:
@@ -78,6 +78,8 @@ class AudioSegmenter:
         :param float sleep_seconds:
         :return:
         """
+        if int(Timestamp(data[0][1])) != 0:
+            raise TrackTimestampsSequenceError("First track ({}) is supposed to have a 0:00 timestamp. Instead {} found".format(data[0][0], data[0][1]))
         self._track_index_generator = iter((lambda x: str(x) if 9 < x else '0'+str(x))(_) for _ in range(1, 100))
         exit_code = 0
         try:

@@ -17,6 +17,13 @@ dur = '4:56'
 
 class TestSegmenting:
 
+    def test_input_durations_to_segment(self, tmpdir, test_audio_file_path):
+        durations_data = [['t1', '0:10'], ['t2', '0:40'], ['t3', '0:10']]
+
+        with pytest.raises(TrackTimestampsSequenceError, match="First track \({}\) is supposed to have a 0:00 timestamp. Instead {} found".format(durations_data[0][0], durations_data[0][1])):
+            segmenter.target_directory = str(tmpdir.mkdir('album'))
+            segmenter.segment_from_list(test_audio_file_path, durations_data)
+
     def test_illogical_timetamp_sequence(self, tmpdir, test_audio_file_path):
         with pytest.raises(TrackTimestampsSequenceError):
             segmenter.target_directory = str(tmpdir.mkdir('album'))
@@ -36,7 +43,7 @@ class TestSegmenting:
                      ['01 - tr1.mp3', '02 - tr2.mp3', '03 - tr3.mp3'],
                      [72, 48, 236], marks=pytest.mark.xfail),
     ])
-    def test_valid_segmentation0(self, tracks, names, durations, tmpdir, test_audio_file_path):
+    def test_valid_segmentation(self, tracks, names, durations, tmpdir, test_audio_file_path):
         segmenter.target_directory = str(tmpdir.mkdir('album'))
         tracks_file = tmpdir.join('tracks.txt')
         tracks_file.write_text(tracks, 'utf-8')
