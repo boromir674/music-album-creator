@@ -6,7 +6,6 @@ import sys
 import glob
 import shutil
 import readline
-import subprocess
 from time import sleep
 import mutagen
 import click
@@ -20,6 +19,8 @@ from format_classification import FormatClassifier
 from frontend.metadata_dialogs import track_information_type_dialog, interactive_track_info_input_dialog, \
     store_album_dialog, interactive_metadata_dialogs
 
+
+this_dir = os.path.dirname(os.path.realpath(__file__))
 
 @click.command()
 @click.option(
@@ -48,8 +49,9 @@ def main(tracks_info, track_name, track_number, artist, album_artist, debug, url
         album_file = os.path.join(directory, os.listdir(directory)[0])
         guessed_info = _parse_artist_n_album(album_file)
     else:
-        print('\n###################\n## ALBUM CREATOR ##\n###################\n\n')
-        print('Please input a url corresponding to a music album uploaded as a youtube video.\n')
+        import subprocess
+        subprocess.call([os.path.join(this_dir, 'display-logo.sh')])
+        print('\nPlease input a url corresponding to a music album uploaded as a youtube video.\n')
         # 'The video must have timestamps indicating the start of each track within the music\n'
         # 'album, other wise the operations below will fail.\n')
         if not url:
@@ -58,15 +60,11 @@ def main(tracks_info, track_name, track_number, artist, album_artist, debug, url
             video_url = url
 
         print('\n')
-
         youtube.download(video_url, directory, spawn=False, verbose=True, supress_stdout=False)  # force waiting before continuing execution, by not spawning a separate process
-
         print('\n')
 
         album_file = os.path.join(directory, os.listdir(directory)[0])
-        # print('{}\n'.format(_format(getattr(mutagen.File(album_file).info, 'length', 0))))
         guessed_info = SParser.get_instance().parse_album_info(album_file)
-        print('Automatically parsed information:', guessed_info)
         audio_segmenter = AudioSegmenter(target_directory=directory)
 
         ### RECEIVE TRACKS INFORMATION
@@ -77,6 +75,7 @@ def main(tracks_info, track_name, track_number, artist, album_artist, debug, url
                 tracks_string = f.read().strip()
         else:
             tracks_string = interactive_track_info_input_dialog().strip()
+            print()
         try:
             tracks_data = audio_segmenter.parse_hhmmss_string(tracks_string)
         except WrongTimestampFormat as e:

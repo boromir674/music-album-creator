@@ -31,7 +31,7 @@ def track_information_type_dialog(prediction=''):
 
 def interactive_track_info_input_dialog():
     print("Enter/Paste your 'track_name - hh:mm:ss' pairs. Each line should represent a single track with format 'trackname - hh:mm:ss'. "
-          "Then navigate one line below your last track and press Ctrl-D (or Ctrl-Z in $#*!% windows) to save it.")
+          "The assumption is that each track is defined either in terms of a timestamp corrspoding to the starting point within the full album or its actuall playtime length. Then navigate one line below your last track and press Ctrl-D (or Ctrl-Z in $#*!% windows) to save it.\n")
 
     def input_lines(prompt_=None):
         """Yields input lines from user until EOFError is raised."""
