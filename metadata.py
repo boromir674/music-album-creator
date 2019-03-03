@@ -63,7 +63,6 @@ class MetadataDealer(metaclass=MetadataDealerType):
 
     @classmethod
     def write_metadata(cls, file, **kwargs):
-        print(kwargs)
         if not all(map(lambda x: x[0] in cls._all.keys(), kwargs.items())):
             raise RuntimeError("Some of the input keys [{}] used to request the addition of metadata, do not correspoond"
                                " to a tag/frame of the supported [{}]".format(', '.join(kwargs.keys()), ' '.join(cls._d)))
@@ -83,17 +82,8 @@ class MetadataDealer(metaclass=MetadataDealerType):
                     pass
         return d
 
-    #     return {k[0]: re.search(self.reg, file_name).group(i+1) for i,k in enumerate(self._auto_data)}
     def _infer_track_number_n_name(self, file_name):
-        r = {}
-        print('FILE:', file_name)
-        for i, tt in enumerate(self._auto_data):
-            c = re.search(self.reg, file_name)
-            print('KEY: {} group index: {}, matched: {}'.format(tt[0], i+1, c.group(i+1)))
-            r[tt[0]] = c.group(i+1)
-        # return {k:re.search(self.reg, file_name).group(i+1) for i,k in enumerate(self._auto_data)}
-        return r
-
+        return {tt[0]: re.search(self.reg, file_name).group(i+1) for i, tt in enumerate(self._auto_data)}
 
 class InvalidInputYearError(Exception):
     def __init__(self, msg):
