@@ -66,11 +66,7 @@ class SParser:
         return SParser()
 
     @classmethod
-    def _parse_line(cls):
-        pass
-
-    @classmethod
-    def parse_tracks_user_input(cls, tracks_row_strings):
+    def parse_tracks_hhmmss(cls, tracks_row_strings):
         """
         Returns parsed tracks: track_title and timestamp in hh:mm:ss format given the multiline string. Ignores potentially
         found track numbers in the start of each line  Returs a list of lists. Each inner list holds the captured groups in the parenthesis'\n
@@ -78,20 +74,45 @@ class SParser:
         :return: a list of lists with each inner list corresponding to each input string row and having 2 elements: the track name and the timestamp
         :rtype: list
         """
-        regex   = re.compile('(?:\d{1,2}[ \t]*[\.\-,][ \t]*|[\t ]+)?([\w ]*\w)' + cls.sep + '((?:\d?\d:)*\d\d)')
+        regex   = re.compile('(?:\d{1,2}[ \t]*[\.\-,][ \t]*|[\t ]+)?([\w ]*\w)' + cls.sep + '((?:\d?\d:)*\d?\d)')
         # regex = re.compile('(?:\d{1,2}(?:[ \t]*[\.\-,][ \t]*|[\t ])+)?([\w ]*\w)' + cls.sep + '((?:\d?\d:)*\d\d)')
 
-        _ = [list(_) for _ in regex.findall(tracks_row_strings)]
-        return _
+        return [list(_) for _ in regex.findall(tracks_row_strings)]
+
+    @classmethod
+    def hhmmss_to_timestamps(cls, hhmmss_tracks):
+        return [_ for _ in cls.generate_track_timestamps(hhmmss_tracks)]
+
+    @classmethod
+    def generate_track_timestamps(cls, hhmmss_tracks):
+        i, p = 1, '0:00'
+        yield [hhmmss_tracks[0][0], p]
+        for name, hhmmss_duration in hhmmss_tracks[:-1]:
+            _ = cls.add(p, hhmmss_duration)
+            yield [name, _]
+            p = _
+
+    @classmethod
+    def hhmmss_durations_to_timestamps(cls, hhmmss_list):
+        return [_ for _ in cls.generate_timestamps(hhmmss_list)]
+
+    @classmethod
+    def generate_timestamps(cls, hhmmss_list):
+        i, p = 1, '0:00'
+        yield p
+        for el in hhmmss_list[:-1]:
+            _ = cls.add(p, el)
+            yield _
+            p = _
 
     @classmethod
     def convert_to_timestamps(cls, tracks_row_strings):
-        """Accepts tracks durations; one per row"""
-        lines = cls.parse_tracks_user_input(tracks_row_strings)  # list of lists
+        """Accepts tracks durations in hh:mm:ss format; one per row"""
+        lines = cls.parse_tracks_hhmmss(tracks_row_strings)  # list of lists
         i = 1
         timestamps = ['0:00']
         while i < len(lines):
-            timestamps[i] = cls.add(timestamps[i-1], lines[i-1][-1])
+            timestamps.append(cls.add(timestamps[i-1], lines[i-1][-1]))
             i += 1
         return timestamps
 
@@ -103,14 +124,15 @@ class SParser:
         :return: hh:mm:ss
         :rtype: str
         """
-        return cls.to_timestamp(cls.to_seconds(timestamp1) + cls.to_seconds(duration))
+        return cls.time_format(cls.to_seconds(timestamp1) + cls.to_seconds(duration))
 
     @staticmethod
     def to_seconds(timestamp):
-        return sum([60**i * int(x) for i, x in enumerate(timestamp.split(':'))])
+        # print('in-tm', timestamp, 'DD', [(i, _) for i, _ in enumerate(reversed(timestamp.split(':')))])
+        return sum([60**i * int(x) for i, x in enumerate(reversed(timestamp.split(':')))])
 
     @staticmethod
-    def to_timestamp(seconds):
+    def time_format(seconds):
         return time.strftime('%H:%M:%S', time.gmtime(seconds))
 
     @staticmethod
@@ -151,15 +173,6 @@ class SParser:
         if m3:
             return {'album': m3.group(1)}
         return {}
-
-    @staticmethod
-    def format(duration):  # in seconds
-        if not duration:
-            return '0:00'
-        res = time.strftime('%H:%M:%S', time.gmtime(duration))
-        regex = re.compile('^0(?:0:?)*')
-        substring = regex.match(res).group()
-        return res.replace(substring, '')
 
 
 # class TabCompleter:

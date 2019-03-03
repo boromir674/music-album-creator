@@ -10,26 +10,26 @@ from tracks_parsing import SParser
 
 
 ##### MULTILINE INPUT TRACK NAMES AND TIMESTAMPS (hh:mm:ss)
-def track_information_type_dialog():
+def track_information_type_dialog(prediction=''):
     """Returns a parser of track hh:mm:ss multiline string"""
+    choices = ['Timestamps (predicted)', 'Durations']
+    if prediction == 'durations':
+        choices = ['Durations (predicted)', 'Timestamps']
     questions = [
         {
             'type': 'list',  ## navigate with arrows through choices
             'name': 'how-to-input-tracks',
             # type of is the format you prefer to input for providing the necessary information to segment an album
             'message': 'What does the expected "hh:mm:ss" input represent?',
-            'choices': ['Timestamps', 'Duration'],
+            'choices': choices,
+
         }
     ]
     answers = prompt(questions)
-    if answers['how-to-input-tracks'] == 'Timestamps':
-        parser = SParser.get_instance().parse_tracks_user_input
-    else:
-        parser = SParser.get_instance().convert_to_timestamps
-    return parser
+    return answers['how-to-input-tracks']
 
 
-def interactive_track_info_input_dialog(parser):
+def interactive_track_info_input_dialog():
     print("Enter/Paste your 'track_name - hh:mm:ss' pairs. Each line should represent a single track with format 'trackname - hh:mm:ss'. "
           "Then navigate one line below your last track and press Ctrl-D (or Ctrl-Z in $#*!% windows) to save it.")
 
@@ -46,26 +46,8 @@ def interactive_track_info_input_dialog(parser):
     def multiline_input(prompt_=None):
         """Reads a multi-line input from the user."""
         return os.linesep.join(input_lines(prompt_=prompt_))
+    return multiline_input()  # '\n' separable string
 
-    res = multiline_input()
-    lines = parser(res)
-    return lines # list of lists
-
-    # else:
-    #     track_number = 1
-    #     lines = []
-    #     print('Please input data, line by line, specifying the track name (extension is\n'
-    #           'inferred from album file if found there) and the start timestamp, in the\n'
-    #           'format: "track_name hh:mm:ss". Press return with no data to exit.\n')
-    #     while True:
-    #         line = input('track {} data: '.format(track_number))
-    #         if line:
-    #             lines.append(line.strip().split())
-    #             track_number += 1
-    #         else:
-    #             break
-    #     print()
-    # return lines
 
 ####################################################################
 
@@ -214,7 +196,5 @@ def interactive_metadata_dialogs(artist='', album='', year=''):
 if __name__ == '__main__':
     from pprint import pprint
 
-    # ans = interactive_metadata_dialogs(artist='gav')
-    # pprint(ans)
     ans = store_album_dialog(['/data/del/01', '/data/del/02'], music_lib='', artist='gav', album='dibou')
     pprint(ans, indent=1)
