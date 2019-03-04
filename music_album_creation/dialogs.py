@@ -1,10 +1,7 @@
-# from __future__ import print_function, unicode_literals
-
 import os
 import shutil
 
 from PyInquirer import style_from_dict, Token, prompt, Separator, Validator, ValidationError
-from tracks_parsing import SParser
 
 # __all__ = ['store_album_dialog', 'interactive_metadata_dialogs']
 
@@ -12,9 +9,8 @@ from tracks_parsing import SParser
 ##### MULTILINE INPUT TRACK NAMES AND TIMESTAMPS (hh:mm:ss)
 def track_information_type_dialog(prediction=''):
     """Returns a parser of track hh:mm:ss multiline string"""
-    choices = ['Timestamps (predicted)', 'Durations']
-    if not prediction:
-        choices = ['Timestamps', 'Durations']
+    if prediction == 'Timestamps':
+        choices = ['Timestamps (predicted)', 'Durations']
     elif prediction == 'durations':
         choices = ['Durations (predicted)', 'Timestamps']
     else:
@@ -75,20 +71,6 @@ def store_album_dialog(tracks, music_lib='', artist='', album='', year=''):
         album = album
 
     questions = [
-        # {
-        #     'type': 'confirm',
-        #     'name': 'store-album',
-        #     'message': 'Do you want to store the album in folder that will persist?',
-        #     'default': True,
-        # },
-        # {
-        #     'type': 'input',
-        #     'name': 'create-album-in-music-lib',
-        #     'message': "Please give relative path from '{}'".format(music_lib),
-        #     'default': os.path.join(artist, album),
-        #     'when': lambda x: os.path.isdir(music_lib),
-        #     'filter': lambda x: os.path.join(music_lib, x)
-        # },
         {
             'type': 'input',
             'name': 'create-album-dir',
@@ -102,8 +84,7 @@ def store_album_dialog(tracks, music_lib='', artist='', album='', year=''):
         answers = prompt(questions)
 
         destination_directory = answers['create-album-dir']
-        # if not destination_directory:
-        #     destination_directory = answers['create-album-dir']
+
         try:
             os.makedirs(destination_directory)
         except FileExistsError:
@@ -195,10 +176,3 @@ def interactive_metadata_dialogs(artist='', album='', year=''):
         return my_answers
 
     return set_metadata_panel()
-
-
-if __name__ == '__main__':
-    from pprint import pprint
-
-    ans = store_album_dialog(['/data/del/01', '/data/del/02'], music_lib='', artist='gav', album='dibou')
-    pprint(ans, indent=1)

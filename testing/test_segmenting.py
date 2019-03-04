@@ -2,7 +2,7 @@ import os
 import pytest
 import mutagen
 
-from album_segmentation import AudioSegmenter, Timestamp, TrackTimestampsSequenceError, WrongTimestampFormat
+from music_album_creation.album_segmentation import AudioSegmenter, Timestamp, TrackTimestampsSequenceError, WrongTimestampFormat
 
 this_dir = os.path.dirname(os.path.realpath(__file__))
 
@@ -12,8 +12,6 @@ def test_audio_file_path():
 
 segmenter = AudioSegmenter()
 
-
-dur = '4:56'
 
 class TestSegmenting:
 
