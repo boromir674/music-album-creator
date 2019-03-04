@@ -1,8 +1,7 @@
 import os
 import pytest
 
-from downloading import WrongYoutubeUrl, YoutubeDownloader
-
+from music_album_creation.downloading import YoutubeDownloader, WrongYoutubeUrl
 
 
 @pytest.fixture(scope='module')

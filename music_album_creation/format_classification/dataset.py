@@ -7,7 +7,8 @@ import mutagen
 
 # from librosa.core import get_duration
 
-from tracks_parsing import SParser
+from music_album_creation.tracks_parsing import SParser
+
 
 sp = SParser.get_instance()
 
