@@ -1,10 +1,11 @@
 import os
 import pytest
 
-from format_classification import dataset_handler
-from format_classification.tracks_format_classifier import FormatClassifier
+from music_album_creation.format_classification import dataset_handler, FormatClassifier
 
-model = "/data/projects/music-album-creator/format_classification/data/model.pickle"
+
+model = "/data/projects/music-album-creator/music_album_creation/format_classification/data/model.pickle"
+
 
 @pytest.fixture(scope='module')
 def format_classifier():
