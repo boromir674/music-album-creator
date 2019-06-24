@@ -31,7 +31,7 @@ class AudioSegmenter:
 
     @classmethod
     def _parse_string(cls, tracks):
-        regex = re.compile('(?:\d{1,2}[ \t]*[\.\-,][ \t]*|[\t ]+)?([\w ]*\w)' + cls.sep + '((?:\d?\d:)*\d?\d)$')
+        regex = re.compile('(?:\d{1,2}[ \t]*[\.\-,][ \t]*|[\t ]+)?([\w\'\(\) ]*[\w)])' + cls.sep + '((?:\d?\d:)*\d?\d)$')
         for i, line in enumerate(_.strip() for _ in tracks.split('\n')):
             if line == '':
                 continue
