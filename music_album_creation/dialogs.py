@@ -5,6 +5,27 @@ from PyInquirer import style_from_dict, Token, prompt, Separator, Validator, Val
 
 # __all__ = ['store_album_dialog', 'interactive_metadata_dialogs']
 
+#### INPUT URL
+def input_youtube_url_dialog():
+    """"""
+    print('Please input a url corresponding to a music album uploaded as a youtube video.\n')
+    video_url = input('   video url: ')
+    return video_url
+
+
+## HANDLE Token Error with update youtube-dl and retry download same url dialog
+def update_and_retry_dialog():
+    questions = [
+        {
+            'type': 'confirm',
+            'name': 'update-youtube-dl',
+            'message': "Update 'youtube-dl' backend?)",
+            'default': True,
+        }
+    ]
+    answer = promt(questions)
+    return answer
+
 
 ##### MULTILINE INPUT TRACK NAMES AND TIMESTAMPS (hh:mm:ss)
 def track_information_type_dialog(prediction=''):
