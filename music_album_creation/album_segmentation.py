@@ -31,14 +31,26 @@ class AudioSegmenter:
 
     @classmethod
     def _parse_string(cls, tracks):
-        regex = re.compile('(?:\d{1,2}[ \t]*[\.\-,][ \t]*|[\t ]+)?([\w\'\(\) ]*[\w)])' + cls.sep + '((?:\d?\d:)*\d?\d)$')
+        # regex = re.compile('(?:\d{1,2}[ \t]*[\.\-,][ \t]*|[\t ]+)?([\w\'\(\) ]*[\w)])' + cls.sep + '((?:\d?\d:)*\d?\d)$')
         for i, line in enumerate(_.strip() for _ in tracks.split('\n')):
             if line == '':
                 continue
-            if regex.search(line):
-                yield list(regex.search(line).groups())
-            else:
-                raise WrongTimestampFormat("Couldn't parse line {}: '{}'. Please use a format as 'trackname - 3:45'".format(i+1, line))
+            try:
+                yield cls._parse_track_line(line)
+            except AttributeError:
+                raise WrongTimestampFormat("Couldn't parse line {}: '{}'. Please use a format as 'trackname - 3:45'".format(i + 1, line))
+
+    @classmethod
+    def _parse_track_line(cls, track_line):
+        """Parses a string line such as '01. Doteru 3:45'"""
+        regex = re.compile(r"""^(?:\d{1,2}(?:[\ \t]*[\.\-,][\ \t]*|[\t\ ]+))?  # potential track number (eg 01) included is ignored
+                                ([\w\'\(\) ]*[\w)])                       # track name
+                                (?:[\t ]+|[\t ]*[\-\.]+[\t ]*)            # separator between name and time
+                                ((?:\d?\d:)*\d?\d)$                       # time in hh:mm:ss format""", re.X)
+        # regex = re.compile('^(?:\d{1,2}([\ \t]*[\.\-,][ \t]*|[\t ]+))?([\w\'\(\) ]*[\w)])' + cls.sep + '((?:\d?\d:)*\d?\d)$')
+        # regex = re.compile(
+        #     '^(?:\d{1,2}[ \t]*[\.\-,][ \t]*|[\t ]+)?([\w\'\(\) ]*[\w)])' + cls.sep + '((?:\d?\d:)*\d?\d)$')
+        return list(regex.search(track_line.strip()).groups())
 
     @classmethod
     def parse_hhmmss_string(cls, tracks):

@@ -19,7 +19,7 @@ from album_segmentation import AudioSegmenter, TrackTimestampsSequenceError, Wro
 from dialogs import track_information_type_dialog, interactive_track_info_input_dialog, \
     store_album_dialog, interactive_metadata_dialogs, input_youtube_url_dialog, update_and_retry_dialog
 
-from downloading import DET, TKE, IUR, WUE
+from downloading import TokenParameterNotInVideoInfoError, InvalidUrlError, UnavailableVideoError
 
 this_dir = os.path.dirname(os.path.realpath(__file__))
 
@@ -58,14 +58,14 @@ def main(tracks_info, track_name, track_number, artist, album_artist, url):
         try:
             youtube.download(video_url, directory, spawn=False, verbose=True, supress_stdout=False)  # force waiting before continuing execution, by not spawning a separate process
             done = True
-        except TKE as e:
+        except TokenParameterNotInVideoInfoError as e:
             print(e, '\n')
             if update_and_retry_dialog()['update-youtube-dl']:
                 ro = youtube.update_backend()
             else:
                 print("Exiting ..")
                 sys.exit(1)
-        except (IUR, WUE) as e:
+        except (InvalidUrlError, UnavailableVideoError) as e:
             print(e, '\n')
             video_url = input_youtube_url_dialog()
             print('\n')
