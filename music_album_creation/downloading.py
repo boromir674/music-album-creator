@@ -6,10 +6,14 @@ import subprocess
 
 class YoutubeDownloader:
     wrong_url_message = 'ERROR: This video is unavailable.'
+    TokenParameterNotInVideoInfoError = 'ERROR: This video is unavailable.'
     _cmd = 'youtube-dl --extract-audio --audio-quality 0 --audio-format mp3 -o "%(title)s.%(ext)s" "{url}"'
     _args = ['youtube-dl', '--extract-audio', '--audio-quality', '0', '--audio-format', 'mp3', '-o', '%(title)s.%(ext)s']
     _capture_stdout = {True: {'stdout': subprocess.PIPE},  # captures std out ie: print(str(ro.stdout, encoding='utf-8'))
                        False: {}}  # does not capture stdout and it streams it in the terminal}
+
+    update_command_args = ('sudo', 'pip3', 'install', '--upgrade', 'youtube-dl')
+
     @classmethod
     def download(cls, video_url, directory, spawn=True, verbose=True, supress_stdout=False):
         """
@@ -30,39 +34,66 @@ class YoutubeDownloader:
             ro = subprocess.run(args, stderr=subprocess.PIPE, **cls._capture_stdout[supress_stdout])
             if ro.returncode != 0:
                 stderr = str(ro.stderr, encoding='utf-8')
-                print('STDERR:', stderr)
-                if re.search(cls.wrong_url_message, stderr):
-                    raise WrongYoutubeUrl("The '{}' youtube url doesn't exist.".format(video_url))
-                raise DownloadError("Failed to download url '{}'".format(video_url))
+                raise YoutubeDownloaderErrorFactory.create_from_stderr(stderr, video_url)
+
+    @classmethod
+    def update_backend(cls):
+        print("About to execute '{}'".format(' '.join(self.update_command_args)))
+        ro = subprocess.run(cls.update_command_args, stderr=subprocess.PIPE, **cls._capture_stdout[False])
+        return ro
 
     @classmethod
     def cmd(cls, video_url):
         return cls._cmd.format(url=video_url)
 
 
-class DownloadError(Exception):
-    def __init__(self, msg): super().__init__(msg)
-class WrongYoutubeUrl(Exception):
-    def __init__(self, msg): super().__init__(msg)
+class YoutubeDownloaderErrorFactory:
+    @staticmethod
+    def create_with_message(msg):
+        return Exception(msg)
+
+    @staticmethod
+    def create_from_stderr(stderror, video_url):
+        for subclass in (TokenParameterNotInVideoInfoError, InvalidUrlError, UnavailableVideoError):
+            if re.search(subclass.reg, stderror):
+                return subclass(video_url, stderror)
+                # return YoutubeDownloaderError(dl_error_type, stderr, video_url)
+        return Exception(AbstractYoutubeDownloaderError(video_url, stderror)._msg)
 
 
-youtube = YoutubeDownloader()
+#### EXCEPTIONS
+import abc
+class AbstractYoutubeDownloaderError(metaclass=abc.ABCMeta):
+    def __init__(self, *args, **kwargs):
+        super().__init__()
+        if len(args) > 1:
+            self.video_url = args[0]
+            self.stderr = args[1]
+        elif len(args) > 0:
+            self.video_url = args[0]
+        self._msg = "YoutubeDownloader generic error."
+        self._short_msg = kwargs.get('msg')
+        if args or 'msg' in kwargs:
+            self._msg = '\n'.join([_ for _ in [kwargs.get('msg', ''), getattr(self, 'stderr', '')] if _])
 
 
+class TokenParameterNotInVideoInfoError(Exception, AbstractYoutubeDownloaderError):
+    """Token error"""
+    reg = '"token" parameter not in video info for unknown reason'
+    def __init__(self, video_url, stderror):
+        AbstractYoutubeDownloaderError.__init__(self, video_url, stderror)
+        Exception.__init__(self, self._msg)
 
+class InvalidUrlError(Exception, AbstractYoutubeDownloaderError):
+    """Invalid url error"""
+    reg = 'is not a valid URL\.'
+    def __init__(self, video_url, stderror):
+        AbstractYoutubeDownloaderError.__init__(self, video_url, stderror, msg="Invalid url '{}'.".format(video_url))
+        Exception.__init__(self, self._short_msg)
 
-if __name__ == '__main__':
-    import sys
-    if len(sys.argv) < 2:
-        print('Usage: downloading.py VIDEO_URL')
-        sys.exit(1)
-
-    url = sys.argv[1]
-    # url = 'https://www.youtube.com/watch?v=V5YOhcAof8I'
-    try:
-        youtube.download(url, '/tmp/', spawn=False, verbose=True, supress_stdout=False)
-    except WrongYoutubeUrl as e:
-        print(e)
-    except DownloadError as e:
-        print(e)
-        print("Something else went wrong with the youtube-dl cl program")
+class UnavailableVideoError(Exception, AbstractYoutubeDownloaderError):
+    """Wrong url error"""
+    reg = 'ERROR: This video is unavailable.'
+    def __init__(self, video_url, stderror):
+        AbstractYoutubeDownloaderError.__init__(self, video_url, stderror, msg="Unavailable video at '{}'.".format(video_url))
+        Exception.__init__(self, self._msg)

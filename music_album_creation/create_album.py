@@ -11,14 +11,15 @@ import subprocess
 from time import sleep
 
 
-from .tracks_parsing import SParser
-from .metadata import MetadataDealer
-from .format_classification import FormatClassifier
-from .downloading import DownloadError, YoutubeDownloader as youtube
-from .album_segmentation import AudioSegmenter, TrackTimestampsSequenceError, WrongTimestampFormat
-from .dialogs import track_information_type_dialog, interactive_track_info_input_dialog, \
-    store_album_dialog, interactive_metadata_dialogs
+from tracks_parsing import SParser
+from metadata import MetadataDealer
+from format_classification import FormatClassifier
+from downloading import YoutubeDownloader as youtube
+from album_segmentation import AudioSegmenter, TrackTimestampsSequenceError, WrongTimestampFormat
+from dialogs import track_information_type_dialog, interactive_track_info_input_dialog, \
+    store_album_dialog, interactive_metadata_dialogs, input_youtube_url_dialog, update_and_retry_dialog
 
+from downloading import TokenParameterNotInVideoInfoError, InvalidUrlError, UnavailableVideoError
 
 this_dir = os.path.dirname(os.path.realpath(__file__))
 
@@ -43,15 +44,35 @@ def main(tracks_info, track_name, track_number, artist, album_artist, url):
     os.mkdir(directory)
     music_dir = '/media/kostas/freeagent/m'
 
+    ## Render Logo
     subprocess.call([os.path.join(this_dir, 'display-logo.sh')])
-    print('\nPlease input a url corresponding to a music album uploaded as a youtube video.\n')
-    if not url:
-        video_url = input('   video url: ')
-    else:
-        video_url = url
 
     print('\n')
-    youtube.download(video_url, directory, spawn=False, verbose=True, supress_stdout=False)  # force waiting before continuing execution, by not spawning a separate process
+    video_url = url
+    if not url:
+        video_url = input_youtube_url_dialog()
+    print('\n')
+
+    done = False
+    while not done:
+        try:
+            youtube.download(video_url, directory, spawn=False, verbose=True, supress_stdout=False)  # force waiting before continuing execution, by not spawning a separate process
+            done = True
+        except TokenParameterNotInVideoInfoError as e:
+            print(e, '\n')
+            if update_and_retry_dialog()['update-youtube-dl']:
+                ro = youtube.update_backend()
+            else:
+                print("Exiting ..")
+                sys.exit(1)
+        except (InvalidUrlError, UnavailableVideoError) as e:
+            print(e, '\n')
+            video_url = input_youtube_url_dialog()
+            print('\n')
+        except Exception as e:
+            print(e, '\n')
+            print("Exiting ..")
+            sys.exit(1)
     print('\n')
 
     album_file = os.path.join(directory, os.listdir(directory)[0])
