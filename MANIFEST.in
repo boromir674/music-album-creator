@@ -2,3 +2,4 @@ include README.rst
 include LICENSE.txt
 include music_album_creation/format_classification/data/*
 include music_album_creation/display-logo.sh
+include testing/know_your_enemy.mp3

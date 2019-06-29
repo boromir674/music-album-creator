@@ -8,7 +8,7 @@ this_dir = os.path.dirname(os.path.realpath(__file__))
 
 @pytest.fixture(scope='module')
 def test_audio_file_path():
-    return os.path.join(this_dir, 'Know Your Enemy.mp3')
+    return os.path.join(this_dir, 'know_your_enemy.mp3')
 
 segmenter = AudioSegmenter()
 
