@@ -45,7 +45,7 @@ class TestSegmenting:
         segmenter.target_directory = str(tmpdir.mkdir('album'))
         tracks_file = tmpdir.join('tracks.txt')
         tracks_file.write_text(tracks, 'utf-8')
-        segmenter.segment_from_file(test_audio_file_path, str(tracks_file), supress_stdout=True, verbose=False, sleep_seconds=0)
+        segmenter.segment_from_file(test_audio_file_path, str(tracks_file), supress_stdout=False, supress_stderr=False, verbose=False, sleep_seconds=0)
         file_names = sorted(os.listdir(segmenter.target_directory))
         assert file_names == names
         assert [abs(getattr(mutagen.File(os.path.join(segmenter.target_directory, x[0])).info, 'length', 0) - x[1]) < 1 for x in zip(file_names, durations)]
