@@ -5,10 +5,6 @@ import pytest
 from music_album_creation.album_segmentation import AudioSegmenter
 
 
-# @pytest.fixture(scope='module')
-# def
-
-
 class TestSplitters:
     @pytest.mark.parametrize("track_line, name, time", [
         ("01. A track - 0:00", "A track", "0:00"),
