@@ -5,14 +5,14 @@ import subprocess
 
 
 class YoutubeDownloader:
-    wrong_url_message = 'ERROR: This video is unavailable.'
-    TokenParameterNotInVideoInfoError = 'ERROR: This video is unavailable.'
+
     _cmd = 'youtube-dl --extract-audio --audio-quality 0 --audio-format mp3 -o "%(title)s.%(ext)s" "{url}"'
     _args = ['youtube-dl', '--extract-audio', '--audio-quality', '0', '--audio-format', 'mp3', '-o', '%(title)s.%(ext)s']
     _capture_stdout = {True: {'stdout': subprocess.PIPE},  # captures std out ie: print(str(ro.stdout, encoding='utf-8'))
                        False: {}}  # does not capture stdout and it streams it in the terminal}
 
     update_command_args = ('sudo', 'pip3', 'install', '--upgrade', 'youtube-dl')
+    update_backend_command = ' '.join(update_command_args)
 
     @classmethod
     def download(cls, video_url, directory, spawn=True, verbose=True, supress_stdout=False):
@@ -38,7 +38,6 @@ class YoutubeDownloader:
 
     @classmethod
     def update_backend(cls):
-        print("About to execute '{}'".format(' '.join(self.update_command_args)))
         ro = subprocess.run(cls.update_command_args, stderr=subprocess.PIPE, **cls._capture_stdout[False])
         return ro
 
@@ -57,7 +56,6 @@ class YoutubeDownloaderErrorFactory:
         for subclass in (TokenParameterNotInVideoInfoError, InvalidUrlError, UnavailableVideoError):
             if re.search(subclass.reg, stderror):
                 return subclass(video_url, stderror)
-                # return YoutubeDownloaderError(dl_error_type, stderr, video_url)
         return Exception(AbstractYoutubeDownloaderError(video_url, stderror)._msg)
 
 

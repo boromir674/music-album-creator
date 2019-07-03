@@ -123,7 +123,6 @@ def store_album_dialog(tracks, music_lib='', artist='', album='', year=''):
             continue
         try:
             _copy_tracks(tracks, destination_directory)
-            pass
             break
         except PermissionError:
             print("Can't copy tracks to '{}' folder. You don't have write permissions in this directory".format(destination_directory))

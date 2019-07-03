@@ -7,10 +7,10 @@ import mutagen
 
 # from librosa.core import get_duration
 
-from music_album_creation.tracks_parsing import SParser
+from music_album_creation.tracks_parsing import StringParser
 
 
-sp = SParser.get_instance()
+sp = StringParser.get_instance()
 
 from tqdm import tqdm
 
@@ -44,7 +44,7 @@ class DatasetHandler:
 
     @staticmethod
     def feature_vector(hhmmss_list):
-        return [SParser.to_seconds(hhmmss_list[0])]
+        return [StringParser.to_seconds(hhmmss_list[0])]
 
     def set_dataset_split(self, split, feature_vectors, labels):
         """
@@ -126,8 +126,6 @@ def scan_for_albums(music_library, random=False):
     albums = []
     # traverse root directory, and list directories as dirs and files as files
     for root, dirs, files in os.walk(music_library):
-        # path = root.split(os.sep)
-        # print((len(path) - 1) * '+++', os.path.basename(root))
         mp3s = glob.glob('{}/*.mp3'.format(root))
         if 2 < len(mp3s):  # heuristic: A minimum of 2 audio files is sufficient to constitute a music album
             albums.append(root)

@@ -56,13 +56,14 @@ class MetadataDealer(metaclass=MetadataDealerType):
 
     def _write_metadata(self, album_directory, verbose=False, **kwargs):
         files = glob.glob('{}/*.mp3'.format(album_directory))
-        print('FILES\n', list(map(os.path.basename, files)))
+        if verbose:
+            print('FILES\n', list(map(os.path.basename, files)))
         for file in files:
             self.write_metadata(file, **dict(self._filter_auto_inferred(self._infer_track_number_n_name(file), **kwargs),
                                              **{k: kwargs.get(k, '') for k in self._d.keys()}))
 
     @classmethod
-    def write_metadata(cls, file, **kwargs):
+    def write_metadata(cls, file, verbose=False, **kwargs):
         if not all(map(lambda x: x[0] in cls._all.keys(), kwargs.items())):
             raise RuntimeError("Some of the input keys [{}] used to request the addition of metadata, do not correspoond"
                                " to a tag/frame of the supported [{}]".format(', '.join(kwargs.keys()), ' '.join(cls._d)))
@@ -70,24 +71,21 @@ class MetadataDealer(metaclass=MetadataDealerType):
         for k,v in kwargs.items():
             if bool(v):
                 audio.add(cls._all[k](encoding=3, text=u'{}'.format(cls._filters[k](v))))
-                print("set '{}' with {}: {}={}".format(file, k, cls._all[k].__name__, cls._filters[k](v)))
+                if verbose:
+                    print("set '{}' with {}: {}={}".format(file, k, cls._all[k].__name__, cls._filters[k](v)))
         audio.save()
 
     def _filter_auto_inferred(self, d, **kwargs):
         for k in self._auto_data:
-            if not kwargs.get(k, False):
-                try:
-                    del d[k]
-                except KeyError:
-                    pass
+            if not kwargs.get(k, False) and k in d:
+                del d[k]
         return d
 
     def _infer_track_number_n_name(self, file_name):
         return {tt[0]: re.search(self.reg, file_name).group(i+1) for i, tt in enumerate(self._auto_data)}
 
-class InvalidInputYearError(Exception):
-    def __init__(self, msg):
-        super().__init__(msg)
+class InvalidInputYearError(Exception): pass
+
 
 @click.command()
 @click.option('--album-dir', required=True, help="The directory where a music album resides. Currently only mp3 "
