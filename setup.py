@@ -1,14 +1,16 @@
+import os
 from setuptools import setup, find_packages
 
+my_dir = os.path.dirname(os.path.realpath(__file__))
 
 def readme():
-    with open('README.rst') as f:
+    with open(os.path.join(my_dir, 'README.rst')) as f:
         return f.read()
 
 
 setup(
     name='music_album_creator',
-    version='0.5.3',
+    version='1.0.1',
     description='A CLI application intending to automate offline music library building',
     long_description=readme(),
     keywords='music album automation youtube audio metadata download',
@@ -16,15 +18,16 @@ setup(
         'Development Status :: 4 - Beta',
         'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
         'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
         'Topic :: Software Development :: Libraries :: Python Modules',
-        # 'Topic :: Scientific/Engineering :: Artificial Intelligence',
         'Topic :: Multimedia :: Sound/Audio :: Conversion',
         'Topic :: Multimedia :: Sound/Audio :: Editors',
+        'Intended Audience :: End Users/Desktop',
         'Intended Audience :: Science/Research',
         ],
     # url='',
-    # author='Konstantinos',
-    # author_email='',
+    author='Konstantinos Lampridis',
+    author_email='k.lampridis@hotmail.com',
     download_url='https://github.com/boromir674/music-album-creator/archive/v0.5.3.tar.gz',
     license='GNU GPLv3',
     packages=find_packages(exclude=["*.testing", "*.tests.*", "tests.*", "tests"]),
