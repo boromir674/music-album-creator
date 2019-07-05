@@ -19,7 +19,7 @@ class DatasetHandler:
     __instance = None
     splits = ['train', 'dev', 'test']
     post_fix = '-split.txt'
-    reg = re.compile('^.+/(\w+)-split\.txt$')
+    reg = re.compile(r'^.+/(\w+)-split\.txt$')
     # reg = re.compile('^[\w /\-]+/\w+-split\.txt$')
 
     def __new__(cls, *args, **kwargs):

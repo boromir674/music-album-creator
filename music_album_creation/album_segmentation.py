@@ -10,7 +10,7 @@ from music_album_creation.tracks_parsing import StringParser
 
 
 class AudioSegmenter:
-    sep = '(?:[\t ]+|[\t ]*[\-\.]+[\t ]*)'
+    sep = r'(?:[\t ]+|[\t ]*[\-\.]+[\t ]*)'
 
     args = ['ffmpeg', '-i', '-acodec', 'copy', '-ss']
 
@@ -19,6 +19,7 @@ class AudioSegmenter:
 
     @property
     def target_directory(self):
+        """The directory path that will serve as the destination for storing created tracks"""
         return self._dir
 
     @target_directory.setter
@@ -26,12 +27,23 @@ class AudioSegmenter:
         self._dir = directory_path
 
     def segment_from_file(self, album_file, tracks_file, supress_stdout=True, supress_stderr=True, verbose=False, sleep_seconds=0.45):
+        """
+        Given an album audio file and a file with track information, segments the audio file into audio tracks which get stored in the 'self.target_directory' folder.\n
+        :param str album_file:
+        :param str tracks_file:
+        :param bool supress_stdout:
+        :param bool supress_stderr:
+        :param bool verbose:
+        :param float sleep_seconds:
+        :return:
+        """
         with open(tracks_file, 'r') as f:
             list_of_lists = StringParser.parse_hhmmss_string(f.read().strip())
         self.segment_from_list(album_file, list_of_lists, supress_stdout=supress_stdout, supress_stderr=supress_stderr, verbose=verbose, sleep_seconds=sleep_seconds)
 
     def segment_from_list(self, album_file, data, supress_stdout=True, supress_stderr=True, verbose=False, sleep_seconds=0):
         """
+        Given an album audio file and data structure with tracks information, segments the audio file into audio tracks which get stored in the 'self.target_directory' folder.\n
         :param str album_file:
         :param list data: list of lists. Each inner list must have 2 elements: track name and starting timestamp in hh:mm:ss
         :param bool supress_stdout:

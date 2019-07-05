@@ -84,14 +84,14 @@ class TokenParameterNotInVideoInfoError(Exception, AbstractYoutubeDownloaderErro
 
 class InvalidUrlError(Exception, AbstractYoutubeDownloaderError):
     """Invalid url error"""
-    reg = 'is not a valid URL\.'
+    reg = r'is not a valid URL\.'
     def __init__(self, video_url, stderror):
         AbstractYoutubeDownloaderError.__init__(self, video_url, stderror, msg="Invalid url '{}'.".format(video_url))
         Exception.__init__(self, self._short_msg)
 
 class UnavailableVideoError(Exception, AbstractYoutubeDownloaderError):
     """Wrong url error"""
-    reg = 'ERROR: This video is unavailable.'
+    reg = r'ERROR: This video is unavailable\.'
     def __init__(self, video_url, stderror):
         AbstractYoutubeDownloaderError.__init__(self, video_url, stderror, msg="Unavailable video at '{}'.".format(video_url))
         Exception.__init__(self, self._msg)
