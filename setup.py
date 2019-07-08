@@ -10,7 +10,7 @@ def readme():
 
 setup(
     name='music_album_creator',
-    version='1.0.4',
+    version='1.0.5',
     description='A CLI application intending to automate offline music library building',
     long_description=readme(),
     keywords='music album automation youtube audio metadata download',
