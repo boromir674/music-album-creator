@@ -1,6 +1,7 @@
 import os
 import pytest
 
+import music_album_creation
 from music_album_creation.downloading import YoutubeDownloader, InvalidUrlError, UnavailableVideoError
 
 

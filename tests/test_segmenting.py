@@ -2,6 +2,7 @@ import os
 import pytest
 import mutagen
 
+import music_album_creation
 from music_album_creation.album_segmentation import AudioSegmenter, NotStartingFromZeroTimestampError
 from music_album_creation.tracks_parsing import WrongTimestampFormat, TrackTimestampsSequenceError
 
