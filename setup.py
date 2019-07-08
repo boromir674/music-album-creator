@@ -10,12 +10,12 @@ def readme():
 
 setup(
     name='music_album_creator',
-    version='1.0.6',
+    version='1.0.7',
     description='A CLI application intending to automate offline music library building',
     long_description=readme(),
     keywords='music album automation youtube audio metadata download',
     classifiers=[
-        'Development Status :: 4 - Beta',
+        'Development Status :: 5 - Production/Stable',
         'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
