@@ -26,10 +26,10 @@ setup(
         'Intended Audience :: End Users/Desktop',
         'Intended Audience :: Science/Research',
         ],
-    # url='',
+    url='https://github.com/boromir674/music-album-creator',
     author='Konstantinos Lampridis',
     author_email='k.lampridis@hotmail.com',
-    download_url='https://github.com/boromir674/music-album-creator/archive/v0.5.3.tar.gz',
+    download_url='https://github.com/boromir674/music-album-creator',
     license='GNU GPLv3',
     packages=find_packages(exclude=["*.testing", "*.tests.*", "tests.*", "tests"]),
     install_requires=['tqdm', 'click', 'sklearn', 'mutagen', 'PyInquirer', 'youtube_dl'],
@@ -42,10 +42,3 @@ setup(
     # test_suite='',
     zip_safe=False
 )
-
-# needs_pytest = {'pytest', 'test', 'ptr'}.intersection(sys.argv)
-# pytest_runner = ['pytest-runner'] if needs_pytest else []
-
-# setup_requires=[
-#         ... (other setup requirements)
-    # ] + pytest_runner,
