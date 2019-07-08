@@ -10,7 +10,7 @@ def readme():
 
 setup(
     name='music_album_creator',
-    version='1.0.5',
+    version='1.0.6',
     description='A CLI application intending to automate offline music library building',
     long_description=readme(),
     keywords='music album automation youtube audio metadata download',
@@ -30,7 +30,7 @@ setup(
     author='Konstantinos Lampridis',
     author_email='k.lampridis@hotmail.com',
     license='GNU GPLv3',
-    packages=find_packages(exclude=["*.testing", "*.tests.*", "tests.*", "tests"]),
+    packages=find_packages(exclude=["testing.*", "testing"]),
     install_requires=['tqdm', 'click', 'sklearn', 'mutagen', 'PyInquirer', 'youtube_dl'],
     include_package_data=True,
     entry_points = {
