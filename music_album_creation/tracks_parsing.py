@@ -6,7 +6,7 @@ import time
 class StringParser:
     __instance = None
     timestamp_objects = {}
-    sep = '(?:[\t ]+|[\t ]*[\-\.]+[\t ]*)'
+    sep = r'(?:[\t ]+|[\t ]*[\-\.]+[\t ]*)'
 
     def __new__(cls, *args, **kwargs):
         if not cls.__instance:
@@ -15,6 +15,7 @@ class StringParser:
 
     @classmethod
     def duration_data_to_timestamp_data(cls, duration_data):
+        """Call this to transform data concerning tracks' starting timestamps to tracks' time duration. In both cases the format is hh:mm:ss"""
         return [list(_) for _ in cls._gen_timestamp_data(duration_data)]
 
     @staticmethod
@@ -34,7 +35,7 @@ class StringParser:
 
     @classmethod
     def parse_hhmmss_string(cls, tracks):
-        """
+        """Call this method to transform a '\n' separabale string of album tracks to a list of lists. Inner lists contains [track_name, hhmmss_timestamp].\n
         :param str tracks:
         :return:
         """
@@ -74,13 +75,14 @@ class StringParser:
     @classmethod
     def parse_tracks_hhmmss(cls, tracks_row_strings):
         """
+        Call this method to transform a
         Returns parsed tracks: track_title and timestamp in hh:mm:ss format given the multiline string. Ignores potentially
         found track numbers in the start of each line  Returs a list of lists. Each inner list holds the captured groups in the parenthesis'\n
         :param str tracks_row_strings:
         :return: a list of lists with each inner list corresponding to each input string row and having 2 elements: the track name and the timestamp
         :rtype: list
         """
-        regex   = re.compile('(?:\d{1,2}[ \t]*[\.\-,][ \t]*|[\t ]+)?([\w ]*\w)' + cls.sep + '((?:\d?\d:)*\d?\d)')
+        regex   = re.compile(r'(?:\d{1,2}[ \t]*[\.\-,][ \t]*|[\t ]+)?([\w ]*\w)' + cls.sep + r'((?:\d?\d:)*\d?\d)')
         # regex = re.compile('(?:\d{1,2}(?:[ \t]*[\.\-,][ \t]*|[\t ])+)?([\w ]*\w)' + cls.sep + '((?:\d?\d:)*\d\d)')
 
         return [list(_) for _ in regex.findall(tracks_row_strings)]
@@ -121,21 +123,13 @@ class StringParser:
 
     @staticmethod
     def to_seconds(timestamp):
+        """Call this method to transform a hh:mm:ss formatted string timestamp to its equivalent duration in seconds as an integer"""
         return sum([60**i * int(x) for i, x in enumerate(reversed(timestamp.split(':')))])
 
     @staticmethod
     def time_format(seconds):
+        """Call this method to transform an integer representing time duration in seconds to its equivalent hh:mm:ss formatted string representeation"""
         return time.strftime('%H:%M:%S', time.gmtime(seconds))
-
-    @classmethod
-    def timestamp(cls, hhmmss):
-        if hhmmss in cls.timestamp_objects:
-            return cls.timestamp_objects[hhmmss]
-        try:
-            cls.timestamp_objects[hhmmss] = Timestamp(hhmmss)
-            return cls.timestamp_objects[hhmmss]
-        except WrongTimestampFormat as e:
-            raise e
 
     @staticmethod
     def parse_album_info(video_title):
@@ -149,11 +143,11 @@ class StringParser:
         :return: the exracted values as a dictionary having maximally keys: {'artist', 'album', 'year'}
         :rtype: dict
         """
-        sep1 = '[\t ]*[\-\.][\t ]*'
-        sep2 = '[\t \-\.]+'
-        year = '\(?(\d{4})\)?'
-        art = '([\w ]*\w)'
-        alb = '([\w ]*\w)'
+        sep1 = r'[\t ]*[\-\.][\t ]*'
+        sep2 = r'[\t \-\.]+'
+        year = r'\(?(\d{4})\)?'
+        art = r'([\w ]*\w)'
+        alb = r'([\w ]*\w)'
         _reg = lambda x: re.compile(str('{}' * len(x)).format(*x))
 
         reg1 = _reg([art, sep1, alb, sep2, year])
@@ -204,19 +198,19 @@ class StringParser:
         cls.__target_directory = target_directory
         cls.__track_index_generator = iter((lambda x: str(x) if 9 < x else '0' + str(x))(_) for _ in range(1, len(data) + 1))
         for i in range(len(data)-1):
-            if cls.timestamp(data[i + 1][1]) <= cls.timestamp(data[i][1]):
+            if Timestamp(data[i + 1][1]) <= Timestamp(data[i][1]):
                 raise TrackTimestampsSequenceError(
                     "Track '{} - {}' starting timestamp '{}' should be 'bigger' than track's '{} - {}'; '{}'".format(
                         i + 2, data[i + 1][0], data[i + 1][1],
                         i + 1, data[i][0], data[i][1]))
             yield (
                 cls.__track_file(data[i][0]),
-                str(int(cls.timestamp(data[i][1]))),
-                str(int(cls.timestamp(data[i + 1][1])))
+                str(int(Timestamp(data[i][1]))),
+                str(int(Timestamp(data[i + 1][1])))
             )
         yield (
             cls.__track_file(data[-1][0]),
-            str(int(cls.timestamp(data[-1][1]))),
+            str(int(Timestamp(data[-1][1]))),
         )
 
     @classmethod
@@ -228,15 +222,25 @@ class StringParser:
 
 
 class Timestamp:
-    def __init__(self, hhmmss):
-        match = re.fullmatch('((\d?\d):){0,2}(\d?\d)', hhmmss)
+    instances = {}
+    def __new__(cls, *args, **kwargs):
+        hhmmss = args[0]
+        if hhmmss in cls.instances:
+            return cls.instances[hhmmss]
+        match = re.fullmatch(r'((\d?\d):){0,2}(\d?\d)', hhmmss)
         if not match:
             raise WrongTimestampFormat("Timestamp given: '{}'. Please use the 'hh:mm:ss' format.".format(hhmmss))
         values = [int(_) for _ in hhmmss.split(':')]
         if not all([0 <= _ <= 60 for _ in values]):
             raise WrongTimestampFormat("Timestamp given: '{}'. Please use the 'hh:mm:ss' format.".format(hhmmss))
-        self._s = sum([60 ** i * int(x) for i, x in enumerate(reversed(values))])
-        self._b = hhmmss
+        x = super().__new__(cls)
+        x._s = sum([60 ** i * int(x) for i, x in enumerate(reversed(values))])
+        x._b = hhmmss
+        cls.instances[hhmmss] = x
+        return x
+
+    def __init__(self, hhmmss):
+        pass
 
     @staticmethod
     def from_duration(seconds):
