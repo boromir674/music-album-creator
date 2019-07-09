@@ -23,3 +23,17 @@ class TestSplitters:
     ])
     def test_youtube_video_title_parsing(self, video_title, artist, album, year):
         assert StringParser.parse_album_info(video_title) == {'artist': artist, 'album': album, 'year': year}
+
+    @pytest.mark.parametrize("tracks_string", [
+        ('1. Virtual Funeral - 0:00\n2. Macedonian Lines - 6:46\n3. Melancholy Sadie - 11:30\n4. Bowie’s Last Breath - 16:19\n5. I’m Not A Real Indian (But I Play One On TV) - 20:20\n6. I Make Weird Choices - 23:44'),
+        ('1. Virtual Funeral - 0:00\n2. Macedonian Lines - 6:46\n3. Melancholy Sadie - 11:30\n4. Bowie’s Last Breath - 16:19\n5. I’m Not A Real Indian (But I Play One On TV) - 20:20\n6. I Make Weird Choices - 23:44\n'),
+        ('1 Virtual Funeral - 0:00\n2 Macedonian Lines - 6:46\n3 Melancholy Sadie - 11:30\n4 Bowie’s Last Breath - 16:19\n5 I’m Not A Real Indian (But I Play One On TV) - 20:20\n6 I Make Weird Choices - 23:44'),
+        ('1 Virtual Funeral - 0:00\n2 Macedonian Lines - 6:46\n3 Melancholy Sadie - 11:30\n4 Bowie’s Last Breath - 16:19\n5 I’m Not A Real Indian (But I Play One On TV) - 20:20\n6 I Make Weird Choices - 23:44\n'),
+    ])
+    def test_tracks_string(self, tracks_string):
+        assert StringParser.parse_hhmmss_string(tracks_string) == [['Virtual Funeral', '0:00'],
+                                                                   ['Macedonian Lines', '6:46'],
+                                                                   ['Melancholy Sadie', '11:30'],
+                                                                   ['Bowie’s Last Breath', '16:19'],
+                                                                   ["I’m Not A Real Indian (But I Play One On TV)", '20:20'],
+                                                                   ['I Make Weird Choices', '23:44']]
