@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 
 import re
 import os
@@ -11,15 +11,13 @@ import readline
 import subprocess
 from time import sleep
 
-from tracks_parsing import parser
-from metadata import MetadataDealer
-from format_classification import FormatClassifier
-from downloading import YoutubeDownloader as youtube
-from album_segmentation import AudioSegmenter, TrackTimestampsSequenceError, WrongTimestampFormat
-from downloading import TokenParameterNotInVideoInfoError, InvalidUrlError, UnavailableVideoError
+from . import StringParser, MetadataDealer, AudioSegmenter, FormatClassifier
+from .tracks_parsing import TrackTimestampsSequenceError, WrongTimestampFormat
+
+from .downloading import TokenParameterNotInVideoInfoError, InvalidUrlError, UnavailableVideoError
 
 # 'front-end', interface, interactive dialogs are imported below
-from dialogs import track_information_type_dialog, interactive_track_info_input_dialog, \
+from .dialogs import track_information_type_dialog, interactive_track_info_input_dialog, \
     store_album_dialog, interactive_metadata_dialogs, input_youtube_url_dialog, update_and_retry_dialog
 
 
@@ -58,13 +56,13 @@ def main(tracks_info, track_name, track_number, artist, album_artist, url):
     done = False
     while not done:
         try:
-            youtube.download(video_url, directory, spawn=False, verbose=True, supress_stdout=False)  # force waiting before continuing execution, by not spawning a separate process
+            YoutubeDownloader.download(video_url, directory, spawn=False, verbose=True, supress_stdout=False)  # force waiting before continuing execution, by not spawning a separate process
             done = True
         except TokenParameterNotInVideoInfoError as e:
             print(e, '\n')
             if update_and_retry_dialog()['update-youtube-dl']:
-                print("About to execute '{}'".format(youtube.update_backend_command))
-                ro = youtube.update_backend()
+                print("About to execute '{}'".format(YoutubeDownloader.update_backend_command))
+                ro = YoutubeDownloader.update_backend()
             else:
                 print("Exiting ..")
                 sys.exit(1)
