@@ -60,7 +60,7 @@ class StringParser:
     def _parse_track_line(cls, track_line):
         """Parses a string line such as '01. Doteru 3:45'"""
         regex = re.compile(r"""^(?:\d{1,2}(?:[\ \t]*[\.\-,][\ \t]*|[\t\ ]+))?  # potential track number (eg 01) included is ignored
-                                    ([\w\'\(\) ]*[\w)])                       # track name
+                                    ([\w\'\(\) ’]*[\w)])                       # track name
                                     (?:[\t ]+|[\t ]*[\-\.]+[\t ]*)            # separator between name and time
                                     ((?:\d?\d:)*\d?\d)$                       # time in hh:mm:ss format""", re.X)
         # regex = re.compile('^(?:\d{1,2}([\ \t]*[\.\-,][ \t]*|[\t ]+))?([\w\'\(\) ]*[\w)])' + cls.sep + '((?:\d?\d:)*\d?\d)$')

@@ -14,7 +14,7 @@ from time import sleep
 from . import StringParser, MetadataDealer, AudioSegmenter, FormatClassifier
 from .tracks_parsing import TrackTimestampsSequenceError, WrongTimestampFormat
 
-from .downloading import TokenParameterNotInVideoInfoError, InvalidUrlError, UnavailableVideoError
+from .downloading import YoutubeDownloader, TokenParameterNotInVideoInfoError, InvalidUrlError, UnavailableVideoError
 
 # 'front-end', interface, interactive dialogs are imported below
 from .dialogs import track_information_type_dialog, interactive_track_info_input_dialog, \
@@ -77,7 +77,7 @@ def main(tracks_info, track_name, track_number, artist, album_artist, url):
     print('\n')
 
     album_file = os.path.join(directory, os.listdir(directory)[0])
-    guessed_info = parser.parse_album_info(album_file)
+    guessed_info = StringParser.parse_album_info(album_file)
     audio_segmenter = AudioSegmenter(target_directory=directory)
 
     ### RECEIVE TRACKS INFORMATION
@@ -89,7 +89,7 @@ def main(tracks_info, track_name, track_number, artist, album_artist, url):
         tracks_string = interactive_track_info_input_dialog().strip()
         print()
     try:
-        tracks_data = parser.parse_hhmmss_string(tracks_string)
+        tracks_data = StringParser.parse_hhmmss_string(tracks_string)
     except WrongTimestampFormat as e:
         print(e)
         sys.exit(1)
@@ -101,7 +101,7 @@ def main(tracks_info, track_name, track_number, artist, album_artist, url):
     answer = track_information_type_dialog(prediction={1:'durations'}.get(int(predicted_label), 'timestamps'))
 
     if answer.startswith('Durations'):
-        tracks_data = parser.duration_data_to_timestamp_data(tracks_data)
+        tracks_data = StringParser.duration_data_to_timestamp_data(tracks_data)
     try:
         audio_files = audio_segmenter.segment_from_list(album_file, tracks_data, supress_stdout=True, verbose=True, sleep_seconds=0.4)
     except TrackTimestampsSequenceError as e:
@@ -110,7 +110,7 @@ def main(tracks_info, track_name, track_number, artist, album_artist, url):
         # TODO capture ctrl-D to signal possible change of type from timestamp to durations and vice-versa...
         # in order to put the above statement outside of while loop
 
-    durations = [parser.time_format(getattr(mutagen.File(os.path.join(directory, t)).info, 'length', 0)) for t in audio_files]
+    durations = [StringParser.time_format(getattr(mutagen.File(os.path.join(directory, t)).info, 'length', 0)) for t in audio_files]
     max_row_length = max(len(_[0]) + len(_[1]) for _ in zip(audio_files, durations))
     print("\n\nThese are the tracks created.\n".format(os.path.dirname(audio_files[0])))
     print('\n'.join(sorted([' {}{}  {}'.format(t, (max_row_length - len(t) - len(d)) * ' ', d) for t, d in zip(audio_files, durations)])), '\n')
