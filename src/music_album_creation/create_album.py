@@ -88,6 +88,7 @@ def main(tracks_info, track_name, track_number, artist, album_artist, url):
         sleep(0.50)
         tracks_string = interactive_track_info_input_dialog().strip()
         print()
+    # Convert string with tracks and timestamps information to data structure
     try:
         tracks_data = StringParser.parse_hhmmss_string(tracks_string)
     except WrongTimestampFormat as e:
@@ -102,7 +103,7 @@ def main(tracks_info, track_name, track_number, artist, album_artist, url):
 
     if answer.startswith('Durations'):
         tracks_data = StringParser.duration_data_to_timestamp_data(tracks_data)
-    try:
+    try:  # SEGMENTATION
         audio_files = audio_segmenter.segment_from_list(album_file, tracks_data, supress_stdout=True, verbose=True, sleep_seconds=0.4)
     except TrackTimestampsSequenceError as e:
         print(e)
