@@ -23,14 +23,14 @@ def update_and_retry_dialog():
             'default': True,
         }
     ]
-    answer = promt(questions)
+    answer = prompt(questions)
     return answer
 
 
 ##### MULTILINE INPUT TRACK NAMES AND TIMESTAMPS (hh:mm:ss)
 def track_information_type_dialog(prediction=''):
     """Returns a parser of track hh:mm:ss multiline string"""
-    if prediction == 'Timestamps':
+    if prediction == 'timestamps':
         choices = ['Timestamps (predicted)', 'Durations']
     elif prediction == 'durations':
         choices = ['Durations (predicted)', 'Timestamps']

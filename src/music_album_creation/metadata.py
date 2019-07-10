@@ -48,7 +48,7 @@ class MetadataDealer(metaclass=MetadataDealerType):
 
     _all = dict(_d, **dict(_auto_data))
 
-    reg = re.compile(r'(?:(\d{1,2})(?:[ \t]*[\-\.][ \t]*|[ \t]+)|^)?((?:\w+\b[ \t])*?\w+)(?:\.\w+)')  # use to parse track file names like "1. Loyal to the Pack.mp3"
+    reg = re.compile(r'(?:(\d{1,2})(?:[ \t]*[\-\.][ \t]*|[ \t]+)|^)?([\w\'\(\) ’]*[\w)])\.mp3$')  # use to parse track file names like "1. Loyal to the Pack.mp3"
 
     def set_album_metadata(self, album_directory, track_number=True, track_name=True, artist='', album_artist='', album='', year='', verbose=False):
         self._write_metadata(album_directory, track_number=track_number, track_name=track_name, artist=artist,
