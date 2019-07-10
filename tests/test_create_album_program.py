@@ -1,11 +1,10 @@
 
 import subprocess
-import pytest
 
 from click.testing import CliRunner
-import music_album_creation
 
 from music_album_creation.create_album import main
+
 
 class TestCreateAlbum:
 

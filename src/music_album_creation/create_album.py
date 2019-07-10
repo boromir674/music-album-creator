@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import re
 import os
 import sys
 import glob
@@ -37,7 +36,7 @@ this_dir = os.path.dirname(os.path.realpath(__file__))
 @click.option('--album_artist', help="If given, then value shall be used as the TPE2 tag: 'Band/orchestra/accompaniment'.  In the music player 'clementine' it corresponds to the 'Album artist' column")
 @click.option('--url', '-u', help='the youtube video url')
 def main(tracks_info, track_name, track_number, artist, album_artist, url):
-    ## CONFIG of the 'app' ##
+    # CONFIG of the 'app' #
     directory = '/tmp/gav'
     if os.path.isdir(directory):
         shutil.rmtree(directory)
@@ -62,7 +61,7 @@ def main(tracks_info, track_name, track_number, artist, album_artist, url):
             print(e, '\n')
             if update_and_retry_dialog()['update-youtube-dl']:
                 print("About to execute '{}'".format(YoutubeDownloader.update_backend_command))
-                ro = YoutubeDownloader.update_backend()
+                _ = YoutubeDownloader.update_backend()
             else:
                 print("Exiting ..")
                 sys.exit(1)
@@ -99,7 +98,7 @@ def main(tracks_info, track_name, track_number, artist, album_artist, url):
     fc = FormatClassifier.load(os.path.join(this_dir, "format_classification/data/model.pickle"))
     predicted_label = fc.is_durations([_[1] for _ in tracks_data])
     # print('Predicted class {}; 0: timestamp input, 1:duration input'.format(predicted_label))
-    answer = track_information_type_dialog(prediction={1:'durations'}.get(int(predicted_label), 'timestamps'))
+    answer = track_information_type_dialog(prediction={1: 'durations'}.get(int(predicted_label), 'timestamps'))
 
     if answer.startswith('Durations'):
         tracks_data = StringParser.duration_data_to_timestamp_data(tracks_data)
@@ -136,7 +135,7 @@ class TabCompleter:
         This is the tab completer for systems paths.
         Only tested on *nix systems
         """
-        line = readline.get_line_buffer().split()
+        _ = readline.get_line_buffer().split()
         return [x for x in glob.glob(text + '*')][state]
 
     def createListCompleter(self, ll):
@@ -148,14 +147,11 @@ class TabCompleter:
         """
         def listCompleter(text, state):
             line = readline.get_line_buffer()
-
             if not line:
-                print('CC1', c)
                 return [c + " " for c in ll][state]
-
             else:
-                print('CC2', c)
                 return [c + " " for c in ll if c.startswith(line)][state]
+
         self.listCompleter = listCompleter
 
 

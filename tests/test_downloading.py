@@ -1,7 +1,6 @@
 import os
 import pytest
 
-import music_album_creation
 from music_album_creation.downloading import YoutubeDownloader, InvalidUrlError, UnavailableVideoError
 
 
@@ -27,4 +26,4 @@ class TestYoutubeDownloader:
     @pytest.mark.parametrize("url, target_file", [('https://www.youtube.com/watch?v=Q3dvbM6Pias', 'Rage Against The Machine - Testify')])
     def test_downloading_valid_url(self, url, target_file, youtube):
         youtube.download(url, '/tmp', spawn=False, verbose=False, supress_stdout=True)
-        assert os.path.isfile('/tmp/'+target_file+'.mp3')
+        assert os.path.isfile('/tmp/' + target_file + '.mp3')

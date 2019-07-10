@@ -93,7 +93,7 @@ class StringParser:
 
     @classmethod
     def _generate_timestamps(cls, hhmmss_list):
-        i, p = 1, '0:00'
+        p = '0:00'
         yield p
         for el in hhmmss_list[:-1]:
             _ = cls.add(p, el)
@@ -148,7 +148,9 @@ class StringParser:
         year = r'\(?(\d{4})\)?'
         art = r'([\w ]*\w)'
         alb = r'([\w ]*\w)'
-        _reg = lambda x: re.compile(str('{}' * len(x)).format(*x))
+
+        def _reg(x):
+            return re.compile(str('{}' * len(x)).format(*x))
 
         reg1 = _reg([art, sep1, alb, sep2, year])
         m1 = reg1.search(video_title)
@@ -223,6 +225,7 @@ class StringParser:
 
 class Timestamp:
     instances = {}
+
     def __new__(cls, *args, **kwargs):
         hhmmss = args[0]
         if hhmmss in cls.instances:
@@ -245,28 +248,37 @@ class Timestamp:
     @staticmethod
     def from_duration(seconds):
         return Timestamp(time.strftime('%H:%M:%S', time.gmtime(seconds)))
+
     def __repr__(self):
         return self._b
+
     def __str__(self):
         return self._b
+
     def __eq__(self, other):
         return str(self) == str(other)
+
     def __int__(self):
         return self._s
+
     def __lt__(self, other):
         return int(self) < int(other)
+
     def __le__(self, other):
         return int(self) <= int(other)
+
     def __gt__(self, other):
         return int(other) < int(self)
+
     def __ge__(self, other):
         return int(other) <= int(self)
+
     def __add__(self, other):
         return Timestamp.from_duration(int(self) + int(other))
+
     def __sub__(self, other):
         return Timestamp.from_duration(int(self) - int(other))
 
 
 class WrongTimestampFormat(Exception): pass
 class TrackTimestampsSequenceError(Exception): pass
-

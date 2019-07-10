@@ -1,7 +1,7 @@
 import os
 import shutil
 
-from PyInquirer import style_from_dict, Token, prompt, Separator, Validator, ValidationError
+from PyInquirer import prompt, Validator, ValidationError
 
 # __all__ = ['store_album_dialog', 'interactive_metadata_dialogs']
 
@@ -38,7 +38,7 @@ def track_information_type_dialog(prediction=''):
         choices = ['Timestamps', 'Durations']
     questions = [
         {
-            'type': 'list',  ## navigate with arrows through choices
+            'type': 'list',  # navigate with arrows through choices
             'name': 'how-to-input-tracks',
             # type of is the format you prefer to input for providing the necessary information to segment an album
             'message': 'What does the expected "hh:mm:ss" input represent?',
@@ -187,7 +187,7 @@ def interactive_metadata_dialogs(artist='', album='', year=''):
                 'type': 'input',
                 'name': 'year',
                 'message': "'year' tag",
-                'default': year, # trick to allow empty value
+                'default': year,  # trick to allow empty value
                 'validate': NumberValidator,
                 # 'filter': lambda val: int(val)
             },
