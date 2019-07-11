@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 
+import abc
 import re
 import subprocess
 
@@ -60,7 +61,7 @@ class YoutubeDownloaderErrorFactory:
 
 
 #### EXCEPTIONS
-import abc
+
 class AbstractYoutubeDownloaderError(metaclass=abc.ABCMeta):
     def __init__(self, *args, **kwargs):
         super().__init__()
@@ -78,6 +79,7 @@ class AbstractYoutubeDownloaderError(metaclass=abc.ABCMeta):
 class TokenParameterNotInVideoInfoError(Exception, AbstractYoutubeDownloaderError):
     """Token error"""
     reg = '"token" parameter not in video info for unknown reason'
+
     def __init__(self, video_url, stderror):
         AbstractYoutubeDownloaderError.__init__(self, video_url, stderror)
         Exception.__init__(self, self._msg)
@@ -85,6 +87,7 @@ class TokenParameterNotInVideoInfoError(Exception, AbstractYoutubeDownloaderErro
 class InvalidUrlError(Exception, AbstractYoutubeDownloaderError):
     """Invalid url error"""
     reg = r'is not a valid URL\.'
+
     def __init__(self, video_url, stderror):
         AbstractYoutubeDownloaderError.__init__(self, video_url, stderror, msg="Invalid url '{}'.".format(video_url))
         Exception.__init__(self, self._short_msg)
@@ -92,6 +95,7 @@ class InvalidUrlError(Exception, AbstractYoutubeDownloaderError):
 class UnavailableVideoError(Exception, AbstractYoutubeDownloaderError):
     """Wrong url error"""
     reg = r'ERROR: This video is unavailable\.'
+
     def __init__(self, video_url, stderror):
         AbstractYoutubeDownloaderError.__init__(self, video_url, stderror, msg="Unavailable video at '{}'.".format(video_url))
         Exception.__init__(self, self._msg)

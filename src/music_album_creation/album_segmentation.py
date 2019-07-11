@@ -1,10 +1,8 @@
 #!/usr/bin/python3
 
 import re
-import sys
 import time
 import subprocess
-from warnings import warn
 
 from music_album_creation.tracks_parsing import StringParser
 

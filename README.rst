@@ -1,7 +1,7 @@
 Music Album Creator - CLI Application
 =====================================
 
-Music Album Creator is a cli application aiming to automate the process of building an offline music library.
+Music Album Creator is a cli application aiming to automate the process of building an offline music digital library.
 
 
 ========
@@ -19,8 +19,8 @@ Overview
       - | |travis|
         | |coveralls|
     * - package
-      - | |version| |wheel| |supported-versions| |supported-implementations|
-        | |commits-since|
+      - | |version| |wheel|
+
 .. |docs| image:: https://readthedocs.org/projects/music-album-creator/badge/?style=flat
     :target: https://readthedocs.org/projects/music-album-creator
     :alt: Documentation Status
@@ -29,9 +29,9 @@ Overview
     :alt: Travis-CI Build Status
     :target: https://travis-ci.org/boromir674/music-album-creator
 
-.. |coveralls| image:: https://coveralls.io/repos/boromir674/music-album-creator/badge.svg?branch=master&service=github
+.. |coveralls| image:: https://coveralls.io/repos/github/boromir674/music-album-creator/badge.svg?branch=dev
     :alt: Coverage Status
-    :target: https://coveralls.io/r/boromir674/music-album-creator
+    :target: https://coveralls.io/github/boromir674/music-album-creator?branch=dev
 
 .. |version| image:: https://img.shields.io/pypi/v/music-album-creator.svg
     :alt: PyPI Package latest release
@@ -58,7 +58,7 @@ Overview
 
 A CLI application intending to automate offline music library building.
 
-* Free software: Apache Software License 2.0
+* Free software: GNU General Public License v3.0
 
 Installation
 ============
@@ -80,20 +80,3 @@ Development
 To run the all tests run::
 
     tox
-
-Note, to combine the coverage data from all the tox environments run:
-
-.. list-table::
-    :widths: 10 90
-    :stub-columns: 1
-
-    - - Windows
-      - ::
-
-            set PYTEST_ADDOPTS=--cov-append
-            tox
-
-    - - Other
-      - ::
-
-            PYTEST_ADDOPTS=--cov-append tox

@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 import pytest
-import music_album_creation
 from music_album_creation.tracks_parsing import StringParser
 
 

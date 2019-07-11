@@ -1,6 +1,8 @@
 import os
+from glob import glob
+from os.path import basename
+from os.path import splitext
 from setuptools import setup, find_packages
-
 
 
 my_dir = os.path.dirname(os.path.realpath(__file__))
@@ -15,7 +17,7 @@ setup(
     version='1.0.8a',
     description='A CLI application intending to automate offline music library building',
     long_description=readme(),
-    keywords='music album automation youtube audio metadata download',
+    keywords=['music album', 'automation', 'youtube', 'audio metadata', 'download'],
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
@@ -26,14 +28,15 @@ setup(
         'Topic :: Multimedia :: Sound/Audio :: Conversion',
         'Topic :: Multimedia :: Sound/Audio :: Editors',
         'Intended Audience :: End Users/Desktop',
-        'Intended Audience :: Science/Research',
-        ],
+        'Intended Audience :: Science/Research'
+    ],
     url='https://github.com/boromir674/music-album-creator',
     author='Konstantinos Lampridis',
     author_email='k.lampridis@hotmail.com',
     license='GNU GPLv3',
     packages=find_packages(where='src'),
-    package_dir={'':'src'},
+    package_dir={'': 'src'},
+    py_modules=[splitext(basename(path))[0] for path in glob('src/*.py')],
     install_requires=['tqdm', 'click', 'sklearn', 'mutagen', 'PyInquirer', 'youtube_dl'],
     include_package_data=True,
     entry_points={
@@ -41,8 +44,9 @@ setup(
             'create-album = music_album_creation.create_album:main',
         ]
     },
-    setup_requires=['pytest-runner>=2.0',],
-    tests_require=['pytest',],
+    # TODO check if/where to put pytest
+    # setup_requires=['numpy>=1.11.0'],
+    tests_require=['tox', 'pytest'],
     # test_suite='',
     zip_safe=False
 )

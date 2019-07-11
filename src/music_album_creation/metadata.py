@@ -2,9 +2,6 @@ import os
 import re
 import glob
 import click
-from functools import reduce
-import mutagen
-from mutagen import mp3
 from mutagen.id3 import ID3, TPE1, TPE2, TRCK, TIT2, TALB, TDRC
 from collections import defaultdict
 
@@ -17,14 +14,14 @@ class MetadataDealerType(type):
     def __parse_year(year):
         if year == '':
             return ''
-        c = re.match('0*(\d+)', year)
+        c = re.match(r'0*(\d+)', year)
         if not c:
             raise InvalidInputYearError("Input year tag '{}' is invalid".format(year))
-        return re.match('0*(\d+)', year).group(1)
+        return re.match(r'0*(\d+)', year).group(1)
 
     def __new__(mcs, name, bases, attributes):
         x = super().__new__(mcs, name, bases, attributes)
-        x._filters = defaultdict(lambda : lambda y: y, track_number=lambda y: mcs.__parse_year(y))
+        x._filters = defaultdict(lambda: lambda y: y, track_number=lambda y: mcs.__parse_year(y))
         return x
 
 
@@ -34,9 +31,9 @@ class MetadataDealer(metaclass=MetadataDealerType):
     # simply add keys and constructor pairs to enrich the support of the API for writting tags/frames to audio files
     # you can use the cls._filters to add a new post processing filter as shown in MetadataDealerType constructor above
     _d = {'artist': TPE1,  # 4.2.1   TPE1    [#TPE1 Lead performer(s)/Soloist(s)]  ; taken from http://id3.org/id3v2.3.0
-                             # in clementine temrs, it affects the 'Artist' tab but not the 'Album artist'
+          #  in clementine temrs, it affects the 'Artist' tab but not the 'Album artist'
           'album_artist': TPE2,  # 4.2.1   TPE2    [#TPE2 Band/orchestra/accompaniment]
-                                   # in clementine terms, it affects the 'Artist' tab but not the 'Album artist'
+          # in clementine terms, it affects the 'Artist' tab but not the 'Album artist'
           'album': TALB,  # 4.2.1   TALB    [#TALB Album/Movie/Show title]
           'year': TDRC  # TDRC (recording time) consolidates TDAT (date), TIME (time), TRDA (recording dates), and TYER (year).
 
@@ -68,7 +65,7 @@ class MetadataDealer(metaclass=MetadataDealerType):
             raise RuntimeError("Some of the input keys [{}] used to request the addition of metadata, do not correspoond"
                                " to a tag/frame of the supported [{}]".format(', '.join(kwargs.keys()), ' '.join(cls._d)))
         audio = ID3(file)
-        for k,v in kwargs.items():
+        for k, v in kwargs.items():
             if bool(v):
                 audio.add(cls._all[k](encoding=3, text=u'{}'.format(cls._filters[k](v))))
                 if verbose:
@@ -89,8 +86,8 @@ class InvalidInputYearError(Exception): pass
 
 @click.command()
 @click.option('--album-dir', required=True, help="The directory where a music album resides. Currently only mp3 "
-                                                          "files are supported as contents of the directory. Namely only "
-                                                          "such files will be apprehended as tracks of the album.")
+                                                 "files are supported as contents of the directory. Namely only "
+                                                 "such files will be apprehended as tracks of the album.")
 @click.option('--track_name/--no-track_name', default=True, show_default=True, help='Whether to extract the track names from the mp3 files and write them as metadata correspondingly')
 @click.option('--track_number/--no-track_number', default=True, show_default=True, help='Whether to extract the track numbers from the mp3 files and write them as metadata correspondingly')
 @click.option('--artist', '-a', help="If given, then value shall be used as the TPE1 tag: 'Lead performer(s)/Soloist(s)'.  In the music player 'clementine' it corresponds to the 'artist' column")
