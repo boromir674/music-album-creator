@@ -21,6 +21,7 @@ Overview
     * - package
       - | |version| |wheel|
 
+
 .. |docs| image:: https://readthedocs.org/projects/music-album-creator/badge/?style=flat
     :target: https://readthedocs.org/projects/music-album-creator
     :alt: Documentation Status
@@ -66,6 +67,15 @@ Installation
 ::
 
     pip install music-album-creator
+
+
+Usage
+============
+
+To run, simply execute::
+
+    create-album
+
 
 Documentation
 =============

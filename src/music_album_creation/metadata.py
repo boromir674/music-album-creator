@@ -51,13 +51,14 @@ class MetadataDealer(metaclass=MetadataDealerType):
         self._write_metadata(album_directory, track_number=track_number, track_name=track_name, artist=artist,
                              album_artist=album_artist, album=album, year=str(year), verbose=verbose)
 
-    def _write_metadata(self, album_directory, verbose=False, **kwargs):
+    @classmethod
+    def _write_metadata(cls, album_directory, verbose=False, **kwargs):
         files = glob.glob('{}/*.mp3'.format(album_directory))
         if verbose:
             print('FILES\n', list(map(os.path.basename, files)))
         for file in files:
-            self.write_metadata(file, **dict(self._filter_auto_inferred(self._infer_track_number_n_name(file), **kwargs),
-                                             **{k: kwargs.get(k, '') for k in self._d.keys()}))
+            cls.write_metadata(file, **dict(cls._filter_auto_inferred(cls._infer_track_number_n_name(file), **kwargs),
+                                            **{k: kwargs.get(k, '') for k in cls._d.keys()}))
 
     @classmethod
     def write_metadata(cls, file, verbose=False, **kwargs):
@@ -72,14 +73,18 @@ class MetadataDealer(metaclass=MetadataDealerType):
                     print("set '{}' with {}: {}={}".format(file, k, cls._all[k].__name__, cls._filters[k](v)))
         audio.save()
 
-    def _filter_auto_inferred(self, d, **kwargs):
-        for k in self._auto_data:
+    @classmethod
+    def _filter_auto_inferred(cls, d, **kwargs):
+        """Given a dictionary (like the one outputted by _infer_track_number_n_name), deletes entries unless it finds them declared in kwargs as key_name=True"""
+        for k in cls._auto_data:
             if not kwargs.get(k, False) and k in d:
                 del d[k]
         return d
 
-    def _infer_track_number_n_name(self, file_name):
-        return {tt[0]: re.search(self.reg, file_name).group(i+1) for i, tt in enumerate(self._auto_data)}
+    @classmethod
+    def _infer_track_number_n_name(cls, file_name):
+        """Call this method to get a dict like {'track_number': 'number', 'track_name': 'name'} from input file name with format like '1. - Loyal to the Pack.mp3'; number must be included!"""
+        return {tt[0]: re.search(cls.reg, file_name).group(i+1) for i, tt in enumerate(cls._auto_data)}
 
 class InvalidInputYearError(Exception): pass
 
@@ -88,19 +93,16 @@ class InvalidInputYearError(Exception): pass
 @click.option('--album-dir', required=True, help="The directory where a music album resides. Currently only mp3 "
                                                  "files are supported as contents of the directory. Namely only "
                                                  "such files will be apprehended as tracks of the album.")
-@click.option('--track_name/--no-track_name', default=True, show_default=True, help='Whether to extract the track names from the mp3 files and write them as metadata correspondingly')
-@click.option('--track_number/--no-track_number', default=True, show_default=True, help='Whether to extract the track numbers from the mp3 files and write them as metadata correspondingly')
-@click.option('--artist', '-a', help="If given, then value shall be used as the TPE1 tag: 'Lead performer(s)/Soloist(s)'.  In the music player 'clementine' it corresponds to the 'artist' column")
-@click.option('--album_artist', help="If given, then value shall be used as the TPE2 tag: 'Band/orchestra/accompaniment'.  In the music player 'clementine' it corresponds to the 'Album artist' column")
-def main(album_dir, track_name, track_number, artist, album_artist):
+@click.option('--track_name/--no-track_name', default=True, show_default=True, help='Whether to extract the track names from the mp3 files and write them as metadata correspondingly.')
+@click.option('--track_number/--no-track_number', default=True, show_default=True, help='Whether to extract the track numbers from the mp3 files and write them as metadata correspondingly.')
+@click.option('--artist', '-a', help="If given, then value shall be used as the TPE1 tag: 'Lead performer(s)/Soloist(s)'.  In the music player 'clementine' it corresponds to the 'Artist' column.")
+@click.option('--album_artist', '-aa', help="If given, then value shall be used as the TPE2 tag: 'Band/orchestra/accompaniment'.  In the music player 'clementine' it corresponds to the 'Album artist' column.")
+@click.option('--album', '-al', help="If given, then value shall be used as the TALB tag: 'Album/Movie/Show title'.  In the music player 'clementine' it corresponds to the 'Album' column.")
+@click.option('--year', 'y', help="If given, then value shall be used as the TDRC tag: 'Recoring time'.  In the music player 'clementine' it corresponds to the 'Year' column.")
+def main(album_dir, track_name, track_number, artist, album_artist, album, year):
     md = MetadataDealer()
-    md.set_album_metadata(album_dir, track_number=track_number, track_name=track_name, artist=artist, album_artist=album_artist, verbose=True)
+    md.set_album_metadata(album_dir, track_number=track_number, track_name=track_name, artist=artist, album_artist=album_artist, album=album, year=year, verbose=True)
 
-
-def test():
-    al = '/data/projects/music-album-creator/lttp'
-    md = MetadataDealer()
-    md.set_album_metadata(al, track_name=True, track_number=True, artist='gg', album_artist='navi', album='alb', year='2009', verbose=True)
 
 if __name__ == '__main__':
     main()
