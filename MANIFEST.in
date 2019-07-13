@@ -13,7 +13,9 @@ graft src
 graft tests
 
 include .travis.yml
+include .scrutinizer.yml
 include .coveragerc
+include .coverage
 include tox.ini
 
 graft .travis
