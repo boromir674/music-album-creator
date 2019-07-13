@@ -18,6 +18,8 @@ Overview
     * - tests
       - | |travis|
         | |coveralls|
+        | |scrutinizer_code_quality|
+        | |code_intelligence_status|
     * - package
       - | |version| |wheel|
 
@@ -26,13 +28,21 @@ Overview
     :target: https://readthedocs.org/projects/music-album-creator
     :alt: Documentation Status
 
-.. |travis| image:: https://travis-ci.org/boromir674/music-album-creator.svg?branch=master
+.. |travis| image:: https://travis-ci.org/boromir674/music-album-creator.svg?branch=dev
     :alt: Travis-CI Build Status
     :target: https://travis-ci.org/boromir674/music-album-creator
 
 .. |coveralls| image:: https://coveralls.io/repos/github/boromir674/music-album-creator/badge.svg?branch=dev
     :alt: Coverage Status
     :target: https://coveralls.io/github/boromir674/music-album-creator?branch=dev
+
+.. |scrutinizer_code_quality| image:: https://scrutinizer-ci.com/g/boromir674/music-album-creator/badges/quality-score.png?b=dev
+    :alt: Code Quality
+    :target: https://scrutinizer-ci.com/g/boromir674/music-album-creator/?branch=dev
+
+.. |code_intelligence_status| image:: https://scrutinizer-ci.com/g/boromir674/music-album-creator/badges/code-intelligence.svg?b=dev
+    :alt: Code Intelligence
+    :target: https://scrutinizer-ci.com/code-intelligence
 
 .. |version| image:: https://img.shields.io/pypi/v/music-album-creator.svg
     :alt: PyPI Package latest release
