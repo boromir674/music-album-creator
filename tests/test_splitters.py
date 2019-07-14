@@ -10,7 +10,11 @@ class TestSplitters:
         ("1 A track - 0:00", "A track", "0:00"),
         ("01 A track - 0:00", "A track", "0:00"),
         ("01. A track - 0:00", "A track", "0:00"),
-        ("3.  Uber en Colère - 9:45", "Uber en Colère", '9:45')
+        ("3.  Uber en Colère - 9:45", "Uber en Colère", '9:45'),
+        ("3.  Delta-v - 20:04", 'Delta-v', '20:04'),
+        ("3.  Delta-v - 0:00", 'Delta-v', '0:00'),
+        ("3  Delta-v - 20:04", 'Delta-v', '20:04'),
+        ("3  Delta-v - 0:00", 'Delta-v', '0:00'),
     ])
     def test_tracks_line_parsing(self, track_line, name, time):
         assert StringParser._parse_track_line(track_line) == [name, time]

@@ -3,10 +3,69 @@ import re
 import time
 
 
+class StringToDictParser:
+    """Parses album information out of video title string"""
+    check = re.compile(r'^s([1-9]\d*)$')
+
+    class AlbumInfoEntity:
+        def __init__(self, name, reg):
+            self.name = name
+            self.reg = reg
+
+        def __str__(self):
+            return self.reg
+
+    class RegexSequence:
+        def __init__(self, data):
+            self._keys = [d.name for d in data if hasattr(d, 'name')]
+            self._regex = r'{}'.format(''.join(str(d) for d in data))
+
+        def search_n_dict(self, string):
+            return dict(_ for _ in
+                        zip(self._keys, list(getattr(re.search(self._regex, string), 'groups', lambda: ['', '', ''])()))
+                        if _[1])
+
+        def __str__(self):
+            return self._regex
+
+    def __init__(self, entities, separators):
+        assert all(type(x) == str for x in separators)
+        self.entities = {k: self.AlbumInfoEntity(k, v) for k, v in entities.items()}
+        self.separators = separators
+
+    def __call__(self, *args, **kwargs):
+        title = args[0]
+        design = kwargs['design']
+        assert all(0 <= len(x) <= len(self.entities) + len(self.separators) and all(type(y) == str for y in x) for x in design)
+        assert all(all(self.check.match(y) for y in x if y.startswith('s')) for x in design)
+        rregs = [self.RegexSequence([_ for _ in self._yield_reg_comp(d)]) for d in design]
+        return max([r.search_n_dict(title) for r in rregs], key=lambda x: len(x))
+
+    def _yield_reg_comp(self, kati):
+        for k in kati:
+            if k.startswith('s'):
+                yield self.separators[int(self.check.match(k).group(1)) - 1]
+            else:
+                yield self.entities[k]
+
+
 class StringParser:
     __instance = None
-    timestamp_objects = {}
-    sep = r'(?:[\t ]+|[\t ]*[\-\.]+[\t ]*)'
+
+    track_number = r'\d{1,2}'
+    track_name = r'[\w\'\(\) \-’]*[\w)]'
+    sep = r'(?:[\t ]+|[\t ]*[\.\-,]+[\t ]*)'
+    extension = r'.mp3'
+    hhmmss = r'(?:\d?\d:)*\d?\d'
+
+    ## to parse from youtube video title string
+    sep1 = r'[\t ]*[\-\.][\t ]*'
+    sep2 = r'[\t \-\.]+'
+    year = r'\(?(\d{4})\)?'
+    art = r'([\w ]*\w)'
+    alb = r'([\w ]*\w)'
+
+    album_info_parser = StringToDictParser({'artist': art, 'album': alb, 'year': year}, [sep1, sep2])
 
     def __new__(cls, *args, **kwargs):
         if not cls.__instance:
@@ -35,7 +94,7 @@ class StringParser:
 
     @classmethod
     def parse_hhmmss_string(cls, tracks):
-        """Call this method to transform a '\n' separabale string of album tracks to a list of lists. Inner lists contains [track_name, hhmmss_timestamp].\n
+        """Call this method to transform a '\n' separabale string of album tracks (eg copy-pasted from video description) to a list of lists. Inner lists contains [track_name, hhmmss_timestamp].\n
         :param str tracks:
         :return:
         """
@@ -47,7 +106,6 @@ class StringParser:
         :param str tracks: a '\n' separable string of lines coresponding to the tracks information
         :return:
         """
-        # regex = re.compile('(?:\d{1,2}[ \t]*[\.\-,][ \t]*|[\t ]+)?([\w\'\(\) ]*[\w)])' + cls.sep + '((?:\d?\d:)*\d?\d)$')
         for i, line in enumerate(_.strip() for _ in tracks.split('\n')):
             if line == '':
                 continue
@@ -59,13 +117,11 @@ class StringParser:
     @classmethod
     def _parse_track_line(cls, track_line):
         """Parses a string line such as '01. Doteru 3:45'"""
-        regex = re.compile(r"""^(?:\d{1,2}(?:[\ \t]*[\.\-,][\ \t]*|[\t\ ]+))?  # potential track number (eg 01) included is ignored
-                                    ([\w\'\(\) ’]*[\w)])                       # track name
-                                    (?:[\t ]+|[\t ]*[\-\.]+[\t ]*)            # separator between name and time
-                                    ((?:\d?\d:)*\d?\d)$                       # time in hh:mm:ss format""", re.X)
-        # regex = re.compile('^(?:\d{1,2}([\ \t]*[\.\-,][ \t]*|[\t ]+))?([\w\'\(\) ]*[\w)])' + cls.sep + '((?:\d?\d:)*\d?\d)$')
-        # regex = re.compile(
-        #     '^(?:\d{1,2}[ \t]*[\.\-,][ \t]*|[\t ]+)?([\w\'\(\) ]*[\w)])' + cls.sep + '((?:\d?\d:)*\d?\d)$')
+        # regex = re.compile(r"""^(?:\d{1,2}(?:[\ \t]*[\.\-,][\ \t]*|[\t\ ]+))?  # potential track number (eg 01) included is ignored
+        #                             ([\w\'\(\) \-’]*[\w)])                       # track name
+        #                             (?:[\t ]+|[\t ]*[\-\.]+[\t ]*)            # separator between name and time
+        #                             ((?:\d?\d:)*\d?\d)$                       # time in hh:mm:ss format""", re.X)
+        regex = re.compile(r"^(?:{}{})?({}){}({})$".format(cls.track_number, cls.sep, cls.track_name, cls.sep, cls.hhmmss))
         return list(regex.search(track_line.strip()).groups())
 
     @classmethod
@@ -82,10 +138,7 @@ class StringParser:
         :return: a list of lists with each inner list corresponding to each input string row and having 2 elements: the track name and the timestamp
         :rtype: list
         """
-        regex   = re.compile(r'(?:\d{1,2}[ \t]*[\.\-,][ \t]*|[\t ]+)?([\w ]*\w)' + cls.sep + r'((?:\d?\d:)*\d?\d)')
-        # regex = re.compile('(?:\d{1,2}(?:[ \t]*[\.\-,][ \t]*|[\t ])+)?([\w ]*\w)' + cls.sep + '((?:\d?\d:)*\d\d)')
-
-        return [list(_) for _ in regex.findall(tracks_row_strings)]
+        return cls.parse_hhmmss_string(tracks_row_strings)
 
     @classmethod
     def hhmmss_durations_to_timestamps(cls, hhmmss_list):
@@ -102,7 +155,12 @@ class StringParser:
 
     @classmethod
     def convert_to_timestamps(cls, tracks_row_strings):
-        """Accepts tracks durations in hh:mm:ss format; one per row"""
+        """Call this method to transform a '\n' separabale string of album tracks (eg copy-pasted from the youtube video description) that represents durations (in hhmmss format)
+        to a list of strings with each track's starting timestamp in hhmmss format.\n
+        :param str tracks_row_strings:
+        :return: the list of each track's timestamp
+        :rtype: list
+        """
         lines = cls.parse_tracks_hhmmss(tracks_row_strings)  # list of lists
         i = 1
         timestamps = ['0:00']
@@ -131,46 +189,17 @@ class StringParser:
         """Call this method to transform an integer representing time duration in seconds to its equivalent hh:mm:ss formatted string representeation"""
         return time.strftime('%H:%M:%S', time.gmtime(seconds))
 
-    @staticmethod
-    def parse_album_info(video_title):
-        """Parses a video title string into 'artist', 'album' and 'year' fields.\n
-        Can parse patters:
-         - Artist Album Year\n
-         - Album Year\n
-         - Artist Album\n
-         - Album\n
-        :param video_title:
+    @classmethod
+    def parse_album_info(cls, video_title):
+        """Call to parse a video title string into a hash (dictionary) of potentially all the 3 fields; 'artist', 'album' and 'year'.\n
+        :param str video_title:
         :return: the exracted values as a dictionary having maximally keys: {'artist', 'album', 'year'}
         :rtype: dict
         """
-        sep1 = r'[\t ]*[\-\.][\t ]*'
-        sep2 = r'[\t \-\.]+'
-        year = r'\(?(\d{4})\)?'
-        art = r'([\w ]*\w)'
-        alb = r'([\w ]*\w)'
-
-        def _reg(x):
-            return re.compile(str('{}' * len(x)).format(*x))
-
-        reg1 = _reg([art, sep1, alb, sep2, year])
-        m1 = reg1.search(video_title)
-        if m1:
-            return {'artist': m1.group(1), 'album': m1.group(2), 'year': m1.group(3)}
-
-        m1 = _reg([alb, sep2, year]).search(video_title)
-        if m1:
-            return {'album': m1.group(1), 'year': m1.group(2)}
-
-        reg2 = _reg([art, sep1, alb])
-        m2 = reg2.search(video_title)
-        if m2:
-            return {'artist': m2.group(1), 'album': m2.group(2)}
-
-        reg3 = _reg([alb])
-        m3 = reg3.search(video_title)
-        if m3:
-            return {'album': m3.group(1)}
-        return {}
+        return cls.album_info_parser(video_title, design=[['artist', 's1', 'album', 's2', 'year'],
+                                                          ['artist', 's1', 'album'],
+                                                          ['album', 's2', 'year'],
+                                                          ['album']])
 
     @classmethod
     def convert_tracks_data(cls, data, album_file, target_directory=''):
