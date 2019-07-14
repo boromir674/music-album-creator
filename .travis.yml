@@ -45,29 +45,28 @@ script: .travis/run-tox.sh
 jobs:
   fail_fast: true
   include:
-#  - stage: clean coverage data
-#    python: '3.6'
-#    env: TOXENV=clean
-  - stage: run unittests
+  - stage: Check
+    env: TOXENV=clean
+  - stage: run tests
     python: '3.6'
     env: TOXENV=quality
     script:
       - export TOX_SKIP_MISSING_INTERPRETERS="False"
       - tox
-  - stage: run unittests
+  - stage: run tests
     python: '3.5'
     env: TOXENV=py35
-  - stage: run unittests
+  - stage: run tests
     python: '3.6'
     env: TOXENV=py36
-  - stage: run unittests
+  - stage: run tests
     python: '3.7'
     env: TOXENV=py37
 #  - stage: send coverage data to coveralls.io
 #    python: '3.6'
 #    env: TOXENV=reporting
-#  allow_failures:
-#    - env: TOXENV=reporting
+  allow_failures:
+    - env: TOXENV=quality
 
 after_failure:
   - more .tox/log/* | cat
