@@ -7,46 +7,45 @@ class StringToDictParser:
     """Parses album information out of video title string"""
     check = re.compile(r'^s([1-9]\d*)$')
 
-    class AlbumInfoEntity:
-        def __init__(self, name, reg):
-            self.name = name
-            self.reg = reg
-
-        def __str__(self):
-            return self.reg
-
-    class RegexSequence:
-        def __init__(self, data):
-            self._keys = [d.name for d in data if hasattr(d, 'name')]
-            self._regex = r'{}'.format(''.join(str(d) for d in data))
-
-        def search_n_dict(self, string):
-            return dict(_ for _ in
-                        zip(self._keys, list(getattr(re.search(self._regex, string), 'groups', lambda: ['', '', ''])()))
-                        if _[1])
-
-        def __str__(self):
-            return self._regex
-
     def __init__(self, entities, separators):
         assert all(type(x) == str for x in separators)
-        self.entities = {k: self.AlbumInfoEntity(k, v) for k, v in entities.items()}
+        self.entities = {k: AlbumInfoEntity(k, v) for k, v in entities.items()}
         self.separators = separators
 
     def __call__(self, *args, **kwargs):
         title = args[0]
         design = kwargs['design']
         assert all(0 <= len(x) <= len(self.entities) + len(self.separators) and all(type(y) == str for y in x) for x in design)
-        assert all(all(self.check.match(y) for y in x if y.startswith('s')) for x in design)
-        rregs = [self.RegexSequence([_ for _ in self._yield_reg_comp(d)]) for d in design]
+        assert all(all(StringToDictParser.check.match(y) for y in x if y.startswith('s')) for x in design)
+        rregs = [RegexSequence([_ for _ in self._yield_reg_comp(d)]) for d in design]
         return max([r.search_n_dict(title) for r in rregs], key=lambda x: len(x))
 
     def _yield_reg_comp(self, kati):
         for k in kati:
             if k.startswith('s'):
-                yield self.separators[int(self.check.match(k).group(1)) - 1]
+                yield self.separators[int(StringToDictParser.check.match(k).group(1)) - 1]
             else:
                 yield self.entities[k]
+
+class AlbumInfoEntity:
+    def __init__(self, name, reg):
+        self.name = name
+        self.reg = reg
+
+    def __str__(self):
+        return self.reg
+
+
+class RegexSequence:
+    def __init__(self, data):
+        self._keys = [d.name for d in data if hasattr(d, 'name')]
+        self._regex = r'{}'.format(''.join(str(d) for d in data))
+
+    def search_n_dict(self, string):
+        return dict(_ for _ in zip(self._keys, list(getattr(re.search(self._regex, string), 'groups', lambda: ['', '', ''])())) if _[1])
+
+    def __str__(self):
+        return self._regex
 
 
 class StringParser:
@@ -106,6 +105,7 @@ class StringParser:
         :param str tracks: a '\n' separable string of lines coresponding to the tracks information
         :return:
         """
+        # regex = re.compile('(?:\d{1,2}[ \t]*[\.\-,][ \t]*|[\t ]+)?([\w\'\(\) ]*[\w)])' + cls.sep + '((?:\d?\d:)*\d?\d)$')
         for i, line in enumerate(_.strip() for _ in tracks.split('\n')):
             if line == '':
                 continue
@@ -191,7 +191,12 @@ class StringParser:
 
     @classmethod
     def parse_album_info(cls, video_title):
-        """Call to parse a video title string into a hash (dictionary) of potentially all the 3 fields; 'artist', 'album' and 'year'.\n
+        """Call to parse a video title string into a hash (dictionary) of potentially all 'artist', 'album' and 'year' fields.\n
+        Can parse patters:
+         - Artist Album Year\n
+         - Artist Album\n
+         - Album Year\n
+         - Album\n
         :param str video_title:
         :return: the exracted values as a dictionary having maximally keys: {'artist', 'album', 'year'}
         :rtype: dict
