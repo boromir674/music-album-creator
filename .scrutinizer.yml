@@ -21,7 +21,8 @@ build:
             tests:
                 before:
                     - pip install coverage
-                after:
+                override:
+                    - tox
                     -
                         command: coverage combine
                         coverage:

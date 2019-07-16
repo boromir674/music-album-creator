@@ -76,15 +76,15 @@ def interactive_track_info_input_dialog():
 ##### STORE ALBUM DIALOG
 def store_album_dialog(tracks, music_lib='', artist='', album='', year=''):
 
-    def _copy_tracks(track_files, destination_directory):
+    def _copy_tracks(track_files, destination_dir):
         for track in track_files:
-            destination_file_path = os.path.join(destination_directory, os.path.basename(track))
+            destination_file_path = os.path.join(destination_dir, os.path.basename(track))
             if os.path.isfile(destination_file_path):
                 print(" File '{}' already exists. in '{}'. Skipping".format(os.path.basename(track),
-                                                                            destination_directory))
+                                                                            destination_dir))
             else:
                 shutil.copyfile(track, destination_file_path)
-        print("Album tracks reside in '{}'".format(destination_directory))
+        print("Album tracks reside in '{}'".format(destination_dir))
 
     if year:
         album = '{} ({})'.format(album, year)
@@ -141,7 +141,7 @@ def interactive_metadata_dialogs(artist='', album='', year=''):
                         message='Please enter a number',
                         cursor_position=len(document.text))  # Move cursor to end
 
-    def set_metadata_panel(artist=artist, album=album, year=year):
+    def set_metadata_panel(default_artist=artist, default_album=album, default_year=year):
         questions = [
             {
                 'type': 'confirm',
@@ -168,7 +168,7 @@ def interactive_metadata_dialogs(artist='', album='', year=''):
             {
                 'type': 'input',
                 'name': 'artist',
-                'default': artist,
+                'default': default_artist,
                 'message': "'artist' tag",
             },
             {
@@ -180,14 +180,14 @@ def interactive_metadata_dialogs(artist='', album='', year=''):
             {
                 'type': 'input',
                 'name': 'album',
-                'default': album,
+                'default': default_album,
                 'message': "'album' tag",
             },
             {
                 'type': 'input',
                 'name': 'year',
                 'message': "'year' tag",
-                'default': year,  # trick to allow empty value
+                'default': default_year,  # trick to allow empty value
                 'validate': NumberValidator,
                 # 'filter': lambda val: int(val)
             },
