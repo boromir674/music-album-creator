@@ -1,0 +1,37 @@
+checks:
+    python:
+        code_rating: true
+        duplicate_code: true
+build:
+    nodes:
+        analysis:
+            project_setup:
+                override:
+                    - 'true'
+            tests:
+                override:
+                    - py-scrutinizer-run
+                    -
+                        command: pylint-run
+                        use_website_config: true
+        tests:
+            dependencies:
+                before:
+                  - pip install tox
+            tests:
+                before:
+                    - pip install coverage
+                override:
+                    - tox
+                    -
+                        command: coverage combine
+                        coverage:
+                            file: .coverage
+                            config_file: '.coveragerc'
+                            format: py-cc
+filter:
+    excluded_paths:
+        - '*/test/*'
+        - '*/build/*'
+    dependency_paths:
+        - 'lib/*'

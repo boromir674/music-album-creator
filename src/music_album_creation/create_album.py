@@ -1,6 +1,5 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 
-import re
 import os
 import sys
 import glob
@@ -11,15 +10,13 @@ import readline
 import subprocess
 from time import sleep
 
-from tracks_parsing import parser
-from metadata import MetadataDealer
-from format_classification import FormatClassifier
-from downloading import YoutubeDownloader as youtube
-from album_segmentation import AudioSegmenter, TrackTimestampsSequenceError, WrongTimestampFormat
-from downloading import TokenParameterNotInVideoInfoError, InvalidUrlError, UnavailableVideoError
+from . import StringParser, MetadataDealer, AudioSegmenter, FormatClassifier
+from .tracks_parsing import TrackTimestampsSequenceError, WrongTimestampFormat
+
+from .downloading import YoutubeDownloader, TokenParameterNotInVideoInfoError, InvalidUrlError, UnavailableVideoError
 
 # 'front-end', interface, interactive dialogs are imported below
-from dialogs import track_information_type_dialog, interactive_track_info_input_dialog, \
+from .dialogs import track_information_type_dialog, interactive_track_info_input_dialog, \
     store_album_dialog, interactive_metadata_dialogs, input_youtube_url_dialog, update_and_retry_dialog
 
 
@@ -39,7 +36,7 @@ this_dir = os.path.dirname(os.path.realpath(__file__))
 @click.option('--album_artist', help="If given, then value shall be used as the TPE2 tag: 'Band/orchestra/accompaniment'.  In the music player 'clementine' it corresponds to the 'Album artist' column")
 @click.option('--url', '-u', help='the youtube video url')
 def main(tracks_info, track_name, track_number, artist, album_artist, url):
-    ## CONFIG of the 'app' ##
+    # CONFIG of the 'app' #
     directory = '/tmp/gav'
     if os.path.isdir(directory):
         shutil.rmtree(directory)
@@ -58,13 +55,13 @@ def main(tracks_info, track_name, track_number, artist, album_artist, url):
     done = False
     while not done:
         try:
-            youtube.download(video_url, directory, spawn=False, verbose=True, supress_stdout=False)  # force waiting before continuing execution, by not spawning a separate process
+            YoutubeDownloader.download(video_url, directory, spawn=False, verbose=True, supress_stdout=False)  # force waiting before continuing execution, by not spawning a separate process
             done = True
         except TokenParameterNotInVideoInfoError as e:
             print(e, '\n')
             if update_and_retry_dialog()['update-youtube-dl']:
-                print("About to execute '{}'".format(youtube.update_backend_command))
-                ro = youtube.update_backend()
+                print("About to execute '{}'".format(YoutubeDownloader.update_backend_command))
+                _ = YoutubeDownloader.update_backend()
             else:
                 print("Exiting ..")
                 sys.exit(1)
@@ -79,7 +76,7 @@ def main(tracks_info, track_name, track_number, artist, album_artist, url):
     print('\n')
 
     album_file = os.path.join(directory, os.listdir(directory)[0])
-    guessed_info = parser.parse_album_info(album_file)
+    guessed_info = StringParser.parse_album_info(album_file)
     audio_segmenter = AudioSegmenter(target_directory=directory)
 
     ### RECEIVE TRACKS INFORMATION
@@ -90,8 +87,9 @@ def main(tracks_info, track_name, track_number, artist, album_artist, url):
         sleep(0.50)
         tracks_string = interactive_track_info_input_dialog().strip()
         print()
+    # Convert string with tracks and timestamps information to data structure
     try:
-        tracks_data = parser.parse_hhmmss_string(tracks_string)
+        tracks_data = StringParser.parse_hhmmss_string(tracks_string)
     except WrongTimestampFormat as e:
         print(e)
         sys.exit(1)
@@ -100,11 +98,11 @@ def main(tracks_info, track_name, track_number, artist, album_artist, url):
     fc = FormatClassifier.load(os.path.join(this_dir, "format_classification/data/model.pickle"))
     predicted_label = fc.is_durations([_[1] for _ in tracks_data])
     # print('Predicted class {}; 0: timestamp input, 1:duration input'.format(predicted_label))
-    answer = track_information_type_dialog(prediction={1:'durations'}.get(int(predicted_label), 'timestamps'))
+    answer = track_information_type_dialog(prediction={1: 'durations'}.get(int(predicted_label), 'timestamps'))
 
     if answer.startswith('Durations'):
-        tracks_data = parser.duration_data_to_timestamp_data(tracks_data)
-    try:
+        tracks_data = StringParser.duration_data_to_timestamp_data(tracks_data)
+    try:  # SEGMENTATION
         audio_files = audio_segmenter.segment_from_list(album_file, tracks_data, supress_stdout=True, verbose=True, sleep_seconds=0.4)
     except TrackTimestampsSequenceError as e:
         print(e)
@@ -112,7 +110,7 @@ def main(tracks_info, track_name, track_number, artist, album_artist, url):
         # TODO capture ctrl-D to signal possible change of type from timestamp to durations and vice-versa...
         # in order to put the above statement outside of while loop
 
-    durations = [parser.time_format(getattr(mutagen.File(os.path.join(directory, t)).info, 'length', 0)) for t in audio_files]
+    durations = [StringParser.time_format(getattr(mutagen.File(os.path.join(directory, t)).info, 'length', 0)) for t in audio_files]
     max_row_length = max(len(_[0]) + len(_[1]) for _ in zip(audio_files, durations))
     print("\n\nThese are the tracks created.\n".format(os.path.dirname(audio_files[0])))
     print('\n'.join(sorted([' {}{}  {}'.format(t, (max_row_length - len(t) - len(d)) * ' ', d) for t, d in zip(audio_files, durations)])), '\n')
@@ -137,7 +135,7 @@ class TabCompleter:
         This is the tab completer for systems paths.
         Only tested on *nix systems
         """
-        line = readline.get_line_buffer().split()
+        _ = readline.get_line_buffer().split()
         return [x for x in glob.glob(text + '*')][state]
 
     def createListCompleter(self, ll):
@@ -149,14 +147,11 @@ class TabCompleter:
         """
         def listCompleter(text, state):
             line = readline.get_line_buffer()
-
             if not line:
-                print('CC1', c)
                 return [c + " " for c in ll][state]
-
             else:
-                print('CC2', c)
                 return [c + " " for c in ll if c.startswith(line)][state]
+
         self.listCompleter = listCompleter
 
 

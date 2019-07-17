@@ -5,14 +5,12 @@ from random import shuffle
 from warnings import warn
 import mutagen
 
-# from librosa.core import get_duration
+from tqdm import tqdm
 
 from music_album_creation.tracks_parsing import StringParser
 
 
 sp = StringParser.get_instance()
-
-from tqdm import tqdm
 
 
 class DatasetHandler:
@@ -36,7 +34,7 @@ class DatasetHandler:
 
     def create_split(self, split, album_dirs, progress_bar=False):
         if progress_bar:
-            gen = tqdm(new_gen(album_dirs), total=len(album_dirs)*2, unit='datapoint')
+            gen = tqdm(new_gen(album_dirs), total=len(album_dirs) * 2, unit='datapoint')
         else:
             gen = new_gen(album_dirs)
         with open(os.path.join(self.datasets_root_dir, '{}{}'.format(split, self.post_fix)), 'w') as f:
@@ -69,25 +67,25 @@ class DatasetHandler:
         :param class_ratio:
         :return:
         """
-        d = []
-        l = []
+        feature_vectors = []
+        class_labels = []
         i = 0
         assert nb_datapoints is None or type(nb_datapoints) == int
         if progress_bar:
             if not nb_datapoints:
-                gen = tqdm(new_gen(album_dirs_list), total=len(album_dirs_list)*2, unit='datapoint')
+                gen = tqdm(new_gen(album_dirs_list), total=len(album_dirs_list) * 2, unit='datapoint')
             else:
                 gen = tqdm(new_gen(album_dirs_list), total=nb_datapoints, unit='datapoint')
         else:
             gen = new_gen(album_dirs_list)
         for i, datapoint in enumerate(gen):
-            d.append(datapoint[0])  # feature vector
-            l.append(datapoint[1])  # class label
+            feature_vectors.append(datapoint[0])  # feature vector
+            class_labels.append(datapoint[1])  # class label
             if nb_datapoints is not None and i == nb_datapoints - 1:
                 break
         if nb_datapoints and i < nb_datapoints - 1:
-            warn("Requested {} datapoints but the {} albums available produced {}".format(nb_datapoints, len(album_dirs_list), len(d)))
-        return d, l
+            warn("Requested {} datapoints but the {} albums available produced {}".format(nb_datapoints, len(album_dirs_list), len(feature_vectors)))
+        return feature_vectors, class_labels
 
     def load_dataset_split(self, split):
         return self.load_dataset(os.path.join(self.datasets_root_dir, '{}{}'.format(split, self.post_fix)))
@@ -106,12 +104,12 @@ class DatasetHandler:
         # return zip(*map(lambda x: (x.split(' ')[:-1], x.split(' ')[-1]), rows))
         # return zip(*map(lambda x: (x[:-1], x[-1]), [map(int, r.split(' ')) for r in rows]))
         # [map(int, r.split(' ')) for r in rows]
-       #return zip(*list([(_.split(' ')[:-1], _.split(' ')[-1]) for _ in rows]))
+        # return zip(*list([(_.split(' ')[:-1], _.split(' ')[-1]) for _ in rows]))
 
     @staticmethod
     def save_dataset(file_path, feature_vectors, class_labels):
         with open(file_path, 'w') as f:
-            f.write('\n'.join('{} {}'.format(' '.join(str(el) for el in v), str(c)) for v,c in zip(feature_vectors, class_labels)) + '\n')
+            f.write('\n'.join('{} {}'.format(' '.join(str(el) for el in v), str(c)) for v, c in zip(feature_vectors, class_labels)) + '\n')
 
 
 def scan_for_albums(music_library, random=False):

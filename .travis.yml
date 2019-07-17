@@ -1,10 +1,67 @@
+os: linux
 language: python
-python:
-  - "3.5"
-  - "3.6"
-  - "3.7"
+
+env:
+  global:
+    - LD_PRELOAD=/lib/x86_64-linux-gnu/libSegFault.so
+    - SEGFAULT_SIGNALS=all
+    - TOX_SKIP_MISSING_INTERPRETERS="False"
+
 before_install:
+  - python --version
+  - uname -a
+  - lsb_release -a
   - sudo apt-get install ffmpeg
+
+
 install:
-  - pip install .
-script: python -m pytest
+  - pip install tox
+  - pip install coveralls
+  - virtualenv --version
+  - easy_install --version
+  - pip --version
+  - tox --version
+
+cache: pip
+script:
+  - tox
+  - coveralls
+
+jobs:
+  fail_fast: true
+  include:
+  - stage: Check
+    env: TOXENV=clean
+    script: tox
+  - stage: run tests
+    python: '3.6'
+    env: TOXENV=quality
+    script: tox
+  - stage: run tests
+    python: '3.5'
+    env: TOXENV=py35
+  - stage: run tests
+    python: '3.6'
+    env: TOXENV=py36
+  - stage: run tests
+    python: '3.7'
+    env: TOXENV=py37
+  allow_failures:
+    - env: TOXENV=quality
+
+after_failure:
+  - more .tox/log/* | cat
+  - more .tox/*/log/* | cat
+
+#
+#deploy:
+#  provider: script
+#  script: .travis/deploy.sh
+#  on:
+#    all_branches: true
+
+
+#notifications:
+#  email:
+#    on_success: never
+#    on_failure: never
