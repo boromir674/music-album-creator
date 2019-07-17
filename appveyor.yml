@@ -13,63 +13,55 @@ environment:
     nodejs_version: Current
     ffmpeg_version: latest
   matrix:
+#
+#    - TOXENV: clean
+#      TOXPYTHON: C:\Python35\python.exe
+#      PYTHON_HOME: C:\Python35
+#      PYTHON_VERSION: '3.5'
+#      PYTHON_ARCH: '32'
+#      platform: x86
+#      ffmpeg_platform: win32
 
-    - TOXENV: check
+    - TOXENV: 'py35-cover,coveralls'
       TOXPYTHON: C:\Python35\python.exe
       PYTHON_HOME: C:\Python35
       PYTHON_VERSION: '3.5'
       PYTHON_ARCH: '32'
       platform: x86
       ffmpeg_platform: win32
+#
+#    - TOXENV: 'py35-cover'
+#      TOXPYTHON: C:\Python35-x64\python.exe
+#      PYTHON_HOME: C:\Python35-x64
+#      PYTHON_VERSION: '3.5'
+#      PYTHON_ARCH: '64'
+#      platform: x64
+#      ffmpeg_platform: win64
 
-    - TOXENV: 'py35-cover,coveralls'
-      TOXPYTHON: C:\Python35\python.exe
-      PYTHON_HOME: C:\Python35
-      PYTHON_VERSION: '3.5'
-      PYTHON_ARCH: '32'
-      platform: x86
-      ffmpeg_platform: win32
+#    - TOXENV: 'py35-nocov'
+#      TOXPYTHON: C:\Python35\python.exe
+#      PYTHON_HOME: C:\Python35
+#      PYTHON_VERSION: '3.5'
+#      PYTHON_ARCH: '32'
+#      platform: x86
+#      ffmpeg_platform: win32
+#
+#    - TOXENV: 'py35-nocov'
+#      TOXPYTHON: C:\Python35-x64\python.exe
+#      PYTHON_HOME: C:\Python35-x64
+#      PYTHON_VERSION: '3.5'
+#      PYTHON_ARCH: '64'
+#      platform: x64
+#      ffmpeg_platform: win64
 
-    - TOXENV: 'py35-cover,coveralls'
-      TOXPYTHON: C:\Python35-x64\python.exe
-      PYTHON_HOME: C:\Python35-x64
-      PYTHON_VERSION: '3.5'
-      PYTHON_ARCH: '64'
-      platform: x64
-      ffmpeg_platform: win64
+#    - TOXENV: 'py36-nocov'
+#      TOXPYTHON: C:\Python36-x64\python.exe
+#      PYTHON_HOME: C:\Python36-x64
+#      PYTHON_VERSION: '3.6'
+#      PYTHON_ARCH: '64'
+#      platform: x64
+#      ffmpeg_platform: win64
 
-
-    - TOXENV: 'py36-cover,coveralls'
-      TOXPYTHON: C:\Python36\python.exe
-      PYTHON_HOME: C:\Python36
-      PYTHON_VERSION: '3.6'
-      PYTHON_ARCH: '32'
-      platform: x86
-      ffmpeg_platform: win32
-
-    - TOXENV: 'py36-cover,coveralls'
-      TOXPYTHON: C:\Python36-x64\python.exe
-      PYTHON_HOME: C:\Python36-x64
-      PYTHON_VERSION: '3.6'
-      PYTHON_ARCH: '64'
-      platform: x64
-      ffmpeg_platform: win64
-
-    - TOXENV: 'py37-cover,coveralls'
-      TOXPYTHON: C:\Python37\python.exe
-      PYTHON_HOME: C:\Python37
-      PYTHON_VERSION: '3.7'
-      PYTHON_ARCH: '32'
-      platform: x86
-      ffmpeg_platform: win32
-
-    - TOXENV: 'py37-cover,coveralls'
-      TOXPYTHON: C:\Python37-x64\python.exe
-      PYTHON_HOME: C:\Python37-x64
-      PYTHON_VERSION: '3.7'
-      PYTHON_ARCH: '64'
-      platform: x64
-      ffmpeg_platform: win64
 
 init:
   - ps: echo $env:TOXENV
@@ -83,11 +75,17 @@ install:
   - ps: Start-FileDownload $env:ffmpeg_download$env:ffmpeg_platform/static/ffmpeg-$env:ffmpeg_version-$env:ffmpeg_platform-static.zip
   - 7z x ffmpeg-%ffmpeg_version%-%ffmpeg_platform%-static.zip
   - PATH=%PATH%;%cd%\ffmpeg-%ffmpeg_version%-%ffmpeg_platform%-static\bin
+#  - ps: $env:package_version = (Get-Content -Raw -Path package.json | ConvertFrom-Json).version
+#  - ps: Update-AppveyorBuild -Version "$env:package_version-$env:APPVEYOR_REPO_BRANCH-$env:APPVEYOR_BUILD_NUMBER"
   - '%PYTHON_HOME%\Scripts\virtualenv --version'
   - '%PYTHON_HOME%\Scripts\easy_install --version'
   - '%PYTHON_HOME%\Scripts\pip --version'
   - '%PYTHON_HOME%\Scripts\tox --version'
   - '%PYTHON_HOME%\python --version'
+  # Read the encrypted file with eg a COVERALLS_REPO_TOKEN value
+#  - ps: iex ((New-Object Net.WebClient).DownloadString('https://raw.githubusercontent.com/appveyor/secure-file/master/install.ps1'))
+#  - cmd: appveyor-tools\secure-file -decrypt .appveyor-coveralls-repo-token.enc -secret %COVERALLS_REPO_TOKEN%
+#  - sh: ./appveyor-tools/secure-file -decrypt .appveyor-coveralls-repo-token.enc -secret $COVERALLS_REPO_TOKEN
 
 
 test_script:

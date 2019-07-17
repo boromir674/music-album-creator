@@ -7,6 +7,7 @@ import click
 import shutil
 import mutagen
 import subprocess
+from tempfile import mkdtemp, gettempdir
 from time import sleep
 
 from . import StringParser, MetadataDealer, AudioSegmenter, FormatClassifier
@@ -39,10 +40,11 @@ this_dir = os.path.dirname(os.path.realpath(__file__))
 @click.option('--url', '-u', help='the youtube video url')
 def main(tracks_info, track_name, track_number, artist, album_artist, url):
     # CONFIG of the 'app' #
-    directory = '/tmp/gav'
-    if os.path.isdir(directory):
-        shutil.rmtree(directory)
-    os.mkdir(directory)
+    mkdtemp()
+    directory = gettempdir()
+    # if os.path.isdir(directory):
+    #     shutil.rmtree(directory)
+    # os.mkdir(directory)
     music_dir = '/media/kostas/freeagent/m'
 
     ## Render Logo
@@ -105,7 +107,7 @@ def main(tracks_info, track_name, track_number, artist, album_artist, url):
     if answer.startswith('Durations'):
         tracks_data = StringParser.duration_data_to_timestamp_data(tracks_data)
     try:  # SEGMENTATION
-        audio_files = audio_segmenter.segment_from_list(album_file, tracks_data, supress_stdout=True, verbose=True, sleep_seconds=0.4)
+        audio_files = audio_segmenter.segment_from_list(album_file, tracks_data, supress_stdout=False, verbose=True, sleep_seconds=0.4)
     except TrackTimestampsSequenceError as e:
         print(e)
         sys.exit(1)
@@ -162,4 +164,7 @@ if __name__ == '__main__':
     readline.set_completer_delims('\t')
     readline.parse_and_bind("tab: complete")
     readline.set_completer(completer.pathCompleter)
+
+    # if sys.version_info.major == 2:  # if interpreter is python2 somehow (it will crash anyways)
+
     main()
