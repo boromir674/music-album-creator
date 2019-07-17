@@ -8,16 +8,23 @@ include requirements.txt
 include src/music_album_creation/format_classification/data/*
 include src/music_album_creation/display-logo.sh
 include tests/know_your_enemy.mp3
+include tests/data/album_0/*
 
 graft src
 graft tests
 
 include .travis.yml
 include .scrutinizer.yml
+include appveyor.yml
+
 include .coveragerc
-include .coverage
 include tox.ini
 
 graft .travis
 
 global-exclude *.py[cod] __pycache__ *.so *.dylib
+
+
+recursive-include ci *.cmd
+recursive-include ci *.py
+

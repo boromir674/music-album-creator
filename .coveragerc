@@ -6,7 +6,7 @@ source =
 [run]
 branch = true
 source =
-    music_album_creator
+    music_album_creation
     tests
 parallel = true
 
@@ -24,3 +24,4 @@ exclude_lines =
     abstractproperty
     abstractclassmethod
     warnings.warn
+    download_callback\(url,\ directory,

@@ -1,6 +1,5 @@
 #!/usr/bin/python3
 
-import re
 import time
 import subprocess
 
@@ -8,7 +7,6 @@ from music_album_creation.tracks_parsing import StringParser
 
 
 class AudioSegmenter:
-    sep = r'(?:[\t ]+|[\t ]*[\-\.]+[\t ]*)'
 
     args = ['ffmpeg', '-i', '-acodec', 'copy', '-ss']
 
@@ -50,9 +48,9 @@ class AudioSegmenter:
         :param float sleep_seconds:
         :return:
         """
-        if not re.search('0:00', data[0][1]):
-            raise NotStartingFromZeroTimestampError("First track ({}) is supposed to have a 0:00 timestamp. Instead {} found".format(data[0][0], data[0][1]))
-        # self._track_index_generator = iter((lambda x: str(x) if 9 < x else '0'+str(x))(_) for _ in range(1, 100))
+        # if not re.search('0:00', data[0][1]):
+        #     raise NotStartingFromZeroTimestampError("First track ({}) is supposed to have a 0:00 timestamp. Instead {} found".format(data[0][0], data[0][1]))
+
         exit_code = 0
         data = StringParser.convert_tracks_data(data, album_file, target_directory=self._dir)
         audio_files = [x[0] for x in data]

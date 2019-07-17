@@ -1,8 +1,9 @@
 #!/usr/bin/python3
 
-import abc
 import re
+import abc
 import subprocess
+from time import sleep
 
 
 class YoutubeDownloader:
@@ -14,6 +15,19 @@ class YoutubeDownloader:
 
     update_command_args = ('sudo', 'pip3', 'install', '--upgrade', 'youtube-dl')
     update_backend_command = ' '.join(update_command_args)
+
+    @classmethod
+    def download_times(cls, video_url, directory, times=10, spawn=True, verbose=True, supress_stdout=False, suppress_certificate_validation=False, delay=1):
+        i = 0
+        while i < times - 1:
+            try:
+                cls.download(video_url, directory, spawn=spawn, verbose=verbose, supress_stdout=supress_stdout, suppress_certificate_validation=suppress_certificate_validation)
+                return
+            except TooManyRequestsError as e:
+                print(e)
+                i += 1
+                sleep(delay)
+        cls.download(video_url, directory, spawn=spawn, verbose=verbose, supress_stdout=supress_stdout, suppress_certificate_validation=suppress_certificate_validation)
 
     @classmethod
     def download(cls, video_url, directory, spawn=True, verbose=True, supress_stdout=False, suppress_certificate_validation=False):

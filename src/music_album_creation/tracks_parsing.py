@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 import os
 import re
 import time
@@ -42,20 +44,19 @@ class RegexSequence:
         self._regex = r'{}'.format(''.join(str(d) for d in data))
 
     def search_n_dict(self, string):
-        return dict(_ for _ in zip(self._keys, list(getattr(re.search(self._regex, string), 'groups', lambda: ['', '', ''])())) if _[1])
-
-    def __str__(self):
-        return self._regex
+        return dict(_ for _ in zip(self._keys, list(getattr(re.search(self._regex, string), 'groups', lambda: len(self._keys)*[''])())) if _[1])
 
 
 class StringParser:
     __instance = None
 
-    track_number = r'\d{1,2}'
-    track_name = r'[\w\'\(\) \-’]*[\w)]'
-    sep = r'(?:[\t ]+|[\t ]*[\.\-,]+[\t ]*)'
-    extension = r'.mp3'
-    hhmmss = r'(?:\d?\d:)*\d?\d'
+    regexes = {'track_number': r'\d{1,2}',
+               'sep1': r"(?: [\t\ ]* [\.\-\)]+ )? [\t ]*",
+               'track_word': r"\(?[\w'][\w\-’':]*\)?",
+               'track_sep': r'[\t\ ,]+',
+               'sep2': r'(?: [\t\ ]* [\-.]+ [\t\ ]* | [\t\ ]+ )',
+               'extension': r'\.mp3',
+               'hhmmss': r'(?:\d?\d:)*\d?\d'}
 
     ## to parse from youtube video title string
     sep1 = r'[\t ]*[\-\.][\t ]*'
@@ -69,11 +70,42 @@ class StringParser:
     def __new__(cls, *args, **kwargs):
         if not cls.__instance:
             cls.__instance = super().__new__(cls)
+            cls.regexes['track_name'] = r'{track_word}(?:{track_sep}{track_word})*'.format(**cls.regexes)
         return cls.__instance
+
+    ## STRING TO DICT
+    @classmethod
+    def parse_album_info(cls, video_title):
+        """Call to parse a video title string into a hash (dictionary) of potentially all 'artist', 'album' and 'year' fields.\n
+        Can parse patters:
+         - Artist Album Year\n
+         - Artist Album\n
+         - Album Year\n
+         - Album\n
+        :param str video_title:
+        :return: the exracted values as a dictionary having maximally keys: {'artist', 'album', 'year'}
+        :rtype: dict
+        """
+        return cls.album_info_parser(video_title, design=[['artist', 's1', 'album', 's2', 'year'],
+                                                          ['artist', 's1', 'album'],
+                                                          ['album', 's2', 'year'],
+                                                          ['album']])
+
+    @classmethod
+    def parse_track_number_n_name(cls, file_name):
+        """Call this method to get a dict like {'track_number': 'number', 'track_name': 'name'} from input file name with format like '1. - Loyal to the Pack.mp3'; number must be included!"""
+        return dict(zip(['track_number', 'track_name'], list(
+            re.compile(r"(?: ({track_number}) {sep1})? ( {track_name} ) {extension}$".format(**cls.regexes), re.X).search(
+                os.path.basename(file_name)).groups())))
+        # return dict(zip(['track_number', 'track_name'], list(re.compile(r'({}){}({}){}$'.format(cls.track_number, cls.sep2, cls.track_name, cls.extension)).search(file_name).groups())))
 
     @classmethod
     def duration_data_to_timestamp_data(cls, duration_data):
-        """Call this to transform data concerning tracks' starting timestamps to tracks' time duration. In both cases the format is hh:mm:ss"""
+        """Call this method to transform a list of 2-legnth lists of track_name - duration_hhmmss pairs to the equivalent list of lists but with starting timestamps in hhmmss format inplace of the durations.\n
+        :param list duration_data: eg: [['Know your enemy', '3:45'], ['Wake up', '4:53'], ['Testify', '4:32']]
+        :return: eg: [['Know your enemy', '0:00'], ['Wake up', '3:45'], ['Testify', '8:38']]
+        :rtype: list
+        """
         return [list(_) for _ in cls._gen_timestamp_data(duration_data)]
 
     @staticmethod
@@ -87,10 +119,14 @@ class StringParser:
         p = Timestamp('0:00')
         yield duration_data[0][0], str(p)
         while i < len(duration_data):
-            yield duration_data[i][0], str(p + Timestamp(duration_data[i-1][1]))
+            try:
+                yield duration_data[i][0], str(p + Timestamp(duration_data[i-1][1]))
+            except WrongTimestampFormat as e:
+                raise e
             p += Timestamp(duration_data[i-1][1])
             i += 1
 
+    # STRING TO LIST
     @classmethod
     def parse_hhmmss_string(cls, tracks):
         """Call this method to transform a '\n' separabale string of album tracks (eg copy-pasted from video description) to a list of lists. Inner lists contains [track_name, hhmmss_timestamp].\n
@@ -121,37 +157,9 @@ class StringParser:
         #                             ([\w\'\(\) \-’]*[\w)])                       # track name
         #                             (?:[\t ]+|[\t ]*[\-\.]+[\t ]*)            # separator between name and time
         #                             ((?:\d?\d:)*\d?\d)$                       # time in hh:mm:ss format""", re.X)
-        regex = re.compile(r"^(?:{}{})?({}){}({})$".format(cls.track_number, cls.sep, cls.track_name, cls.sep, cls.hhmmss))
+        # regex = re.compile(r"^(?:{}{})?({}){}({})$".format(cls.track_number, cls.number_name_sep, cls.track_name, cls.sep, cls.hhmmss))
+        regex = re.compile(r"(?: {track_number} {sep1})? ( {track_name} ) {sep2} ({hhmmss})".format(**cls.regexes), re.X)
         return list(regex.search(track_line.strip()).groups())
-
-    @classmethod
-    def get_instance(cls):
-        return StringParser()
-
-    @classmethod
-    def parse_tracks_hhmmss(cls, tracks_row_strings):
-        """
-        Call this method to transform a
-        Returns parsed tracks: track_title and timestamp in hh:mm:ss format given the multiline string. Ignores potentially
-        found track numbers in the start of each line  Returs a list of lists. Each inner list holds the captured groups in the parenthesis'\n
-        :param str tracks_row_strings:
-        :return: a list of lists with each inner list corresponding to each input string row and having 2 elements: the track name and the timestamp
-        :rtype: list
-        """
-        return cls.parse_hhmmss_string(tracks_row_strings)
-
-    @classmethod
-    def hhmmss_durations_to_timestamps(cls, hhmmss_list):
-        return [_ for _ in cls._generate_timestamps(hhmmss_list)]
-
-    @classmethod
-    def _generate_timestamps(cls, hhmmss_list):
-        p = '0:00'
-        yield p
-        for el in hhmmss_list[:-1]:
-            _ = cls.add(p, el)
-            yield _
-            p = _
 
     @classmethod
     def convert_to_timestamps(cls, tracks_row_strings):
@@ -161,7 +169,7 @@ class StringParser:
         :return: the list of each track's timestamp
         :rtype: list
         """
-        lines = cls.parse_tracks_hhmmss(tracks_row_strings)  # list of lists
+        lines = cls.parse_hhmmss_string(tracks_row_strings)  # list of lists
         i = 1
         timestamps = ['0:00']
         while i < len(lines):
@@ -170,7 +178,7 @@ class StringParser:
         return timestamps
 
     @classmethod
-    def add(cls, timestamp1: str, duration: str) -> object:
+    def add(cls, timestamp1, duration):
         """
         :param str timestamp1: hh:mm:ss
         :param str duration: hh:mm:ss
@@ -190,26 +198,10 @@ class StringParser:
         return time.strftime('%H:%M:%S', time.gmtime(seconds))
 
     @classmethod
-    def parse_album_info(cls, video_title):
-        """Call to parse a video title string into a hash (dictionary) of potentially all 'artist', 'album' and 'year' fields.\n
-        Can parse patters:
-         - Artist Album Year\n
-         - Artist Album\n
-         - Album Year\n
-         - Album\n
-        :param str video_title:
-        :return: the exracted values as a dictionary having maximally keys: {'artist', 'album', 'year'}
-        :rtype: dict
-        """
-        return cls.album_info_parser(video_title, design=[['artist', 's1', 'album', 's2', 'year'],
-                                                          ['artist', 's1', 'album'],
-                                                          ['album', 's2', 'year'],
-                                                          ['album']])
-
-    @classmethod
     def convert_tracks_data(cls, data, album_file, target_directory=''):
         """
         Converts input Nx2 list of lists to Nx3 list of lists. The exception being the last list that has 2 elements\n
+        The input list's inner lists' elements are 'track_name' and 'starting_timestamp' in hhmmss format.\n
         :param list of lists data: each inner list should contain track title (no need for number and without extension)
         and starting time stamp in hh:mm:ss format
         :param str album_file: the path to the audio file of the entire album to potentially segment
@@ -260,20 +252,44 @@ class StringParser:
 class Timestamp:
     instances = {}
 
+    @classmethod
+    def __str(cls, element):
+        if len(element) == 1:
+            return '0{}'.format(int(element))
+        return element
+
+    @classmethod
+    def __pos(cls, array):
+        i = 0
+        while i < len(array) and array[i] == 0:
+            i += 1
+        return i
+
     def __new__(cls, *args, **kwargs):
         hhmmss = args[0]
-        if hhmmss in cls.instances:
-            return cls.instances[hhmmss]
-        match = re.fullmatch(r'((\d?\d):){0,2}(\d?\d)', hhmmss)
-        if not match:
+        m = re.compile(r'^(?:(\d?\d):){0,2}(\d?\d)$').search(hhmmss)
+        if not m:
             raise WrongTimestampFormat("Timestamp given: '{}'. Please use the 'hh:mm:ss' format.".format(hhmmss))
-        values = [int(_) for _ in hhmmss.split(':')]
-        if not all([0 <= _ <= 60 for _ in values]):
+        groups = hhmmss.split(':')
+        if not all([0 <= int(_) <= 60 for _ in groups]):
             raise WrongTimestampFormat("Timestamp given: '{}'. Please use the 'hh:mm:ss' format.".format(hhmmss))
+
+        ind = cls.__pos(groups)
+        if len(groups) == 1:
+            minlength_string = '{}:{}'.format(0, cls.__str(groups[0]))
+        elif len(groups) - ind - 1 < 2:
+            minlength_string = '{}:{}'.format(int(groups[-2]), cls.__str(groups[-1]))
+        else:
+            minlength_string = ':'.join([str(int(groups[ind]))] + [y for y in groups[ind + 1:]])
+        stripped_string = ':'.join((str(int(_)) for _ in minlength_string.split(':')))
+
+        if stripped_string in cls.instances:
+            return cls.instances[stripped_string]
         x = super().__new__(cls)
-        x._s = sum([60 ** i * int(x) for i, x in enumerate(reversed(values))])
-        x._b = hhmmss
-        cls.instances[hhmmss] = x
+        x.__minlength_string = minlength_string
+        x.__stripped_string = stripped_string
+        x._s = sum([60 ** i * int(x) for i, x in enumerate(reversed(groups))])
+        cls.instances[x.__stripped_string] = x
         return x
 
     def __init__(self, hhmmss):
@@ -283,17 +299,20 @@ class Timestamp:
     def from_duration(seconds):
         return Timestamp(time.strftime('%H:%M:%S', time.gmtime(seconds)))
 
-    def __repr__(self):
-        return self._b
-
-    def __str__(self):
-        return self._b
-
-    def __eq__(self, other):
-        return str(self) == str(other)
-
     def __int__(self):
         return self._s
+
+    def __repr__(self):
+        return self.__minlength_string
+
+    def __str__(self):
+        return self.__minlength_string
+
+    def __hash__(self):
+        return self._s
+
+    def __eq__(self, other):
+        return hash(self) == hash(other)
 
     def __lt__(self, other):
         return int(self) < int(other)

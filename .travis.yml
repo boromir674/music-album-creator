@@ -16,22 +16,20 @@ before_install:
 
 install:
   - pip install tox
-  - pip install coveralls
   - virtualenv --version
   - easy_install --version
   - pip --version
   - tox --version
 
 cache: pip
-script:
-  - tox
-  - coveralls
+script: tox -v
+
 
 jobs:
   fail_fast: true
   include:
   - stage: Check
-    env: TOXENV=clean
+    env: TOXENV=clean,check
     script: tox
   - stage: run tests
     python: '3.6'
@@ -39,13 +37,13 @@ jobs:
     script: tox
   - stage: run tests
     python: '3.5'
-    env: TOXENV=py35
+    env: TOXENV=py35-cover,coveralls
   - stage: run tests
     python: '3.6'
-    env: TOXENV=py36
+    env: TOXENV=py36-cover,coveralls
   - stage: run tests
     python: '3.7'
-    env: TOXENV=py37
+    env: TOXENV=py37-cover,coveralls
   allow_failures:
     - env: TOXENV=quality
 

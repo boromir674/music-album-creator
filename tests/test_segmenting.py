@@ -2,7 +2,7 @@ import os
 import pytest
 import mutagen
 
-from music_album_creation.album_segmentation import AudioSegmenter, NotStartingFromZeroTimestampError
+from music_album_creation.album_segmentation import AudioSegmenter
 from music_album_creation.tracks_parsing import WrongTimestampFormat, TrackTimestampsSequenceError
 
 
@@ -19,12 +19,12 @@ segmenter = AudioSegmenter()
 
 class TestSegmenting:
 
-    def test_input_durations_to_segment(self, tmpdir, test_audio_file_path):
-        durations_data = [['t1', '0:10'], ['t2', '0:40'], ['t3', '0:10']]
-
-        with pytest.raises(NotStartingFromZeroTimestampError, match=r"First track \({}\) is supposed to have a 0:00 timestamp. Instead {} found".format(durations_data[0][0], durations_data[0][1])):
-            segmenter.target_directory = str(tmpdir.mkdir('album'))
-            segmenter.segment_from_list(test_audio_file_path, durations_data)
+    # def test_input_durations_to_segment(self, tmpdir, test_audio_file_path):
+    #     durations_data = [['t1', '0:10'], ['t2', '0:40'], ['t3', '0:10']]
+    #
+    #     with pytest.raises(NotStartingFromZeroTimestampError, match=r"First track \({}\) is supposed to have a 0:00 timestamp. Instead {} found".format(durations_data[0][0], durations_data[0][1])):
+    #         segmenter.target_directory = str(tmpdir.mkdir('album'))
+    #         segmenter.segment_from_list(test_audio_file_path, durations_data)
 
     def test_illogical_timetamp_sequence(self, tmpdir, test_audio_file_path):
         with pytest.raises(TrackTimestampsSequenceError):
