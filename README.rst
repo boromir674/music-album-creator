@@ -13,19 +13,18 @@ Overview
 .. list-table::
     :stub-columns: 1
 
-    * - docs
-      - |docs|
     * - tests
       - | |travis|
         | |coveralls|
         | |scrutinizer_code_quality|
         | |code_intelligence_status|
     * - package
-      - | |version| |wheel|
+      - | |version| |wheel| |supported_versions|
+        | |commits_since|
 
 
 .. |docs| image:: https://readthedocs.org/projects/music-album-creator/badge/?style=flat
-    :target: https://readthedocs.org/projects/music-album-creator
+    :target: https://readthedocs.org/projects/music-album-creation
     :alt: Documentation Status
 
 .. |travis| image:: https://travis-ci.org/boromir674/music-album-creator.svg?branch=dev
@@ -44,21 +43,22 @@ Overview
     :alt: Code Intelligence
     :target: https://scrutinizer-ci.com/code-intelligence
 
-.. |version| image:: https://img.shields.io/pypi/v/music-album-creator.svg
+.. |version| image:: https://img.shields.io/pypi/v/music-album-creation.svg
     :alt: PyPI Package latest release
-    :target: https://pypi.org/project/music-album-creator
+    :target: https://pypi.org/project/music-album-creation
 
-.. |commits-since| image:: https://img.shields.io/github/commits-since/boromir674/music-album-creator/v0.svg
-    :alt: Commits since latest release
-    :target: https://github.com/boromir674/music-album-creator/compare/v0...master
-
-.. |wheel| image:: https://img.shields.io/pypi/wheel/music-album-creator.svg
+.. |wheel| image:: https://img.shields.io/pypi/wheel/music-album-creation.svg
     :alt: PyPI Wheel
-    :target: https://pypi.org/project/music-album-creator
+    :target: https://pypi.org/project/music-album-creation
 
-.. |supported-versions| image:: https://img.shields.io/pypi/pyversions/music-album-creator.svg
+.. |supported_versions| image:: https://img.shields.io/pypi/pyversions/music-album-creation.svg
     :alt: Supported versions
-    :target: https://pypi.org/project/music-album-creator
+    :target: https://pypi.org/project/music-album-creation
+
+.. |commits_since| image:: https://img.shields.io/github/commits-since/boromir674/music-album-creator/v1.1.0.svg
+    :alt: Commits since latest release
+    :target: https://github.com/boromir674/music-album-creator/compare/v1.1.0...master
+
 
 .. |supported-implementations| image:: https://img.shields.io/pypi/implementation/music-album-creator.svg
     :alt: Supported implementations
