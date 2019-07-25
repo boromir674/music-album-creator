@@ -3,3 +3,4 @@ click
 mutagen
 sklearn
 PyInquirer
+pyreadline

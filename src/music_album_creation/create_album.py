@@ -6,7 +6,6 @@ import glob
 import click
 import shutil
 import mutagen
-import readline
 import subprocess
 from time import sleep
 
@@ -19,6 +18,9 @@ from .downloading import YoutubeDownloader, TokenParameterNotInVideoInfoError, I
 from .dialogs import track_information_type_dialog, interactive_track_info_input_dialog, \
     store_album_dialog, interactive_metadata_dialogs, input_youtube_url_dialog, update_and_retry_dialog
 
+if os.name == 'nt':
+    from pyreadline import Readline
+    readline = Readline()
 
 this_dir = os.path.dirname(os.path.realpath(__file__))
 

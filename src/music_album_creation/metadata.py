@@ -4,6 +4,7 @@ import glob
 import click
 from mutagen.id3 import ID3, TPE1, TPE2, TRCK, TIT2, TALB, TDRC
 from collections import defaultdict
+from music_album_creation.tracks_parsing import StringParser
 
 # The main notable classes in mutagen are FileType, StreamInfo, Tags, Metadata and for error handling the MutagenError exception.
 
@@ -17,7 +18,7 @@ class MetadataDealerType(type):
         c = re.match(r'0*(\d+)', year)
         if not c:
             raise InvalidInputYearError("Input year tag '{}' is invalid".format(year))
-        return re.match(r'0*(\d+)', year).group(1)
+        return c.group(1)
 
     def __new__(mcs, name, bases, attributes):
         x = super().__new__(mcs, name, bases, attributes)
@@ -36,7 +37,6 @@ class MetadataDealer(metaclass=MetadataDealerType):
           # in clementine terms, it affects the 'Artist' tab but not the 'Album artist'
           'album': TALB,  # 4.2.1   TALB    [#TALB Album/Movie/Show title]
           'year': TDRC  # TDRC (recording time) consolidates TDAT (date), TIME (time), TRDA (recording dates), and TYER (year).
-
           }
 
     # supported metadata to try and infer automatically
@@ -45,11 +45,11 @@ class MetadataDealer(metaclass=MetadataDealerType):
 
     _all = dict(_d, **dict(_auto_data))
 
-    reg = re.compile(r'(?:(\d{1,2})(?:[ \t]*[\-\.][ \t]*|[ \t]+)|^)?([\w\'\(\) ’]*[\w)])\.mp3$')  # use to parse track file names like "1. Loyal to the Pack.mp3"
+    # reg = re.compile(r'(?:(\d{1,2})(?:[ \t]*[\-\.][ \t]*|[ \t]+)|^)?([\w\'\(\) ’]*[\w)])\.mp3$')  # use to parse track file names like "1. Loyal to the Pack.mp3"
 
-    def set_album_metadata(self, album_directory, track_number=True, track_name=True, artist='', album_artist='', album='', year='', verbose=False):
-        self._write_metadata(album_directory, track_number=track_number, track_name=track_name, artist=artist,
-                             album_artist=album_artist, album=album, year=str(year), verbose=verbose)
+    @classmethod
+    def set_album_metadata(cls, album_directory, track_number=True, track_name=True, artist='', album_artist='', album='', year='', verbose=False):
+        cls._write_metadata(album_directory, track_number=track_number, track_name=track_name, artist=artist, album_artist=album_artist, album=album, year=str(year), verbose=verbose)
 
     @classmethod
     def _write_metadata(cls, album_directory, verbose=False, **kwargs):
@@ -57,13 +57,13 @@ class MetadataDealer(metaclass=MetadataDealerType):
         if verbose:
             print('FILES\n', list(map(os.path.basename, files)))
         for file in files:
-            cls.write_metadata(file, **dict(cls._filter_auto_inferred(cls._infer_track_number_n_name(file), **kwargs),
+            cls.write_metadata(file, **dict(cls._filter_auto_inferred(StringParser.parse_track_number_n_name(file), **kwargs),
                                             **{k: kwargs.get(k, '') for k in cls._d.keys()}))
 
     @classmethod
-    def write_metadata(cls, file, verbose=False, **kwargs):
+    def write_metadata(cls, file, verbose=True, **kwargs):
         if not all(map(lambda x: x[0] in cls._all.keys(), kwargs.items())):
-            raise RuntimeError("Some of the input keys [{}] used to request the addition of metadata, do not correspoond"
+            raise RuntimeError("Some of the input keys [{}] used to request the addition of metadata, do not correspond"
                                " to a tag/frame of the supported [{}]".format(', '.join(kwargs.keys()), ' '.join(cls._d)))
         audio = ID3(file)
         for k, v in kwargs.items():
@@ -81,10 +81,6 @@ class MetadataDealer(metaclass=MetadataDealerType):
                 del d[k]
         return d
 
-    @classmethod
-    def _infer_track_number_n_name(cls, file_name):
-        """Call this method to get a dict like {'track_number': 'number', 'track_name': 'name'} from input file name with format like '1. - Loyal to the Pack.mp3'; number must be included!"""
-        return {tt[0]: re.search(cls.reg, file_name).group(i+1) for i, tt in enumerate(cls._auto_data)}
 
 class InvalidInputYearError(Exception): pass
 

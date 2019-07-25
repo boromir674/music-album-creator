@@ -13,7 +13,7 @@ def readme():
 
 setup(
     name='music_album_creation',
-    version='1.1.0-a',
+    version='1.1.1',
     description='A CLI application intending to automate offline music library building.',
     long_description=readme(),
     keywords='music automation download youtube metadata',
@@ -24,7 +24,7 @@ setup(
     zip_safe=False,
 
     # what packages/distributions (python) need to be installed when this one is. (Roughly what is imported in source code)
-    install_requires=['tqdm', 'click', 'sklearn', 'mutagen', 'PyInquirer', 'youtube_dl'],
+    install_requires=['tqdm', 'click', 'sklearn', 'mutagen', 'PyInquirer', 'youtube_dl', 'pyreadline'],
 
     # A string or list of strings specifying what other distributions need to be present in order for the setup script to run.
     # (Note: projects listed in setup_requires will NOT be automatically installed on the system where the setup script is being run.
@@ -44,17 +44,21 @@ setup(
 
     classifiers=[
         'Development Status :: 5 - Production/Stable',
+        'Intended Audience :: End Users/Desktop',
         'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
+        'Natural Language :: English',
+        'Operating System :: Microsoft :: Windows',
+        'Operating System :: POSIX :: Linux',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
-        'Topic :: Software Development :: Libraries :: Python Modules',
-        'Topic :: Multimedia :: Sound/Audio :: Conversion',
-        'Intended Audience :: End Users/Desktop',
+        'Topic :: Home Automation',
+        'Topic :: Multimedia :: Video :: Conversion',
+        'Topic :: Multimedia :: Sound/Audio',
     ],
     url='https://github.com/boromir674/music-album-creator',
-    download_url='point to tar.gz',  # help easy_install do its tricks
+    # download_url='point to tar.gz',  # help easy_install do its tricks
     author='Konstantinos Lampridis',
     author_email='k.lampridis@hotmail.com',
     license='GNU GPLv3',

@@ -10,21 +10,25 @@ from tqdm import tqdm
 from music_album_creation.tracks_parsing import StringParser
 
 
-sp = StringParser.get_instance()
+sp = StringParser()
 
 
 class DatasetHandler:
     __instance = None
     splits = ['train', 'dev', 'test']
     post_fix = '-split.txt'
-    reg = re.compile(r'^.+/(\w+)-split\.txt$')
-    # reg = re.compile('^[\w /\-]+/\w+-split\.txt$')
+    reg = r'^(\w+)-split\.txt$'  # reg to search in a directory expecting dataet files with names ending with '-split.txt'
 
     def __new__(cls, *args, **kwargs):
         if not cls.__instance:
             cls.__instance = super().__new__(cls)
+        dir_requested = kwargs['datasets_root_dir']
         if 'datasets_root_dir' in kwargs and bool(kwargs['datasets_root_dir']):
-            cls.__instance._datasets = {cls.reg.match(file).group(1): file for file in glob.glob('{}/*{}'.format(kwargs['datasets_root_dir'], cls.post_fix))}
+            c_globe = glob.glob('{}/*{}'.format(kwargs['datasets_root_dir'], cls.post_fix))
+            try:
+                cls.__instance._datasets = {re.match(cls.reg, os.path.basename(file)).group(1): file for file in c_globe}
+            except AttributeError as e:
+                raise RuntimeError("Unable to find datasets (txt files) in directory '{}'. Most probably one of [{}] did not match with regex '{}'.".format(dir_requested, ', '.join(str(_) for _ in c_globe), cls.reg))
             cls.__instance.datasets_root_dir = kwargs['datasets_root_dir']
         return cls.__instance
 
