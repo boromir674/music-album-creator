@@ -37,7 +37,7 @@ Overview
     :target: https://ci.appveyor.com/project/boromir674/music-album-creator/branch/master
 
 .. |coveralls| image:: https://coveralls.io/repos/github/boromir674/music-album-creator/badge.svg?branch=master
-    :alt: Coverage Status
+    :alt: Coveralls Coverage Status
     :target: https://coveralls.io/github/boromir674/music-album-creator?branch=master
 
 .. |scrutinizer_code_quality| image:: https://scrutinizer-ci.com/g/boromir674/music-album-creator/badges/quality-score.png?b=master
@@ -60,9 +60,9 @@ Overview
     :alt: Supported versions
     :target: https://pypi.org/project/music-album-creation
 
-.. |commits_since| image:: https://img.shields.io/github/commits-since/boromir674/music-album-creator/v1.1.0.svg
+.. |commits_since| image:: https://img.shields.io/github/commits-since/boromir674/music-album-creator/v1.1.2.svg
     :alt: Commits since latest release
-    :target: https://github.com/boromir674/music-album-creator/compare/v1.1.1...master
+    :target: https://github.com/boromir674/music-album-creator/compare/v1.1.2...master
 
 
 .. |supported-implementations| image:: https://img.shields.io/pypi/implementation/music-album-creator.svg

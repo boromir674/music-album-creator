@@ -27,7 +27,7 @@ class DatasetHandler:
             c_globe = glob.glob('{}/*{}'.format(kwargs['datasets_root_dir'], cls.post_fix))
             try:
                 cls.__instance._datasets = {re.match(cls.reg, os.path.basename(file)).group(1): file for file in c_globe}
-            except AttributeError as e:
+            except AttributeError:
                 raise RuntimeError("Unable to find datasets (txt files) in directory '{}'. Most probably one of [{}] did not match with regex '{}'.".format(dir_requested, ', '.join(str(_) for _ in c_globe), cls.reg))
             cls.__instance.datasets_root_dir = kwargs['datasets_root_dir']
         return cls.__instance
