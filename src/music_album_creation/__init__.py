@@ -1,4 +1,4 @@
-__version__ = '1.0.8a'
+__version__ = '1.1.2'
 
 from .tracks_parsing import StringParser
 from .metadata import MetadataDealer

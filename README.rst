@@ -28,23 +28,23 @@ Overview
     :target: https://readthedocs.org/projects/music-album-creation
     :alt: Documentation Status
 
-.. |travis| image:: https://travis-ci.org/boromir674/music-album-creator.svg?branch=master
+.. |travis| image:: https://travis-ci.org/boromir674/music-album-creator.svg?branch=dev
     :alt: Travis-CI Build Status
     :target: https://travis-ci.org/boromir674/music-album-creator
 
-.. |appveyor| image:: https://ci.appveyor.com/api/projects/status/0lq9l96dwc6aq33j/branch/master?svg=true
+.. |appveyor| image:: https://ci.appveyor.com/api/projects/status/0lq9l96dwc6aq33j/branch/dev?svg=true
     :alt: Appveyor Build Status
-    :target: https://ci.appveyor.com/project/boromir674/music-album-creator/branch/master
+    :target: https://ci.appveyor.com/project/boromir674/music-album-creator/branch/dev
 
-.. |coveralls| image:: https://coveralls.io/repos/github/boromir674/music-album-creator/badge.svg?branch=master
+.. |coveralls| image:: https://coveralls.io/repos/github/boromir674/music-album-creator/badge.svg?branch=dev
     :alt: Coveralls Coverage Status
-    :target: https://coveralls.io/github/boromir674/music-album-creator?branch=master
+    :target: https://coveralls.io/github/boromir674/music-album-creator?branch=dev
 
-.. |scrutinizer_code_quality| image:: https://scrutinizer-ci.com/g/boromir674/music-album-creator/badges/quality-score.png?b=master
+.. |scrutinizer_code_quality| image:: https://scrutinizer-ci.com/g/boromir674/music-album-creator/badges/quality-score.png?b=dev
     :alt: Code Quality
-    :target: https://scrutinizer-ci.com/g/boromir674/music-album-creator/?branch=master
+    :target: https://scrutinizer-ci.com/g/boromir674/music-album-creator/?branch=dev
 
-.. |code_intelligence_status| image:: https://scrutinizer-ci.com/g/boromir674/music-album-creator/badges/code-intelligence.svg?b=master
+.. |code_intelligence_status| image:: https://scrutinizer-ci.com/g/boromir674/music-album-creator/badges/code-intelligence.svg?b=dev
     :alt: Code Intelligence
     :target: https://scrutinizer-ci.com/code-intelligence
 
@@ -62,7 +62,7 @@ Overview
 
 .. |commits_since| image:: https://img.shields.io/github/commits-since/boromir674/music-album-creator/v1.1.2.svg
     :alt: Commits since latest release
-    :target: https://github.com/boromir674/music-album-creator/compare/v1.1.2...master
+    :target: https://github.com/boromir674/music-album-creator/compare/v1.1.2...dev
 
 
 .. |supported-implementations| image:: https://img.shields.io/pypi/implementation/music-album-creator.svg
