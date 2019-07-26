@@ -16,7 +16,7 @@ Overview
     * - tests
       - | |travis|
         | |appveyor|
-        | |coveralls|
+        | |coverage|
         | |scrutinizer_code_quality|
         | |code_intelligence_status|
     * - package
@@ -36,9 +36,9 @@ Overview
     :alt: Appveyor Build Status
     :target: https://ci.appveyor.com/project/boromir674/music-album-creator/branch/dev
 
-.. |coveralls| image:: https://coveralls.io/repos/github/boromir674/music-album-creator/badge.svg?branch=dev
-    :alt: Coveralls Coverage Status
-    :target: https://coveralls.io/github/boromir674/music-album-creator?branch=dev
+.. |coverage| image:: https://scrutinizer-ci.com/g/boromir674/music-album-creator/badges/coverage.png?b=dev
+    :alt: Coverage Status
+    :target: https://scrutinizer-ci.com/g/boromir674/music-album-creator/?branch=dev
 
 .. |scrutinizer_code_quality| image:: https://scrutinizer-ci.com/g/boromir674/music-album-creator/badges/quality-score.png?b=dev
     :alt: Code Quality
