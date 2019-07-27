@@ -10,15 +10,18 @@ class StringToDictParser:
     check = re.compile(r'^s([1-9]\d*)$')
 
     def __init__(self, entities, separators):
-        assert all(type(x) == str for x in separators)
+        if not all(type(x) == str for x in separators):
+            raise RuntimeError
         self.entities = {k: AlbumInfoEntity(k, v) for k, v in entities.items()}
         self.separators = separators
 
     def __call__(self, *args, **kwargs):
         title = args[0]
         design = kwargs['design']
-        assert all(0 <= len(x) <= len(self.entities) + len(self.separators) and all(type(y) == str for y in x) for x in design)
-        assert all(all(StringToDictParser.check.match(y) for y in x if y.startswith('s')) for x in design)
+        if not all(0 <= len(x) <= len(self.entities) + len(self.separators) and all(type(y) == str for y in x) for x in design):
+            raise RuntimeError
+        if not all(all(StringToDictParser.check.match(y) for y in x if y.startswith('s')) for x in design):
+            raise RuntimeError
         rregs = [RegexSequence([_ for _ in self._yield_reg_comp(d)]) for d in design]
         return max([r.search_n_dict(title) for r in rregs], key=lambda x: len(x))
 

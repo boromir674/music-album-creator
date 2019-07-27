@@ -1,15 +1,36 @@
 import os
+import sys
 import shutil
 
 from PyInquirer import prompt, Validator, ValidationError
 
 # __all__ = ['store_album_dialog', 'interactive_metadata_dialogs']
 
+
+class InputFactory:
+    __instance = None
+
+    def __new__(cls, *args, **kwargs):
+        if not cls.__instance:
+            cls.__instance = super().__new__(cls)
+            if sys.version_info.major == 2:
+                cls.__instance._input = raw_input
+            else:
+                cls.__instance._input = input
+        return cls.__instance
+
+    def __call__(self, *args):
+        return self._input(*args)
+
+
+ask_input = InputFactory()
+
+
 #### INPUT URL
 def input_youtube_url_dialog():
     """"""
     print('Please input a url corresponding to a music album uploaded as a youtube video.\n')
-    video_url = input('   video url: ')
+    video_url = ask_input('   video url: ')
     return video_url
 
 
@@ -58,7 +79,7 @@ def interactive_track_info_input_dialog():
         """Yields input lines from user until EOFError is raised."""
         while True:
             try:
-                yield input() if prompt_ is None else input(prompt_)
+                yield ask_input() if prompt_ is None else ask_input(prompt_)
             except EOFError:
                 break
             else:
@@ -196,3 +217,20 @@ def interactive_metadata_dialogs(artist='', album='', year=''):
         return my_answers
 
     return set_metadata_panel()
+
+
+class InputFactory:
+    __instance = None
+    def __new__(cls, *args, **kwargs):
+        if not cls.__instance:
+            cls.__instance = super().__new__(cls)
+            if sys.version_info.major == 2:
+                cls.__instance._input = raw_input
+            else:
+                cls.__instance._input = input
+        return cls.__instance
+
+    def __call__(self, message):
+        if not message.endswith(': '):
+            message += ': '
+        return self._input(message)
