@@ -25,7 +25,7 @@ class FormatClassifier:
 
     def fit(self, X, y, sample_weight=None):
         self._estimator.fit(X, y, sample_weight=sample_weight)
-        self._estimator
+
     @classmethod
     def infer_new(cls, train_set='new-random', nb_datapoints=100, music_library_dir=''):
         """

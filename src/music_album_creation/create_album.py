@@ -4,7 +4,6 @@ import os
 import sys
 import glob
 import click
-import shutil
 import mutagen
 import subprocess
 from tempfile import mkdtemp, gettempdir
