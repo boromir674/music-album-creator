@@ -17,6 +17,8 @@ include .travis.yml
 include .scrutinizer.yml
 include appveyor.yml
 
+include .bandit.yml
+
 include .coveragerc
 include tox.ini
 

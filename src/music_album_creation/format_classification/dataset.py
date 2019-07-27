@@ -74,7 +74,8 @@ class DatasetHandler:
         feature_vectors = []
         class_labels = []
         i = 0
-        assert nb_datapoints is None or type(nb_datapoints) == int
+        if nb_datapoints and type(nb_datapoints) != int:
+            raise RuntimeError("Wrong type of 'nb_datapoints' parameter. It should either be an integer (to indicate number of datapoints to pick) or evaluate to False (to indicate taking all available datapoints). Instead '{}' was given".format(nb_datapoints))
         if progress_bar:
             if not nb_datapoints:
                 gen = tqdm(new_gen(album_dirs_list), total=len(album_dirs_list) * 2, unit='datapoint')
