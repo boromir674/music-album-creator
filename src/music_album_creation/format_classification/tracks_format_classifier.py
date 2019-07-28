@@ -1,15 +1,23 @@
 import os
-import pickle
+import sys
 
 import attr
 from sklearn.svm import LinearSVC
 
-from . import dataset_handler
-from .dataset import scan_for_albums
+from .dataset import DatasetHandler, scan_for_albums
+
+if 2 < sys.version_info[0]:
+    import pickle
+else:
+    import cPickle as pickle
+
+
+dataset_handler = DatasetHandler(datasets_root_dir=os.path.join(os.path.dirname(os.path.realpath(__file__)), "data"))
+this_dir = os.path.dirname(os.path.realpath(__file__))
 
 
 @attr.s
-class FormatClassifier:
+class FormatClassifier(object):
     default_music_dir = os.path.expanduser('~/Music')
     music_library_dir = attr.ib(init=True, default=attr.Factory(lambda self: self.default_music_dir, takes_self=True))
     _estimator = attr.ib(init=False, default=LinearSVC(penalty='l2',
@@ -36,6 +44,13 @@ class FormatClassifier:
         elif train_set == 'load':
             fc.fit(*list(dataset_handler.load_dataset_split('train')))
         return fc
+
+    @classmethod
+    def load_version(cls):
+        return cls.load(os.path.join(this_dir, 'data/{}'.format({
+            2: 'py27_model.pickle',
+            3: 'model.pickle'
+        }[sys.version_info[0]])))
 
     def save(self, file_path):
         with open(file_path, 'wb') as f:

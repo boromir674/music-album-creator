@@ -5,9 +5,8 @@ import re
 from collections import defaultdict
 
 import click
-from mutagen.id3 import ID3, TALB, TDRC, TIT2, TPE1, TPE2, TRCK
-
 from music_album_creation.tracks_parsing import StringParser
+from mutagen.id3 import ID3, TALB, TDRC, TIT2, TPE1, TPE2, TRCK
 
 # The main notable classes in mutagen are FileType, StreamInfo, Tags, Metadata and for error handling the MutagenError exception.
 
@@ -15,10 +14,12 @@ from music_album_creation.tracks_parsing import StringParser
 logger = logging.getLogger(__name__)
 
 
-class MetadataDealerType(type):
+class MetadataDealerType(object):
 
-    @staticmethod
-    def __parse_year(year):
+    _filters = defaultdict(lambda: lambda y: y, track_number=lambda y: MetadataDealerType._parse_year(y))
+
+    @classmethod
+    def _parse_year(cls, year):
         if year == '':
             return ''
         c = re.match(r'0*(\d+)', year)
@@ -26,13 +27,8 @@ class MetadataDealerType(type):
             raise InvalidInputYearError("Input year tag '{}' is invalid".format(year))
         return c.group(1)
 
-    def __new__(mcs, name, bases, attributes):
-        x = super().__new__(mcs, name, bases, attributes)
-        x._filters = defaultdict(lambda: lambda y: y, track_number=lambda y: mcs.__parse_year(y))
-        return x
 
-
-class MetadataDealer(metaclass=MetadataDealerType):
+class MetadataDealer(MetadataDealerType):
 
     #############
     # simply add keys and constructor pairs to enrich the support of the API for writting tags/frames to audio files
@@ -51,17 +47,16 @@ class MetadataDealer(metaclass=MetadataDealerType):
 
     _all = dict(_d, **dict(_auto_data))
 
-    # reg = re.compile(r'(?:(\d{1,2})(?:[ \t]*[\-\.][ \t]*|[ \t]+)|^)?([\w\'\(\) ’]*[\w)])\.mp3$')  # use to parse track file names like "1. Loyal to the Pack.mp3"
-
     @classmethod
-    def set_album_metadata(cls, album_directory, track_number=True, track_name=True, artist='', album_artist='', album='', year='', verbose=False):
+    def set_album_metadata(cls, album_directory, track_number=True, track_name=True, artist='', album_artist='', album='', year=''):
         cls._write_metadata(album_directory, track_number=track_number, track_name=track_name, artist=artist, album_artist=album_artist, album=album, year=str(year))
 
     @classmethod
     def _write_metadata(cls, album_directory, **kwargs):
         files = glob.glob('{}/*.mp3'.format(album_directory))
-        logger.info("Files selected: [{}]".format(', '.join(map(os.path.basename, files))))
+        logger.info("Album directory: {}".format(album_directory))
         for file in files:
+            logger.info("File: {}".format(os.path.basename(file)))
             cls.write_metadata(file, **dict(cls._filter_auto_inferred(StringParser.parse_track_number_n_name(file), **kwargs),
                                             **{k: kwargs.get(k, '') for k in cls._d.keys()}))
 
@@ -71,10 +66,12 @@ class MetadataDealer(metaclass=MetadataDealerType):
             raise RuntimeError("Some of the input keys [{}] used to request the addition of metadata, do not correspond"
                                " to a tag/frame of the supported [{}]".format(', '.join(kwargs.keys()), ' '.join(cls._d)))
         audio = ID3(file)
-        for k, v in kwargs.items():
+        for metadata_name, v in kwargs.items():
             if bool(v):
-                audio.add(cls._all[k](encoding=3, text=u'{}'.format(cls._filters[k](v))))
-                logger.info("Track '{}'; set {}: {}={}".format(file, k, cls._all[k].__name__, cls._filters[k](v)))
+                audio.add(cls._all[metadata_name](encoding=3, text=u'{}'.format(cls._filters[metadata_name](v))))
+                logger.info(" {}: {}={}".format(metadata_name, cls._all[metadata_name].__name__, cls._filters[metadata_name](v)))
+            else:
+                logger.warning("Skipping metadata '{}::'{}' because bool({}) == False".format(metadata_name, cls._all[metadata_name].__name__, v))
         audio.save()
 
     @classmethod
@@ -101,7 +98,7 @@ class InvalidInputYearError(Exception): pass
 @click.option('--year', 'y', help="If given, then value shall be used as the TDRC tag: 'Recoring time'.  In the music player 'clementine' it corresponds to the 'Year' column.")
 def main(album_dir, track_name, track_number, artist, album_artist, album, year):
     md = MetadataDealer()
-    md.set_album_metadata(album_dir, track_number=track_number, track_name=track_name, artist=artist, album_artist=album_artist, album=album, year=year, verbose=True)
+    md.set_album_metadata(album_dir, track_number=track_number, track_name=track_name, artist=artist, album_artist=album_artist, album=album, year=year)
 
 
 if __name__ == '__main__':

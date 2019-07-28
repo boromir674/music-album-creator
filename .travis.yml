@@ -3,10 +3,16 @@ language: python
 
 env:
   global:
-    - LD_PRELOAD=/lib/x86_64-linux-gnu/libSegFault.so
-    - SEGFAULT_SIGNALS=all
-    - TOX_SKIP_MISSING_INTERPRETERS="False"
-    - MUSIC_LIB_ROOT=music-lib
+  - LD_PRELOAD=/lib/x86_64-linux-gnu/libSegFault.so
+  - SEGFAULT_SIGNALS=all
+  - TOX_SKIP_MISSING_INTERPRETERS="False"
+  - PYPI_USERNAME=boromir674
+  - MUSIC_LIB_ROOT=music-lib
+  - TRAVIS=true
+# in case you want to use semantic-release from travis specify two
+# 'secure' items; one for PYPI_USERNAME and one for PYPI_PASSWORD
+
+
 addons:
   apt:
     update: true
@@ -14,30 +20,29 @@ addons:
     - ffmpeg
 
 before_install:
-  - uname -a
-  - lsb_release -a
-  - python --version
-  - python -m pip install -U pip
-  - pip --version
-  - python -m pip install tox
-  - tox --version
-  - virtualenv --version
-  - easy_install --version
-  - ffmpeg -version
+- uname -a
+- lsb_release -a
+- python --version
+- python -m pip install -U pip
+- pip --version
+- python -m pip install tox
+- tox --version
+- virtualenv --version
+- easy_install --version
+- ffmpeg -version
 
-#install:
 cache: pip
 script: tox -v
-
 
 jobs:
   fail_fast: true
   include:
-#  - stage: Check
   - stage: run tests
     env: TOXENV=clean,check
   - stage: run tests
-    python: '3.6'
+    python: '2.7'
+    env: TOXENV=py27-cover,codecov
+  - stage: run tests
     env: TOXENV=quality
   - stage: run tests
     python: '3.5'
@@ -48,25 +53,24 @@ jobs:
   - stage: run tests
     python: '3.7'
     env: TOXENV=py37-cover,codecov
-  - stage: run tests
-    python: '3.7'
-    env: TOXENV=py37-build,codecov
   allow_failures:
-    - env: TOXENV=quality
+  - env: TOXENV=quality
 
 after_failure:
-  - more .tox/log/* | cat
-  - more .tox/*/log/* | cat
-
-#
-#deploy:
-#  provider: script
-#  script: .travis/deploy.sh
-#  on:
-#    all_branches: true
+- more .tox/log/* | cat
+- more .tox/*/log/* | cat
 
 
-#notifications:
-#  email:
-#    on_success: never
-#    on_failure: never
+#- stage: semantic release
+#    if: branch = master AND type != pull_request
+#    before_install: skip
+#    install:
+#      - python -m pip install -U pip
+#      - pip install typing
+#      - pip install python-semantic-release
+#    script:
+#      - git config --global user.name "semantic-release (via TravisCI)"
+#      - git config --global user.email "semantic-release@travis"
+#      - semantic-release publish
+#    after_script: skip # optional, skip if you have a global after_script
+#    after_success: skip # optional, skip if you have a global after_success

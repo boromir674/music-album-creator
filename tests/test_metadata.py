@@ -3,11 +3,14 @@ import os
 from glob import glob
 
 import pytest
-from mutagen.id3 import ID3
-
 from music_album_creation.metadata import MetadataDealer as MD
 from music_album_creation.tracks_parsing import StringParser
+from mutagen.id3 import ID3
 
+
+@pytest.fixture(scope='module')
+def metadata():
+    return MD()
 
 @pytest.fixture(scope='module')
 def test_album_dir():
@@ -34,7 +37,7 @@ def tags_from_file_name():
 ])
 def test_writting_album_metadata(test_album_dir, album_info, tags_from_file_name, year):
     MD.set_album_metadata(test_album_dir, track_number=True, track_name=True, artist=album_info['artist'][0],
-                          album_artist=album_info['album-artist'][0], album=album_info['album'][0], year=year, verbose=True)
+                          album_artist=album_info['album-artist'][0], album=album_info['album'][0], year=year)
     for file_path in glob(test_album_dir + '/*'):
         c = StringParser.parse_track_number_n_name(os.path.basename(file_path))
         audio = ID3(file_path)
@@ -43,3 +46,7 @@ def test_writting_album_metadata(test_album_dir, album_info, tags_from_file_name
         # for k, v in tags_from_file_name.items():
         #     print("TAG SET: {}={}, requested: {}={}".format(v, str(audio.get(v)), k, c[k]))
         assert all([str(audio.get(album_info[k][1]) == album_info[k][0] for k in album_info.keys())]) and all([str(audio.get(data['tag'])) == data.get('parser', lambda x: x)(c[k]) for k, data in tags_from_file_name.items()])
+
+
+def test_metadata_dealer_object(metadata):
+    assert hasattr(metadata, '_filters')
