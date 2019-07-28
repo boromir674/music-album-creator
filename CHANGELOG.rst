@@ -2,6 +2,16 @@ Changelog
 =========
 
 
+1.1.4 (2019-07-28)
+-------------------
+
+Changes
+^^^^^^^
+
+- Fix track segmentation in linux systems.
+- Settle for 9 minor and 3 medium issues of security severity
+
+
 1.1.3 (2019-07-27)
 -------------------
 

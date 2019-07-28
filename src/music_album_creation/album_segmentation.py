@@ -1,8 +1,7 @@
 #!/usr/bin/python3
 
-import subprocess
 import time
-from tempfile import mkdtemp
+import subprocess
 
 from music_album_creation.tracks_parsing import StringParser
 
@@ -11,11 +10,8 @@ class AudioSegmenter:
 
     args = ['ffmpeg', '-i', '-acodec', 'copy', '-ss']
 
-    def __init__(self, target_directory=''):
-        if not target_directory:
-            self._dir = mkdtemp()
-        else:
-            self._dir = target_directory
+    def __init__(self, target_directory='/tmp'):
+        self._dir = target_directory
 
     @property
     def target_directory(self):
@@ -25,9 +21,6 @@ class AudioSegmenter:
     @target_directory.setter
     def target_directory(self, directory_path):
         self._dir = directory_path
-
-    def temp_location(self):
-        self._dir = mkdtemp()
 
     def segment_from_file(self, album_file, tracks_file, supress_stdout=True, supress_stderr=True, verbose=False, sleep_seconds=0.45):
         """
@@ -44,7 +37,7 @@ class AudioSegmenter:
             list_of_lists = StringParser.parse_hhmmss_string(f.read().strip())
         self.segment_from_list(album_file, list_of_lists, supress_stdout=supress_stdout, supress_stderr=supress_stderr, verbose=verbose, sleep_seconds=sleep_seconds)
 
-    def segment_from_list(self, album_file, data, supress_stdout=True, supress_stderr=False, verbose=False, sleep_seconds=0):
+    def segment_from_list(self, album_file, data, supress_stdout=True, supress_stderr=True, verbose=False, sleep_seconds=0):
         """
         Given an album audio file and data structure with tracks information, segments the audio file into audio tracks which get stored in the 'self.target_directory' folder.\n
         :param str album_file:
@@ -84,8 +77,8 @@ class AudioSegmenter:
         self._args = self.args[:2] + [album_file] + self.args[2:] + [start] + (lambda: ['-to', str(end)] if end else [])() + [track_file]
         if verbose:
             print("Segmenting with '{}'".format(' '.join(self._args)))
-            # subprocess.call()
-        return subprocess.call(self._args, **self.__std_parameters(supress_stdout, supress_stderr))
+        ro = subprocess.run(self._args, **self.__std_parameters(supress_stdout, supress_stderr))
+        return ro.returncode
 
     @classmethod
     def __std_parameters(cls, std_out_flag, std_error_flag):
