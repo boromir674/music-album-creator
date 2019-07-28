@@ -14,7 +14,7 @@ class InputFactory:
         if not cls.__instance:
             cls.__instance = super().__new__(cls)
             if sys.version_info.major == 2:
-                cls.__instance._input = raw_input
+                cls.__instance._input = raw_input  # NOQA
             else:
                 cls.__instance._input = input
         return cls.__instance
@@ -217,20 +217,3 @@ def interactive_metadata_dialogs(artist='', album='', year=''):
         return my_answers
 
     return set_metadata_panel()
-
-
-class InputFactory:
-    __instance = None
-    def __new__(cls, *args, **kwargs):
-        if not cls.__instance:
-            cls.__instance = super().__new__(cls)
-            if sys.version_info.major == 2:
-                cls.__instance._input = raw_input
-            else:
-                cls.__instance._input = input
-        return cls.__instance
-
-    def __call__(self, message):
-        if not message.endswith(': '):
-            message += ': '
-        return self._input(message)
