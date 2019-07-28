@@ -209,7 +209,7 @@ class StringParser:
         and starting time stamp in hh:mm:ss format
         :param str album_file: the path to the audio file of the entire album to potentially segment
         :param str target_directory: path to desired directory path to store the potentially created album
-        :return: each iner list contains track title and timestamp in seconds
+        :return: each iner list contains track path and timestamp in seconds
         :rtype: list of lists
         """
         return [list(_) for _ in cls._generate_data(data, album_file, target_directory)]
@@ -222,7 +222,7 @@ class StringParser:
         :param list data:
         :param str album_file:
         :param str target_directory:
-        :returns: 3-element tuples with track_name, starting_timestamp, ending_timestamp
+        :returns: 3-element tuples with track_file_path, starting_timestamp, ending_timestamp
         :rtype: tuple
         """
         cls.__album_file = album_file

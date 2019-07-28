@@ -6,21 +6,26 @@ env:
     - LD_PRELOAD=/lib/x86_64-linux-gnu/libSegFault.so
     - SEGFAULT_SIGNALS=all
     - TOX_SKIP_MISSING_INTERPRETERS="False"
+    - MUSIC_LIB_ROOT=music-lib
+addons:
+  apt:
+    update: true
+    packages:
+    - ffmpeg
 
 before_install:
-  - python --version
   - uname -a
   - lsb_release -a
-  - sudo apt-get install ffmpeg
-
-
-install:
-  - pip install tox
+  - python --version
+  - python -m pip install -U pip
+  - pip --version
+  - python -m pip install tox
+  - tox --version
   - virtualenv --version
   - easy_install --version
-  - pip --version
-  - tox --version
+  - ffmpeg -version
 
+#install:
 cache: pip
 script: tox -v
 
@@ -28,22 +33,24 @@ script: tox -v
 jobs:
   fail_fast: true
   include:
-  - stage: Check
+#  - stage: Check
+  - stage: run tests
     env: TOXENV=clean,check
-    script: tox
   - stage: run tests
     python: '3.6'
     env: TOXENV=quality
-    script: tox
   - stage: run tests
     python: '3.5'
-    env: TOXENV=py35-cover,coveralls
+    env: TOXENV=py35-cover,codecov
   - stage: run tests
     python: '3.6'
-    env: TOXENV=py36-cover,coveralls
+    env: TOXENV=py36-cover,codecov
   - stage: run tests
     python: '3.7'
-    env: TOXENV=py37-cover,coveralls
+    env: TOXENV=py37-cover,codecov
+  - stage: run tests
+    python: '3.7'
+    env: TOXENV=py37-build,codecov
   allow_failures:
     - env: TOXENV=quality
 

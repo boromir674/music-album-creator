@@ -1,12 +1,18 @@
+import glob
+import logging
 import os
 import re
-import glob
-import click
-from mutagen.id3 import ID3, TPE1, TPE2, TRCK, TIT2, TALB, TDRC
 from collections import defaultdict
+
+import click
+from mutagen.id3 import ID3, TALB, TDRC, TIT2, TPE1, TPE2, TRCK
+
 from music_album_creation.tracks_parsing import StringParser
 
 # The main notable classes in mutagen are FileType, StreamInfo, Tags, Metadata and for error handling the MutagenError exception.
+
+
+logger = logging.getLogger(__name__)
 
 
 class MetadataDealerType(type):
@@ -49,19 +55,18 @@ class MetadataDealer(metaclass=MetadataDealerType):
 
     @classmethod
     def set_album_metadata(cls, album_directory, track_number=True, track_name=True, artist='', album_artist='', album='', year='', verbose=False):
-        cls._write_metadata(album_directory, track_number=track_number, track_name=track_name, artist=artist, album_artist=album_artist, album=album, year=str(year), verbose=verbose)
+        cls._write_metadata(album_directory, track_number=track_number, track_name=track_name, artist=artist, album_artist=album_artist, album=album, year=str(year))
 
     @classmethod
-    def _write_metadata(cls, album_directory, verbose=False, **kwargs):
+    def _write_metadata(cls, album_directory, **kwargs):
         files = glob.glob('{}/*.mp3'.format(album_directory))
-        if verbose:
-            print('FILES\n', list(map(os.path.basename, files)))
+        logger.info("Files selected: [{}]".format(', '.join(map(os.path.basename, files))))
         for file in files:
             cls.write_metadata(file, **dict(cls._filter_auto_inferred(StringParser.parse_track_number_n_name(file), **kwargs),
                                             **{k: kwargs.get(k, '') for k in cls._d.keys()}))
 
     @classmethod
-    def write_metadata(cls, file, verbose=True, **kwargs):
+    def write_metadata(cls, file, **kwargs):
         if not all(map(lambda x: x[0] in cls._all.keys(), kwargs.items())):
             raise RuntimeError("Some of the input keys [{}] used to request the addition of metadata, do not correspond"
                                " to a tag/frame of the supported [{}]".format(', '.join(kwargs.keys()), ' '.join(cls._d)))
@@ -69,8 +74,7 @@ class MetadataDealer(metaclass=MetadataDealerType):
         for k, v in kwargs.items():
             if bool(v):
                 audio.add(cls._all[k](encoding=3, text=u'{}'.format(cls._filters[k](v))))
-                if verbose:
-                    print("set '{}' with {}: {}={}".format(file, k, cls._all[k].__name__, cls._filters[k](v)))
+                logger.info("Track '{}'; set {}: {}={}".format(file, k, cls._all[k].__name__, cls._filters[k](v)))
         audio.save()
 
     @classmethod

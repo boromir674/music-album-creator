@@ -1,6 +1,6 @@
 import os
-from setuptools import setup, find_packages
 
+from setuptools import find_packages, setup
 
 my_dir = os.path.dirname(os.path.realpath(__file__))
 
@@ -13,7 +13,7 @@ def readme():
 
 setup(
     name='music_album_creation',
-    version='1.1.4',
+    version='1.2.0',
     description='A CLI application intending to automate offline music library building.',
     long_description=readme(),
     keywords='music automation download youtube metadata',
@@ -24,7 +24,7 @@ setup(
     zip_safe=False,
 
     # what packages/distributions (python) need to be installed when this one is. (Roughly what is imported in source code)
-    install_requires=['tqdm', 'click', 'sklearn', 'mutagen', 'PyInquirer', 'youtube_dl', 'pyreadline'],
+    install_requires=['attrs', 'tqdm', 'click', 'sklearn', 'mutagen', 'PyInquirer', 'youtube_dl', 'pyreadline', 'lxml'],
 
     # A string or list of strings specifying what other distributions need to be present in order for the setup script to run.
     # (Note: projects listed in setup_requires will NOT be automatically installed on the system where the setup script is being run.
@@ -40,7 +40,7 @@ setup(
     # what other distributions need to be present for the package’s tests to run. Note that these required projects will not be installed on the system where the
     # tests are run, but only downloaded to the project’s setup directory if they’re not already installed locally.
     # Use to ensure that a package is available when the test command is run.
-    tests_require=['pytest'],
+    tests_require=['pytest', 'mock'],
 
     classifiers=[
         'Development Status :: 5 - Production/Stable',

@@ -1,7 +1,7 @@
 import pytest
 
-from music_album_creation.format_classification import dataset_handler, FormatClassifier
-
+from music_album_creation.format_classification import (FormatClassifier,
+                                                        dataset_handler)
 
 model = "src/music_album_creation/format_classification/data/model.pickle"
 

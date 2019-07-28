@@ -1,0 +1,15 @@
+*__pycache__*
+
+\.idea
+playground*
+*\.pyc
+/dist/
+/*.egg-info
+build/*
+\.cache*
+\.eggs/*
+logos\.sh
+*wheel*
+*sdist*
+*dist
+*egg-info
