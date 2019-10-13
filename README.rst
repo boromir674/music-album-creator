@@ -36,9 +36,9 @@ Overview
     :alt: Appveyor Build Status
     :target: https://ci.appveyor.com/project/boromir674/music-album-creator/branch/master
 
-.. |coverage| image:: https://scrutinizer-ci.com/g/boromir674/music-album-creator/badges/coverage.png?b=master
-    :alt: Coverage Status
-    :target: https://scrutinizer-ci.com/g/boromir674/music-album-creator/?branch=master
+.. |coverage| image:: https://codecov.io/gh/boromir674/music-album-creator/branch/master/graph/badge.svg
+  :alt: Coverage Status
+  :target: https://codecov.io/gh/boromir674/music-album-creator
 
 .. |scrutinizer_code_quality| image:: https://scrutinizer-ci.com/g/boromir674/music-album-creator/badges/quality-score.png?b=master
     :alt: Code Quality
@@ -87,6 +87,12 @@ Installation
 Usage
 ============
 
+
+Music Album Creation depends on the ffmpeg package which can be easily installed if need be with::
+
+    sudo apt-get install ffmpeg
+
+
 To run, simply execute::
 
     create-album
@@ -102,7 +108,7 @@ https://music-album-creator.readthedocs.io/
 Development
 ===========
 
-To run the all tests run::
+To run all tests run::
 
-    tox
-
+    pip install -U tox
+    tox -v

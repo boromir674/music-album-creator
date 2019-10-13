@@ -1,27 +1,24 @@
 import os
 import pickle
 
+import attr
 from sklearn.svm import LinearSVC
 
 from . import dataset_handler
 from .dataset import scan_for_albums
 
 
+@attr.s
 class FormatClassifier:
     default_music_dir = os.path.expanduser('~/Music')
-
-    def __init__(self, music_library_dir=''):
-        if music_library_dir:
-            self.music_library_dir = music_library_dir
-        else:
-            self.music_library_dir = self.default_music_dir
-        self._estimator = LinearSVC(penalty='l2',
-                                    loss='squared_hinge',  # 'hinge'
-                                    dual=False,
-                                    tol=1e-4,
-                                    fit_intercept=False,  # False: data expected to be already centered
-                                    verbose=0,
-                                    max_iter=1000)
+    music_library_dir = attr.ib(init=True, default=attr.Factory(lambda self: self.default_music_dir, takes_self=True))
+    _estimator = attr.ib(init=False, default=LinearSVC(penalty='l2',
+                                                       loss='squared_hinge',  # 'hinge'
+                                                       dual=False,
+                                                       tol=1e-4,
+                                                       fit_intercept=False,  # False: data expected to be already centered
+                                                       verbose=0,
+                                                       max_iter=1000))
 
     def fit(self, X, y, sample_weight=None):
         self._estimator.fit(X, y, sample_weight=sample_weight)

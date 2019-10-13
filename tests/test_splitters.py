@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import pytest
+
 from music_album_creation.tracks_parsing import StringParser, Timestamp
 
 

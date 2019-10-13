@@ -22,7 +22,7 @@ build:
                 before:
                     - pip install coverage
                 override:
-                    - tox
+                    - tox -e clean,check,scrutinizer
                     -
                         command: coverage
                         coverage:

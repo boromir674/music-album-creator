@@ -2,6 +2,18 @@ Changelog
 =========
 
 
+1.2.0 (2019-10-13)
+-------------------
+
+Changes
+^^^^^^^
+
+- Write integration test
+- Fix 3 minor security issues and 2 medium
+- Implement alternative method to retrieve album name
+- Improve 'front-end' architecture
+
+
 1.1.4 (2019-07-28)
 -------------------
 

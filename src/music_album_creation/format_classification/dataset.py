@@ -3,12 +3,11 @@ import os
 import re
 from random import shuffle
 from warnings import warn
-import mutagen
 
+import mutagen
 from tqdm import tqdm
 
 from music_album_creation.tracks_parsing import StringParser
-
 
 sp = StringParser()
 
