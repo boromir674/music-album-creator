@@ -8,6 +8,7 @@ environment:
   COVERALLS_REPO_TOKEN:
     secure: EJUHS/ajkZiRV3cLoINHVvgZTW8EhLHzVzvA7vXaQEpr/Mn3BArtglPXvSuoX24z
   global:
+    MUSIC_LIB_ROOT: '.\music-lib'
     WITH_COMPILER: 'cmd /E:ON /V:ON /C .\ci\appveyor-with-compiler.cmd'
     ffmpeg_download: https://ffmpeg.zeranoe.com/builds/
     nodejs_version: Current
@@ -22,45 +23,53 @@ environment:
 #      platform: x86
 #      ffmpeg_platform: win32
 
-    - TOXENV: 'py35-cover,coveralls'
+    - TOXENV: 'clean,py35-cover,coveralls'
       TOXPYTHON: C:\Python35\python.exe
       PYTHON_HOME: C:\Python35
       PYTHON_VERSION: '3.5'
       PYTHON_ARCH: '32'
       platform: x86
       ffmpeg_platform: win32
-#
-#    - TOXENV: 'py35-cover'
-#      TOXPYTHON: C:\Python35-x64\python.exe
-#      PYTHON_HOME: C:\Python35-x64
-#      PYTHON_VERSION: '3.5'
-#      PYTHON_ARCH: '64'
-#      platform: x64
-#      ffmpeg_platform: win64
 
-#    - TOXENV: 'py35-nocov'
-#      TOXPYTHON: C:\Python35\python.exe
-#      PYTHON_HOME: C:\Python35
-#      PYTHON_VERSION: '3.5'
-#      PYTHON_ARCH: '32'
-#      platform: x86
-#      ffmpeg_platform: win32
-#
-#    - TOXENV: 'py35-nocov'
-#      TOXPYTHON: C:\Python35-x64\python.exe
-#      PYTHON_HOME: C:\Python35-x64
-#      PYTHON_VERSION: '3.5'
-#      PYTHON_ARCH: '64'
-#      platform: x64
-#      ffmpeg_platform: win64
+    - TOXENV: 'py35-nocov'
+      TOXPYTHON: C:\Python35-x64\python.exe
+      PYTHON_HOME: C:\Python35-x64
+      PYTHON_VERSION: '3.5'
+      PYTHON_ARCH: '64'
+      platform: x64
+      ffmpeg_platform: win64
 
-#    - TOXENV: 'py36-nocov'
-#      TOXPYTHON: C:\Python36-x64\python.exe
-#      PYTHON_HOME: C:\Python36-x64
-#      PYTHON_VERSION: '3.6'
-#      PYTHON_ARCH: '64'
-#      platform: x64
-#      ffmpeg_platform: win64
+    - TOXENV: 'clean,py36-cover,coveralls'
+      TOXPYTHON: C:\Python36\python.exe
+      PYTHON_HOME: C:\Python36
+      PYTHON_VERSION: '3.6'
+      PYTHON_ARCH: '32'
+      platform: x86
+      ffmpeg_platform: win32
+
+    - TOXENV: 'py36-nocov'
+      TOXPYTHON: C:\Python36-x64\python.exe
+      PYTHON_HOME: C:\Python36-x64
+      PYTHON_VERSION: '3.6'
+      PYTHON_ARCH: '64'
+      platform: x64
+      ffmpeg_platform: win64
+
+    - TOXENV: 'clean,py37-cover,coveralls'
+      TOXPYTHON: C:\Python37\python.exe
+      PYTHON_HOME: C:\Python37
+      PYTHON_VERSION: '3.7'
+      PYTHON_ARCH: '32'
+      platform: x86
+      ffmpeg_platform: win32
+
+    - TOXENV: 'py37-nocov'
+      TOXPYTHON: C:\Python37-x64\python.exe
+      PYTHON_HOME: C:\Python37-x64
+      PYTHON_VERSION: '3.7'
+      PYTHON_ARCH: '64'
+      platform: x64
+      ffmpeg_platform: win64
 
 
 init:
@@ -93,7 +102,7 @@ test_script:
   - node --version
   - npm --version
   - '%PYTHON_HOME%\Scripts\tox --version'
-  - '%WITH_COMPILER% %PYTHON_HOME%\Scripts\tox'
+  - '%WITH_COMPILER% %PYTHON_HOME%\Scripts\tox -v'
 
 after_test:
 - '%PYTHON_HOME%\python setup.py bdist_wheel'
