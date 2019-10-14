@@ -60,9 +60,9 @@ Overview
     :alt: Supported versions
     :target: https://pypi.org/project/music-album-creation
 
-.. |commits_since| image:: https://img.shields.io/github/commits-since/boromir674/music-album-creator/v1.1.4.svg
+.. |commits_since| image:: https://img.shields.io/github/commits-since/boromir674/music-album-creator/v1.2.1.svg
     :alt: Commits since latest release
-    :target: https://github.com/boromir674/music-album-creator/compare/v1.1.4...master
+    :target: https://github.com/boromir674/music-album-creator/compare/v1.2.1...master
 
 
 .. |supported-implementations| image:: https://img.shields.io/pypi/implementation/music-album-creator.svg
