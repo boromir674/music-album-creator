@@ -5,14 +5,13 @@ from random import shuffle
 from warnings import warn
 
 import mutagen
-from tqdm import tqdm
-
 from music_album_creation.tracks_parsing import StringParser
+from tqdm import tqdm
 
 sp = StringParser()
 
 
-class DatasetHandler:
+class DatasetHandler(object):
     __instance = None
     splits = ['train', 'dev', 'test']
     post_fix = '-split.txt'
@@ -20,7 +19,7 @@ class DatasetHandler:
 
     def __new__(cls, *args, **kwargs):
         if not cls.__instance:
-            cls.__instance = super().__new__(cls)
+            cls.__instance = super(cls, DatasetHandler).__new__(cls)
         dir_requested = kwargs['datasets_root_dir']
         if 'datasets_root_dir' in kwargs and bool(kwargs['datasets_root_dir']):
             c_globe = glob.glob('{}/*{}'.format(kwargs['datasets_root_dir'], cls.post_fix))
@@ -148,8 +147,9 @@ def album_to_datapoints(album_dir):
     # the sum of the durations and a is_album=1 flag (binary class) : an album
     d1 = [[durs[0]], 1]
 
-    hhmmss_durs = [sp.time_format(d) for d in durs]
-    timestamps = sp.convert_to_timestamps('\n'.join('x {}'.format(_) for _ in hhmmss_durs))
+    timestamps = sp.convert_to_timestamps('\n'.join('x {}'.format(sp.hhmmss_format(seconds)) for seconds in durs))
+
+    # timestamps = sp.convert_to_timestamps('\n'.join('x {}'.format(_) for _ in hhmmss_durs))
 
     # the sum of the durations and a is_album=0 flag (binary class): not an album
     d2 = [[sp.to_seconds(timestamps[0])], 0]

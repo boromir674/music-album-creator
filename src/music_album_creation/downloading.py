@@ -1,6 +1,7 @@
 import logging
 import re
 import subprocess
+import sys
 from abc import ABCMeta, abstractmethod
 from time import sleep
 
@@ -24,8 +25,8 @@ logger = logging.getLogger(__name__)
 
 
 
-class AbstractYoutubeDownloader(metaclass=ABCMeta):
-
+class AbstractYoutubeDownloader(object):
+    __metaclass__ = ABCMeta
     @abstractmethod
     def download(self, video_url, directory, **kwargs):
         raise NotImplementedError
@@ -62,7 +63,7 @@ class CMDYoutubeDownloader(AbstractYoutubeDL):
 
     def __new__(cls, *args, **kwargs):
         if not cls.__instance:
-            cls.__instance = super().__new__(cls)
+            cls.__instance = super(CMDYoutubeDownloader, cls).__new__(cls)
         return cls.__instance
 
     def download(self, video_url, directory, suppress_certificate_validation=False, **kwargs):
@@ -76,9 +77,13 @@ class CMDYoutubeDownloader(AbstractYoutubeDL):
         if kwargs.get('suppress_certificate_validation', False):
             args.insert(1, '--no-check-certificate')
         logger.info("Executing '{}'".format(' '.join(args)))
-        ro = subprocess.run(args, stderr=subprocess.PIPE)  # stdout gets streamed in terminal
-        if ro.returncode != 0:
-            stderr = str(ro.stderr, encoding='utf-8')
+        process = subprocess.Popen(args, stderr=subprocess.PIPE)  # stdout gets streamed in terminal
+        stdout, stderr = process.communicate()
+        if process.returncode != 0:
+            if 2 < sys.version_info[0]:
+                stderr = str(stderr, encoding='utf-8')
+            else:
+                stderr = str(stderr)
             raise YoutubeDownloaderErrorFactory.create_from_stderr(stderr, video_url)
 
     def download_trials(self, video_url, directory, times=10, delay=1, **kwargs):
@@ -94,7 +99,7 @@ class CMDYoutubeDownloader(AbstractYoutubeDL):
         self.download(video_url, directory, **kwargs)
 
 
-class YoutubeDownloaderErrorFactory:
+class YoutubeDownloaderErrorFactory(object):
     @staticmethod
     def create_with_message(msg):
         return Exception(msg)
@@ -111,9 +116,11 @@ class YoutubeDownloaderErrorFactory:
 
 #### EXCEPTIONS
 
-class AbstractYoutubeDownloaderError(metaclass=ABCMeta):
+class AbstractYoutubeDownloaderError(object):
+    __metaclass__ = ABCMeta
+
     def __init__(self, *args, **kwargs):
-        super().__init__()
+        super(AbstractYoutubeDownloaderError, self).__init__()
         if len(args) > 1:
             self.video_url = args[0]
             self.stderr = args[1]

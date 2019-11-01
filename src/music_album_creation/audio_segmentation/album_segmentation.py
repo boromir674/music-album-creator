@@ -1,18 +1,17 @@
-#!/usr/bin/python3
-
 import logging
+import os
 import subprocess
 import tempfile
 import time
 
 from music_album_creation.tracks_parsing import StringParser
 
+from .data import SegmentationInformation
+
 logger = logging.getLogger(__name__)
 
 
-class AudioSegmenter:
-
-    args = ['ffmpeg', '-i', '-acodec', 'copy', '-ss']
+class AudioSegmenter(object):
 
     def __init__(self, target_directory=tempfile.gettempdir()):
         self._dir = target_directory
@@ -26,7 +25,33 @@ class AudioSegmenter:
     def target_directory(self, directory_path):
         self._dir = directory_path
 
-    def segment_from_list(self, album_file, data, supress_stdout=True, supress_stderr=True, verbose=False, sleep_seconds=0):
+    def _trans(self, track_info):
+        return [os.path.join(self._dir, '{}.mp3'.format(track_info[0]))] + track_info[1:]
+
+    def segment(self, album_file, data, supress_stdout=True, supress_stderr=True, sleep_seconds=0):
+        """
+
+        :param album_file:
+        :param data:
+        :param supress_stdout:
+        :param supress_stderr:
+        :param float sleep_seconds:
+        :return:
+        """
+        exit_code = 0
+        i = 0
+        while exit_code == 0 and i < len(data) - 1:
+            time.sleep(sleep_seconds)
+            exit_code = self._segment(album_file, *self._trans(list(data[i])), supress_stdout=supress_stdout, supress_stderr=supress_stderr)
+            i += 1
+        if exit_code != 0:
+            raise FfmpegCommandError("Command '{}' failed".format(' '.join(self._args)))
+        exit_code = self._segment(album_file, *self._trans(list(data[-1])), supress_stdout=supress_stdout, supress_stderr=supress_stderr)
+        if exit_code != 0:
+            raise FfmpegCommandError("Command '{}' failed".format(' '.join(self._args)))
+        return [os.path.join(self._dir, '{}.mp3'.format(list(x)[0])) for x in data]
+
+    def segment_from_list(self, album_file, data, supress_stdout=True, supress_stderr=True, sleep_seconds=0):
         """
         Given an album audio file and data structure with tracks information, segments the audio file into audio tracks which get stored in the 'self.target_directory' folder.\n
         :param str album_file:
@@ -55,34 +80,37 @@ class AudioSegmenter:
             raise FfmpegCommandError("Command '{}' failed".format(' '.join(self._args)))
         return audio_file_paths
 
-    def segment_from_file(self, album_file, tracks_file, supress_stdout=True, supress_stderr=True, verbose=False, sleep_seconds=0.45):
+    def segment_from_file(self, album_file, tracks_file, hhmmss_type, supress_stdout=True, supress_stderr=True, sleep_seconds=0):
         """
-        Given an album audio file and a file with track information, segments the audio file into audio tracks which get stored in the 'self.target_directory' folder.\n
+        Assumes the hhmmss are starting timestamps. Given an album audio file and a file with track information, segments the audio file into audio tracks which get stored in the 'self.target_directory' folder.\n
         :param str album_file:
         :param str tracks_file:
+        :param str hhmmss_type:
         :param bool supress_stdout:
         :param bool supress_stderr:
-        :param bool verbose:
         :param float sleep_seconds:
         :return:
         """
         with open(tracks_file, 'r') as f:
-            list_of_lists = StringParser.parse_hhmmss_string(f.read().strip())
-        self.segment_from_list(album_file, list_of_lists, supress_stdout=supress_stdout, supress_stderr=supress_stderr, verbose=verbose, sleep_seconds=sleep_seconds)
+            segmentation_info = SegmentationInformation.from_multiline(f.read().strip(), hhmmss_type)
+        return self.segment(album_file, segmentation_info, supress_stdout=supress_stdout, supress_stderr=supress_stderr, sleep_seconds=sleep_seconds)
 
-
-    def _segment(self, *args, supress_stdout=True, supress_stderr=True, verbose=False):
+    def _segment(self, *args, **kwargs):
         album_file = args[0]
         track_file = args[1]
+        supress_stdout = kwargs['supress_stdout']
+        supress_stderr = kwargs['supress_stderr']
 
         start = args[2]
         end = None
         if 3 < len(args):
             end = args[3]
-        self._args = self.args[:2] + ['{}'.format(album_file)] + self.args[2:] + [start] + (lambda: ['-to', str(end)] if end else [])() + ['{}'.format(track_file)]
+        args = ['ffmpeg', '-y', '-i', '-acodec', 'copy', '-ss']
+        self._args = args[:3] + ['{}'.format(album_file)] + args[3:] + [start] + (lambda: ['-to', str(end)] if end else [])() + ['{}'.format(track_file)]
         logger.info("Segmenting: '{}'".format(' '.join(self._args)))
-        ro = subprocess.run(self._args, **self.__std_parameters(supress_stdout, supress_stderr))
-        return ro.returncode
+        return subprocess.check_call(self._args, **self.__std_parameters(supress_stdout, supress_stderr))
+        # ro = subprocess.run(self._args, **self.__std_parameters(supress_stdout, supress_stderr))
+        # return ro.returncode
 
     @classmethod
     def __std_parameters(cls, std_out_flag, std_error_flag):

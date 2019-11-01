@@ -13,3 +13,10 @@ logos\.sh
 *sdist*
 *dist
 *egg-info
+node_modules/*
+*\.log
+\.tox
+\.coverage
+coverage\.xml
+htmlcov
+appveyor-tools

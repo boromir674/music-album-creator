@@ -13,7 +13,7 @@ def readme():
 
 setup(
     name='music_album_creation',
-    version='1.2.1',
+    version='1.3.0',
     description='A CLI application intending to automate offline music library building.',
     long_description=readme(),
     keywords='music automation download youtube metadata',
@@ -28,7 +28,7 @@ setup(
 
     # A string or list of strings specifying what other distributions need to be present in order for the setup script to run.
     # (Note: projects listed in setup_requires will NOT be automatically installed on the system where the setup script is being run.
-    # They are simply downloaded to the ./.eggs directory if they’re not locally available already. If you want them to be installed,
+    # They are simply downloaded to the ./.eggs directory if they're not locally available already. If you want them to be installed,
     # as well as being available when the setup script is run, you should add them to install_requires and setup_requires.)
     # setup_requires=[],
 
@@ -36,9 +36,9 @@ setup(
     # to run the specified test suite, e.g. via setup.py test.
     test_suite='tests',
 
-    # Declare packages that the project’s tests need besides those needed to install it. A string or list of strings specifying
-    # what other distributions need to be present for the package’s tests to run. Note that these required projects will not be installed on the system where the
-    # tests are run, but only downloaded to the project’s setup directory if they’re not already installed locally.
+    # Declare packages that the project's tests need besides those needed to install it. A string or list of strings specifying
+    # what other distributions need to be present for the package's tests to run. Note that these required projects will not be installed on the system where the
+    # tests are run, but only downloaded to the project's setup directory if they're not already installed locally.
     # Use to ensure that a package is available when the test command is run.
     tests_require=['pytest', 'mock'],
 
@@ -49,6 +49,8 @@ setup(
         'Natural Language :: English',
         'Operating System :: Microsoft :: Windows',
         'Operating System :: POSIX :: Linux',
+        'Programming Language :: Python :: 2',
+        'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
@@ -58,7 +60,7 @@ setup(
         'Topic :: Multimedia :: Sound/Audio',
     ],
     url='https://github.com/boromir674/music-album-creator',
-    download_url='https://github.com/boromir674/music-album-creator/archive/v1.2.1.tar.gz',  # help easy_install do its tricks
+    download_url='https://github.com/boromir674/music-album-creator/archive/v1.3.0.tar.gz',  # help easy_install do its tricks
     author='Konstantinos Lampridis',
     author_email='k.lampridis@hotmail.com',
     license='GNU GPLv3',
@@ -76,7 +78,7 @@ setup(
             'create-album = music_album_creation.create_album:main',
         ]
     },
-    # A dictionary mapping names of “extras” (optional features of your project: eg imports that a console_script uses) to strings or lists of strings
+    # A dictionary mapping names of "extras" (optional features of your project: eg imports that a console_script uses) to strings or lists of strings
     # specifying what other distributions must be installed to support those features.
     # extras_require={},
 )

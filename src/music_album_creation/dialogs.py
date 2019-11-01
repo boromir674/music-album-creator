@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import os
 import sys
 
@@ -37,14 +38,8 @@ class DialogCommander:
             ")
 
     @classmethod
-    def print(cls, string):
-        print(string)
-
-    @classmethod
     def input_youtube_url_dialog(cls):
-        """"""
         return ask_input('Please input a url corresponding to a music album uploaded as a youtube video.\n   video url: ')
-
 
     ## HANDLE Token Error with update youtube-dl and retry download same url dialog
     @classmethod
@@ -115,6 +110,7 @@ class DialogCommander:
         return prompt([{'type': 'input',
                         'name': 'create-album-dir',
                         'message': 'Please give album directory path',
+                        # TODO make sure that the below gets converted to unicode (not str) when executing python2 (python3 is fine)
                         'default': os.path.join(music_lib, artist, album)}])['create-album-dir']
 
     @classmethod
