@@ -2,7 +2,6 @@ import sys
 
 from lxml import etree
 
-
 if sys.version_info.major == 2:
     from urllib import urlopen
 else:

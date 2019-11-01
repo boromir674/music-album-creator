@@ -4,19 +4,20 @@ import glob
 import os
 import shutil
 import sys
-import tempfile
 from time import sleep
 
 import click
 import mutagen
 
-from . import AudioSegmenter, FormatClassifier, MetadataDealer, StringParser
+from . import FormatClassifier, MetadataDealer, StringParser
+from .audio_segmentation import (AudioSegmenter, SegmentationInformation,
+                                 TracksInformation)
+from .audio_segmentation.data import TrackTimestampsSequenceError
 # 'front-end', interface, interactive dialogs are imported below
 from .dialogs import DialogCommander as inout
-from .downloading import (CMDYoutubeDownloader, InvalidUrlError,
-                          TokenParameterNotInVideoInfoError,
+from .downloading import (InvalidUrlError, TokenParameterNotInVideoInfoError,
                           UnavailableVideoError)
-from .tracks_parsing import TrackTimestampsSequenceError, WrongTimestampFormat
+from .music_master import MusicMaster
 
 if os.name == 'nt':
     from pyreadline import Readline
@@ -54,11 +55,6 @@ def music_lib_directory(verbose=True):
 @click.option('--album_artist', help="If given, then value shall be used as the TPE2 tag: 'Band/orchestra/accompaniment'.  In the music player 'clementine' it corresponds to the 'Album artist' column")
 @click.option('--video_url', '-u', help='the youtube video url')
 def main(tracks_info, track_name, track_number, artist, album_artist, video_url):
-    # CONFIG of the 'app' #
-    directory = os.path.join(tempfile.gettempdir(), 'gav')
-    if os.path.isdir(directory):
-        shutil.rmtree(directory)
-    os.mkdir(directory)
 
     music_dir = music_lib_directory(verbose=True)
     print("Music library: {}".format(music_dir))
@@ -72,19 +68,18 @@ def main(tracks_info, track_name, track_number, artist, album_artist, video_url)
         print('\n')
 
     ## Init
-    youtube = CMDYoutubeDownloader()
-    audio_segmenter = AudioSegmenter(target_directory=directory)
+    music_master = MusicMaster(music_dir)
+    audio_segmenter = AudioSegmenter()
 
     ## DOWNLOAD
-    done = False
-    while not done:
+    while 1:
         try:
-            youtube.download(video_url, directory, spawn=False, verbose=True, supress_stdout=False)  # force waiting before continuing execution, by not spawning a separate process
-            done = True
+            album_file = music_master.url2mp3(video_url, suppress_certificate_validation=False, force_download=False)
+            break
         except TokenParameterNotInVideoInfoError as e:
             print(e, '\n')
             if inout.update_and_retry_dialog()['update-youtube-dl']:
-                youtube.update_backend()
+                music_master.update_youtube()
             else:
                 print("Exiting ..")
                 sys.exit(1)
@@ -92,60 +87,46 @@ def main(tracks_info, track_name, track_number, artist, album_artist, video_url)
             print(e, '\n')
             video_url = inout.input_youtube_url_dialog()
             print('\n')
-        except Exception as e:
-            print(e, '\n')
-            print("Exiting ..")
-            sys.exit(1)
     print('\n')
 
-    album_file = os.path.join(directory, os.listdir(directory)[0])
-    print("Album file: {}".format(album_file))
-    print(os.path.basename(album_file))
-    if os.path.basename(album_file) == '_.mp3':
-        from .web_parsing import video_title
-        guessed_info = StringParser.parse_album_info(video_title(video_url)[0])
-    else:
-        guessed_info = StringParser.parse_album_info(album_file)
+    print("Album file: {}".format(os.path.basename(album_file)))
 
     ### RECEIVE TRACKS INFORMATION
     if tracks_info:
-        with open(tracks_info, 'r') as f:
-            tracks_string = f.read().strip()
-    else:
-        sleep(0.50)
-        tracks_string = inout.interactive_track_info_input_dialog().strip()
+        tracks_info = TracksInformation.from_multiline(tracks_info.read().strip())
+    else:  # Interactive track type input
+        sleep(0.5)
+        tracks_info = TracksInformation.from_multiline(inout.interactive_track_info_input_dialog().strip())
         print()
-    # Convert string with tracks and timestamps information to data structure
-    try:
-        tracks_data = StringParser.parse_hhmmss_string(tracks_string)
-    except WrongTimestampFormat as e:
-        print(e)
-        sys.exit(1)
 
     ### PREDICTION SERVICE
-    fc = FormatClassifier.load(os.path.join(this_dir, "format_classification/data/model.pickle"))
-    predicted_label = fc.is_durations([_[1] for _ in tracks_data])
+    fc = FormatClassifier.load_version()
+    # fc = FormatClassifier.load(os.path.join(this_dir, "format_classification/data/model.pickle"))
+    predicted_label = fc.is_durations(tracks_info.hhmmss_list)
     # print('Predicted class {}; 0: timestamp input, 1:duration input'.format(predicted_label))
     answer = inout.track_information_type_dialog(prediction={1: 'durations'}.get(int(predicted_label), 'timestamps'))
 
-    if answer.startswith('Durations'):
-        tracks_data = StringParser.duration_data_to_timestamp_data(tracks_data)
+    segmentation_info = SegmentationInformation.from_tracks_information(tracks_info, hhmmss_type=answer.lower())
+
     try:  # SEGMENTATION
-        audio_file_paths = audio_segmenter.segment_from_list(album_file, tracks_data, supress_stdout=False, supress_stderr=False, verbose=True, sleep_seconds=0.4)
+        audio_file_paths = audio_segmenter.segment(album_file, segmentation_info, supress_stdout=True, supress_stderr=True, sleep_seconds=0)
     except TrackTimestampsSequenceError as e:
         print(e)
         sys.exit(1)
         # TODO capture ctrl-D to signal possible change of type from timestamp to durations and vice-versa...
         # in order to put the above statement outside of while loop
 
-    durations = [StringParser.time_format(getattr(mutagen.File(os.path.join(directory, t)).info, 'length', 0)) for t in audio_file_paths]
+    durations = [StringParser.hhmmss_format(getattr(mutagen.File(t).info, 'length', 0)) for t in audio_file_paths]
     max_row_length = max(len(_[0]) + len(_[1]) for _ in zip(audio_file_paths, durations))
     print("\n\nThese are the tracks created.\n")
     print('\n'.join(sorted([' {}{}  {}'.format(t, (max_row_length - len(t) - len(d)) * ' ', d) for t, d in zip(audio_file_paths, durations)])), '\n')
 
     ### STORE TRACKS IN DIR in MUSIC LIBRARY ROOT
     while 1:
-        album_dir = inout.album_directory_path_dialog(music_dir, **guessed_info)
+        print(type(music_dir), type(music_master.guessed_info))
+        print(music_dir)
+        print(music_master.guessed_info)
+        album_dir = inout.album_directory_path_dialog(music_dir, **music_master.guessed_info)
         try:
             os.makedirs(album_dir)
         except FileExistsError:
@@ -171,9 +152,9 @@ def main(tracks_info, track_name, track_number, artist, album_artist, video_url)
 
     ### WRITE METADATA
     md = MetadataDealer()
-    answers = inout.interactive_metadata_dialogs(**guessed_info)
+    answers = inout.interactive_metadata_dialogs(**music_master.guessed_info)
     md.set_album_metadata(album_dir, track_number=track_number, track_name=track_name, artist=answers['artist'],
-                          album_artist=answers['album-artist'], album=answers['album'], year=answers['year'], verbose=True)
+                          album_artist=answers['album-artist'], album=answers['album'], year=answers['year'])
 
 
 class TabCompleter:

@@ -2,7 +2,6 @@ import os
 from glob import glob
 
 import pytest
-
 from music_album_creation.downloading import (CertificateVerificationError,
                                               CMDYoutubeDownloader,
                                               InvalidUrlError,
