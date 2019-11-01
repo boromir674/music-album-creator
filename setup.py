@@ -13,9 +13,10 @@ def readme():
 
 setup(
     name='music_album_creation',
-    version='1.3.0',
+    version='1.3.0.post0',
     description='A CLI application intending to automate offline music library building.',
     long_description=readme(),
+    long_description_content_type='text/x-rst',
     keywords='music automation download youtube metadata',
 
     project_urls={
@@ -60,7 +61,7 @@ setup(
         'Topic :: Multimedia :: Sound/Audio',
     ],
     url='https://github.com/boromir674/music-album-creator',
-    download_url='https://github.com/boromir674/music-album-creator/archive/v1.3.0.tar.gz',  # help easy_install do its tricks
+    download_url='https://github.com/boromir674/music-album-creator/archive/v1.3.0.post0.tar.gz',  # help easy_install do its tricks
     author='Konstantinos Lampridis',
     author_email='k.lampridis@hotmail.com',
     license='GNU GPLv3',
