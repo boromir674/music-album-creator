@@ -7,12 +7,12 @@ from PyInquirer import ValidationError, Validator, prompt
 # __all__ = ['store_album_dialog', 'interactive_metadata_dialogs']
 
 
-class InputFactory:
+class InputFactory(object):
     __instance = None
 
     def __new__(cls, *args, **kwargs):
         if not cls.__instance:
-            cls.__instance = super().__new__(cls)
+            cls.__instance = super(InputFactory, cls).__new__(cls)
             if sys.version_info.major == 2:
                 cls.__instance._input = raw_input  # NOQA
             else:

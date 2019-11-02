@@ -1,8 +1,16 @@
 import os
+import re
 
 from setuptools import find_packages, setup
 
 my_dir = os.path.dirname(os.path.realpath(__file__))
+
+
+
+# SOURCE_DIR_NAME
+src = 'src'
+name = 'music_album_creation'
+
 
 
 def readme():
@@ -10,10 +18,13 @@ def readme():
         return f.read()
     # return str(resource_string(__name__, 'README.rst'))
 
+with open(os.path.join(my_dir, src, name, '__init__.py')) as f:
+    _version = re.search(r'^__version__\s*=\s*[\'"]([^\'"]*)[\'"]', f.read(), re.MULTILINE).group(1)
+
 
 setup(
     name='music_album_creation',
-    version='1.3.0.post0',
+    version=_version,
     description='A CLI application intending to automate offline music library building.',
     long_description=readme(),
     long_description_content_type='text/x-rst',
@@ -61,12 +72,12 @@ setup(
         'Topic :: Multimedia :: Sound/Audio',
     ],
     url='https://github.com/boromir674/music-album-creator',
-    download_url='https://github.com/boromir674/music-album-creator/archive/v1.3.0.post0.tar.gz',  # help easy_install do its tricks
+    download_url='https://github.com/boromir674/music-album-creator/archive/v{}.tar.gz'.format(_version),  # help easy_install do its tricks
     author='Konstantinos Lampridis',
     author_email='k.lampridis@hotmail.com',
     license='GNU GPLv3',
-    packages=find_packages(where='src'),
-    package_dir={'': 'src'},  # this is required by distutils
+    packages=find_packages(where=src),
+    package_dir={'': src},  # this is required by distutils
     # py_modules=[splitext(basename(path))[0] for path in glob('src/*.py')],
     include_package_data=True,  # Include all data files in packages that distutils are aware of through the MANIFEST.in file
     # package_data={
