@@ -35,7 +35,7 @@ Overview
     :target: https://readthedocs.org/projects/music-album-creation
     :alt: Documentation Status
 
-.. |travis| image:: https://travis-ci.org/boromir674/music-album-creator.svg?branch=dev
+.. |travis| image:: https://api.travis-ci.org/boromir674/music-album-creator.svg?branch=dev
     :alt: Travis-CI Build Status
     :target: https://travis-ci.org/boromir674/music-album-creator
 
