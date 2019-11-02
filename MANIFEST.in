@@ -1,6 +1,7 @@
 include README.rst
 include AUTHORS.rst
 include CHANGELOG.rst
+include CONTRIBUTING.rst
 
 include LICENSE.txt
 include requirements.txt
@@ -12,6 +13,7 @@ include tests/data/album_0/*
 
 graft src
 graft tests
+graft docs
 
 include .travis.yml
 include .scrutinizer.yml

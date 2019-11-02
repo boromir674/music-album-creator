@@ -96,7 +96,7 @@ To install the Music Album Creator simpy do
 
 ::
 
-    pip install music-album-creator
+    pip install music-album-creation
 
 
 Usage
