@@ -1,6 +1,13 @@
 Changelog
 =========
 
+1.3.2 (2019-11-03)
+-------------------
+
+documentation
+^^^^^^^^^^^^^
+- add structured documentation and host it in readthedocs.io
+
 1.3.1 (2019-11-02)
 -------------------
 - fix for python2.7

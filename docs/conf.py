@@ -14,7 +14,9 @@ extensions = [
     'sphinx.ext.napoleon',
     'sphinx.ext.todo',
     'sphinx.ext.viewcode',
+    'sphinxcontrib.spelling'
 ]
+
 source_suffix = '.rst'
 master_doc = 'index'
 project = 'Music Album Creator'

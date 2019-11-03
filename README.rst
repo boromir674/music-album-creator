@@ -6,7 +6,7 @@ Music Album Creator is a CLI application aiming to automate the process of build
 Featuring
 
 - Automatically downloading and converting to mp3 from youtube
-- Segmeneting albums into tracks and automatically adding metadata information (ie for 'artist', 'album', 'track_name' fields)
+- Segmenting albums into tracks and automatically adding metadata information (ie for 'artist', 'album', 'track_name' fields)
 - Cross-platform support (Linux/Windows)
 - Cross-python support (Python2.7 or newer)
 
@@ -67,9 +67,9 @@ Overview
     :alt: Supported versions
     :target: https://pypi.org/project/music-album-creation
 
-.. |commits_since| image:: https://img.shields.io/github/commits-since/boromir674/music-album-creator/v1.3.1.svg
+.. |commits_since| image:: https://img.shields.io/github/commits-since/boromir674/music-album-creator/v1.3.2.svg
     :alt: Commits since latest release
-    :target: https://github.com/boromir674/music-album-creator/compare/v1.3.1...dev
+    :target: https://github.com/boromir674/music-album-creator/compare/v1.3.2...dev
 
 
 .. |supported-implementations| image:: https://img.shields.io/pypi/implementation/music-album-creator.svg
@@ -92,7 +92,7 @@ Installation
     sudo apt-get install ffmpeg
 
 
-To install the Music Album Creator simpy do
+To install the Music Album Creator simply do
 
 ::
 
