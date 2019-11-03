@@ -1,5 +1,6 @@
 import os
 import re
+from collections import OrderedDict
 
 from setuptools import find_packages, setup
 
@@ -7,10 +8,11 @@ my_dir = os.path.dirname(os.path.realpath(__file__))
 
 
 
-# SOURCE_DIR_NAME
+# CONSTANTS
 src = 'src'
 name = 'music_album_creation'
-
+source_code_repo = 'https://github.com/boromir674/music-album-creator'
+changelog = '{}/blob/master/CHANGELOG.rst'.format(source_code_repo)
 
 
 def readme():
@@ -30,9 +32,20 @@ setup(
     long_description_content_type='text/x-rst',
     keywords='music automation download youtube metadata',
 
-    project_urls={
-        "Source Code": "https://github.com/boromir674/music-album-creator",
-    },
+    # rendered as 'HomePage' in Pypi
+    url=source_code_repo,
+
+    project_urls=OrderedDict([
+        # ("1-Tracker", "https://github.com/anymail/django-anymail/issues"),
+        ("1-Changelog", changelog),
+        ("2-Source", source_code_repo),
+        # ("4-Documentation", "https://blahblah.readthedocs.io/en/v{}/".format(_version)),
+    ]),
+
+    download_url='https://github.com/boromir674/music-album-creator/archive/v{}.tar.gz'.format(_version),  # help easy_install do its tricks
+
+        # "Source Code": "https://github.com/boromir674/music-album-creator",
+    # },
     zip_safe=False,
 
     # what packages/distributions (python) need to be installed when this one is. (Roughly what is imported in source code)
@@ -71,8 +84,7 @@ setup(
         'Topic :: Multimedia :: Video :: Conversion',
         'Topic :: Multimedia :: Sound/Audio',
     ],
-    url='https://github.com/boromir674/music-album-creator',
-    download_url='https://github.com/boromir674/music-album-creator/archive/v{}.tar.gz'.format(_version),  # help easy_install do its tricks
+
     author='Konstantinos Lampridis',
     author_email='k.lampridis@hotmail.com',
     license='GNU GPLv3',
