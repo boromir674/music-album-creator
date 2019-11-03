@@ -24,6 +24,7 @@ Overview
       - | |travis|
         | |appveyor|
         | |coverage|
+        | |docs|
         | |scrutinizer_code_quality|
         | |code_intelligence_status|
     * - package
@@ -31,8 +32,8 @@ Overview
         | |commits_since|
 
 
-.. |docs| image:: https://readthedocs.org/projects/music-album-creator/badge/?style=flat
-    :target: https://readthedocs.org/projects/music-album-creation
+.. |docs| image:: https://readthedocs.org/projects/music-album-creator/badge/?version=dev
+    :target: https://music-album-creator.readthedocs.io/en/latest/?badge=dev
     :alt: Documentation Status
 
 .. |travis| image:: https://api.travis-ci.org/boromir674/music-album-creator.svg?branch=dev
