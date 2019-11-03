@@ -1,7 +1,14 @@
 Music Album Creator - CLI Application
 =====================================
 
-Music Album Creator is a cli application aiming to automate the process of building an offline music digital library.
+Music Album Creator is a CLI application aiming to automate the process of building an offline music digital library.
+
+Featuring
+
+- Automatically downloading and converting to mp3 from youtube
+- Segmeneting albums into tracks and automatically adding metadata information (ie for 'artist', 'album', 'track_name' fields)
+- Cross-platform support (Linux/Windows)
+- Cross-python support (Python2.7 or newer)
 
 
 ========
@@ -28,7 +35,7 @@ Overview
     :target: https://readthedocs.org/projects/music-album-creation
     :alt: Documentation Status
 
-.. |travis| image:: https://travis-ci.org/boromir674/music-album-creator.svg?branch=dev
+.. |travis| image:: https://api.travis-ci.org/boromir674/music-album-creator.svg?branch=dev
     :alt: Travis-CI Build Status
     :target: https://travis-ci.org/boromir674/music-album-creator
 
@@ -72,26 +79,28 @@ Overview
 
 .. end-badges
 
-A CLI application intending to automate offline music library building.
-
 * Free software: GNU General Public License v3.0
 
 Installation
 ============
 
+| Music Album Creator requires the ffmpeg package in order to run. You can download it from https://www.ffmpeg.org/download.html.
+| For Linux (Debian) you can simply install it with
+
 ::
 
-    pip install music-album-creator
+    sudo apt-get install ffmpeg
+
+
+To install the Music Album Creator simpy do
+
+::
+
+    pip install music-album-creation
 
 
 Usage
 ============
-
-
-Music Album Creation depends on the ffmpeg package which can be easily installed if need be with::
-
-    sudo apt-get install ffmpeg
-
 
 To run, simply execute::
 
