@@ -36,16 +36,13 @@ setup(
     url=source_code_repo,
 
     project_urls=OrderedDict([
-        # ("1-Tracker", "https://github.com/anymail/django-anymail/issues"),
+        # ("1-Tracker", "https://github.com/blahblah/gavgav/issues"),
         ("1-Changelog", changelog),
         ("2-Source", source_code_repo),
         # ("4-Documentation", "https://blahblah.readthedocs.io/en/v{}/".format(_version)),
     ]),
 
     download_url='https://github.com/boromir674/music-album-creator/archive/v{}.tar.gz'.format(_version),  # help easy_install do its tricks
-
-        # "Source Code": "https://github.com/boromir674/music-album-creator",
-    # },
     zip_safe=False,
 
     # what packages/distributions (python) need to be installed when this one is. (Roughly what is imported in source code)
