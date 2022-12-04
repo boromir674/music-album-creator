@@ -2,9 +2,7 @@
 import os
 import sys
 
-from PyInquirer import ValidationError, Validator, prompt
-
-# __all__ = ['store_album_dialog', 'interactive_metadata_dialogs']
+from questionary import Validator, ValidationError, prompt
 
 
 class InputFactory(object):
@@ -14,6 +12,7 @@ class InputFactory(object):
         if not cls.__instance:
             cls.__instance = super(InputFactory, cls).__new__(cls)
             if sys.version_info.major == 2:
+                raise RuntimeError("Music Album Creator does not support legacy Python 2")
                 cls.__instance._input = raw_input  # NOQA
             else:
                 cls.__instance._input = input
@@ -59,7 +58,11 @@ class DialogCommander:
     ##### MULTILINE INPUT TRACK NAMES AND TIMESTAMPS (hh:mm:ss)
     @classmethod
     def track_information_type_dialog(cls, prediction=''):
-        """Returns a parser of track hh:mm:ss multiline string"""
+        """Returns a parser of track hh:mm:ss multiline string.
+        
+        Type of format (types: "Durations", "Timestamps") you prefer to input
+        for providing the necessary information to segment an album
+        """
         if prediction == 'timestamps':
             choices = ['Timestamps (predicted)', 'Durations']
         elif prediction == 'durations':
@@ -70,7 +73,6 @@ class DialogCommander:
             {
                 'type': 'list',  # navigate with arrows through choices
                 'name': 'how-to-input-tracks',
-                # type of is the format you prefer to input for providing the necessary information to segment an album
                 'message': 'What does the expected "hh:mm:ss" input represent?',
                 'choices': choices,
             }
@@ -81,7 +83,7 @@ class DialogCommander:
     @classmethod
     def interactive_track_info_input_dialog(cls):
         print("Enter/Paste your 'track_name - hh:mm:ss' pairs. Each line should represent a single track with format 'trackname - hh:mm:ss'. "
-              "The assumption is that each track is defined either in terms of a timestamp corrspoding to the starting point within the full album or its actuall playtime length. Then navigate one line below your last track and press Ctrl-D (or Ctrl-Z in $#*!% windows) to save it.\n")
+              "The assumption is that each track is defined either in terms of a timestamp correspoding to the starting point within the full album, or in terms of its actuall playtime length. Then navigate one line below your last track and press Ctrl-D (or Ctrl-Z on windows) to save it.\n")
 
         def input_lines(prompt_=None):
             """Yields input lines from user until EOFError is raised."""
@@ -110,7 +112,6 @@ class DialogCommander:
         return prompt([{'type': 'input',
                         'name': 'create-album-dir',
                         'message': 'Please give album directory path',
-                        # TODO make sure that the below gets converted to unicode (not str) when executing python2 (python3 is fine)
                         'default': os.path.join(music_lib, artist, album)}])['create-album-dir']
 
     @classmethod

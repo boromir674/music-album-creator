@@ -27,6 +27,7 @@ class FormatClassifier(object):
                                                        fit_intercept=False,  # False: data expected to be already centered
                                                        verbose=0,
                                                        max_iter=1000))
+    x_y_train_set = attr.ib(default=None)
 
     def fit(self, X, y, sample_weight=None):
         self._estimator.fit(X, y, sample_weight=sample_weight)
@@ -38,11 +39,15 @@ class FormatClassifier(object):
         :param int nb_datapoints:
         :return:
         """
+        x_y_train_set = None
         fc = FormatClassifier(music_library_dir=music_library_dir)
         if train_set == 'new-random':
-            fc.fit(*dataset_handler.create_datapoints(scan_for_albums((lambda x: x if x else cls.default_music_dir)(music_library_dir)), nb_datapoints=nb_datapoints))
+            x_y_train_set = dataset_handler.create_datapoints(scan_for_albums((lambda x: x if x else cls.default_music_dir)(music_library_dir)), nb_datapoints=nb_datapoints)
+            fc.fit(*x_y_train_set)
         elif train_set == 'load':
-            fc.fit(*list(dataset_handler.load_dataset_split('train')))
+            x_y_train_set = list(dataset_handler.load_dataset_split('train'))
+            fc.fit(*x_y_train_set)
+        fc.x_y_train_set = x_y_train_set
         return fc
 
     @classmethod

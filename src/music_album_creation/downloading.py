@@ -106,7 +106,7 @@ class YoutubeDownloaderErrorFactory(object):
 
     @staticmethod
     def create_from_stderr(stderror, video_url):
-        exception_classes = (TokenParameterNotInVideoInfoError, InvalidUrlError, UnavailableVideoError, TooManyRequestsError, CertificateVerificationError)
+        exception_classes = (TokenParameterNotInVideoInfoError, InvalidUrlError, UnavailableVideoError, TooManyRequestsError, CertificateVerificationError, HTTPForbiddenError)
         for subclass in exception_classes:
             if subclass.reg.search(stderror):
                 return subclass(video_url, stderror)
@@ -150,7 +150,7 @@ class InvalidUrlError(Exception, AbstractYoutubeDownloaderError):
 
 class UnavailableVideoError(Exception, AbstractYoutubeDownloaderError):
     """Wrong url error"""
-    reg = re.compile(r'ERROR: This video is unavailable\.')
+    reg = re.compile(r'ERROR: Video unavailable')
 
     def __init__(self, video_url, stderror):
         AbstractYoutubeDownloaderError.__init__(self, video_url, stderror, msg="Unavailable video at '{}'.".format(video_url))
@@ -178,4 +178,12 @@ class CertificateVerificationError(Exception, AbstractYoutubeDownloaderError):
                                                     "verify failed: unable to get local issuer certificate (_ssl.c:1056)> (caused by "
                                                     "URLError(SSLCertVerificationError(1, '[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: "
                                                     "unable to get local issuer certificate (_ssl.c:1056)')))")
+        Exception.__init__(self, self._msg)
+
+
+class HTTPForbiddenError(Exception, AbstractYoutubeDownloaderError):
+    reg = re.compile(r"ERROR: unable to download video data: HTTP Error 403: Forbidden")
+
+    def __init__(self, video_url, stderror):
+        AbstractYoutubeDownloaderError.__init__(self, video_url, stderror, msg="HTTP 403 Forbidden for some reason.".format(video_url))
         Exception.__init__(self, self._msg)
