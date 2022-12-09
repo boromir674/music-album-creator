@@ -32,6 +32,7 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         python -m pip install tox tox-gh-actions
+        apt-get update && DEBIAN_FRONTEND=noninteractive apt-get installffmpeg
 
     # - name: Do Lint Checking
     #   run: tox -e lint -vv -s false
