@@ -149,7 +149,8 @@ profile = 'black'
 
 ## SEMANTIC RELEASE
 [tool.software-release]
-version_variable = "src/cookiecutter_python/__init__.py:__version__"
+version_variable = "src/music_album_creation/__init__.py:__version__"
+
 
 ## SECURITY
 [tool.bandit]
