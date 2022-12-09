@@ -18,7 +18,7 @@ def download():
                                                                                                         delay=0.8)
 @pytest.fixture(scope='module')
 def download_trials():
-    return 15
+    return 3
 
 
 NON_EXISTANT_YOUTUBE_URL = 'https://www.youtube.com/watch?v=alpharegavgav'
@@ -40,10 +40,15 @@ def download_trial():
 @pytest.mark.network_bound
 def test_downloading_valid_youtube_url(download_trial, tmpdir, download, download_trials, valid_youtube_videos):
     target_directory = str(tmpdir.mkdir('youtubedownloads'))
-    for youtube_video in valid_youtube_videos:
-        download_trial(youtube_video.url, target_directory, download, download_trials)
+    # for youtube_video in [('https://www.youtube.com/watch?v=UO2JIPOYhIk&list=OLAK5uy_k80e1ODmXyVy6K25BL6PS4wCFg1hwjkX0&index=3', 'The Witch')]:
+    for youtube_video in [
+        ('https://www.youtube.com/watch?v=bj1JRuyYeco',
+        '20 Second Timer (Minimal)')]:
+        
+        url, title_name = youtube_video
+        download_trial(url, target_directory, download, download_trials)
         assert len(glob('{}/*'.format(target_directory))) == 1
-        assert os.path.isfile(os.path.join(target_directory, f'{youtube_video.video_title}.mp3')) or os.path.isfile(os.path.join(target_directory, '_.mp3'))
+        assert os.path.isfile(os.path.join(target_directory, f'{title_name}.mp3')) or os.path.isfile(os.path.join(target_directory, '_.mp3'))
 
 @pytest.mark.network_bound
 def test_downloading_false_youtube_url(download_trial, download, download_trials):
