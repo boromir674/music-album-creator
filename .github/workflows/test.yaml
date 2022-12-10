@@ -33,8 +33,8 @@ jobs:
         python -m pip install --upgrade pip
         python -m pip install tox tox-gh-actions
 
-    - name: Install ffmpeg on linux
-      if: ${{ matrix.platform == 'macos-linux' }}
+    - name: Install ffmpeg on ubuntu
+      if: ${{ matrix.platform == 'ubuntu-latest' }}
       run: sudo apt-get update && DEBIAN_FRONTEND=noninteractive sudo apt-get install ffmpeg
 
     - name: Install ffmpeg on macos
