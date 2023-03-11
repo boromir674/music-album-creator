@@ -58,16 +58,16 @@ def build_string(dels1, names, dels2, hhmmss_list):
 class TestSplitters:
 
     def test_parsing_timestamps_tracks_info(self, timestamps_info_string, track_names, track_timestamps):
-        assert StringParser.parse_hhmmss_string(timestamps_info_string) == [[x, y] for x, y in zip(track_names, track_timestamps)]
+        assert StringParser().parse_hhmmss_string(timestamps_info_string) == [[x, y] for x, y in zip(track_names, track_timestamps)]
 
     def test_parsing_durations_tracks_info(self, durations_info_string, track_names, track_durations):
-        assert StringParser.parse_hhmmss_string(durations_info_string) == [[x, y] for x, y in zip(track_names, track_durations)]
+        assert StringParser().parse_hhmmss_string(durations_info_string) == [[x, y] for x, y in zip(track_names, track_durations)]
 
     def test_durations_list_converion(self, track_durations, track_timestamps):
         assert [int(Timestamp(_[1])) for _ in to_timestamps_info([['a', x] for x in track_durations])] == [int(Timestamp(_)) for _ in track_timestamps]
 
     def test_convert_to_timestamps(self, durations_info_string, track_timestamps, track_names):
-        assert list(map(Timestamp, StringParser.convert_to_timestamps(durations_info_string))) == list(map(Timestamp, track_timestamps[:len(track_names)]))
+        assert list(map(Timestamp, StringParser().convert_to_timestamps(durations_info_string))) == list(map(Timestamp, track_timestamps[:len(track_names)]))
 
     @pytest.mark.parametrize("video_title, artist, album, year", [
         ("Alber Jupiter - We Are Just Floating In Space (2019) (New Full Album)", "Alber Jupiter",
@@ -76,7 +76,7 @@ class TestSplitters:
         ("Composer A - Metro 2033 (2010)", "Composer A", "Metro 2033", "2010"),
     ])
     def test_youtube_video_title_parsing(self, video_title, artist, album, year):
-        assert StringParser.parse_album_info(video_title) == {'artist': artist, 'album': album, 'year': year}
+        assert StringParser().parse_album_info(video_title) == {'artist': artist, 'album': album, 'year': year}
 
     @pytest.mark.parametrize("track_file, track_number, track_name", [
         ("Thievery Corporation/The Cosmic Game (2005)/14 - The Supreme Illusion (Feat- Gunjan).mp3", '14',
@@ -99,7 +99,7 @@ class TestSplitters:
         ("In This Moment/Blood (2012)/01- Rise With Me.mp3", '01', 'Rise With Me'),
     ])
     def test_mp3_files_parsing(self, track_file, track_number, track_name):
-        assert StringParser.parse_track_number_n_name(track_file) == {'track_number': track_number,
+        assert StringParser().parse_track_number_n_name(track_file) == {'track_number': track_number,
                                                                       'track_name': track_name}
 
 def test_timestamp():

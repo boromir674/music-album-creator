@@ -100,11 +100,11 @@ class TracksInformation(object):
 
     @classmethod
     def from_multiline(cls, string):
-        return TracksInformation(StringParser.parse_hhmmss_string(string))
+        return TracksInformation(StringParser().parse_hhmmss_string(string))
 
     @classmethod
     def from_multiline_interactive(cls, interactive_dialog):
-        return TracksInformation(StringParser.parse_hhmmss_string(interactive_dialog()))
+        return TracksInformation(StringParser().parse_hhmmss_string(interactive_dialog()))
 
     def __len__(self):
         return len(self.tracks_data)

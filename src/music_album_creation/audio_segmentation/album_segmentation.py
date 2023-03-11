@@ -66,7 +66,7 @@ class AudioSegmenter(object):
         #     raise NotStartingFromZeroTimestampError("First track ({}) is supposed to have a 0:00 timestamp. Instead {} found".format(data[0][0], data[0][1]))
 
         exit_code = 0
-        data = StringParser.convert_tracks_data(data, album_file, target_directory=self._dir)
+        data = StringParser().convert_tracks_data(data, album_file, target_directory=self._dir)
         audio_file_paths = [x[0] for x in data]
         i = 0
         while exit_code == 0 and i < len(data) - 1:

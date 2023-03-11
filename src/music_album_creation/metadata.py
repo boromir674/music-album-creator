@@ -57,7 +57,7 @@ class MetadataDealer(MetadataDealerType):
         logger.info("Album directory: {}".format(album_directory))
         for file in files:
             logger.info("File: {}".format(os.path.basename(file)))
-            cls.write_metadata(file, **dict(cls._filter_auto_inferred(StringParser.parse_track_number_n_name(file), **kwargs),
+            cls.write_metadata(file, **dict(cls._filter_auto_inferred(StringParser().parse_track_number_n_name(file), **kwargs),
                                             **{k: kwargs.get(k, '') for k in cls._d.keys()}))
 
     @classmethod
