@@ -20,3 +20,7 @@ node_modules/*
 coverage\.xml
 htmlcov
 appveyor-tools
+package.json
+package-lock.json
+.vscode/
+.ipynb_checkpoints/
