@@ -12,10 +12,12 @@ from music_album_creation.web_parsing import video_title
 @pytest.fixture(scope='module')
 def download():
     youtue = CMDYoutubeDownloader()
-    return lambda url, target_directory, times, suppress_certificate_validation: youtue.download_trials(url, target_directory,
-                                                                                                        times=10,
-                                                                                                        suppress_certificate_validation=suppress_certificate_validation,
-                                                                                                        delay=0.8)
+    return lambda url, target_directory, times, suppress_certificate_validation: youtue.download_trials(
+        url, target_directory,
+        times=10,
+        suppress_certificate_validation=suppress_certificate_validation,
+        delay=0.8)
+
 @pytest.fixture(scope='module')
 def download_trials():
     return 3

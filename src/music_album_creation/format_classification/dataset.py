@@ -135,11 +135,6 @@ def scan_for_albums(music_library, random=False):
     return albums
 
 
-# def create_from_custom_albums(file_path):
-#     with open(file_path, 'r') as f:
-#         lines = f.readlines()
-#     return [_ for _ in new_gen(lines)]
-
 def album_to_datapoints(album_dir):
     durs = [mutagen.File(f).info.length for f in glob.glob("{}/*.mp3".format(album_dir))]
     # durs = [get_duration(filename=f) for f in glob.glob("{}/*.mp3".format(album_dir))]
