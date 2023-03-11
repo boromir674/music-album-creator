@@ -4,7 +4,6 @@ import logging.config
 from os import path
 
 from .audio_segmentation import AudioSegmenter
-from .format_classification import FormatClassifier
 from .metadata import MetadataDealer
 from .tracks_parsing import StringParser
 
@@ -13,4 +12,4 @@ logging.config.fileConfig(path.join(path.dirname(path.realpath(__file__)), 'logg
 logger = logging.getLogger(__name__)
 
 
-__all__ = ['StringParser', 'MetadataDealer', 'FormatClassifier', 'AudioSegmenter']
+__all__ = ['StringParser', 'MetadataDealer', 'AudioSegmenter']

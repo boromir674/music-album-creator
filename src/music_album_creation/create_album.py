@@ -9,7 +9,7 @@ from time import sleep
 import click
 import mutagen
 
-from . import FormatClassifier, MetadataDealer, StringParser
+from . import MetadataDealer, StringParser
 from .audio_segmentation import (AudioSegmenter, SegmentationInformation,
                                  TracksInformation)
 from .audio_segmentation.data import TrackTimestampsSequenceError
@@ -99,12 +99,9 @@ def main(tracks_info, track_name, track_number, artist, album_artist, video_url)
         tracks_info = TracksInformation.from_multiline(inout.interactive_track_info_input_dialog().strip())
         print()
 
-    ### PREDICTION SERVICE
-    fc = FormatClassifier.load_version()
-    # fc = FormatClassifier.load(os.path.join(this_dir, "format_classification/data/model.pickle"))
-    predicted_label = fc.is_durations(tracks_info.hhmmss_list)
-    # print('Predicted class {}; 0: timestamp input, 1:duration input'.format(predicted_label))
-    answer = inout.track_information_type_dialog(prediction={1: 'durations'}.get(int(predicted_label), 'timestamps'))
+    # Ask user if the input represents song timestamps (withing the whole playtime) OR
+    # if the input represents song durations (that sum up to the total playtime)
+    answer = inout.track_information_type_dialog()
 
     segmentation_info = SegmentationInformation.from_tracks_information(tracks_info, hhmmss_type=answer.lower())
 

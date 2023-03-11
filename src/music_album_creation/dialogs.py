@@ -57,18 +57,13 @@ class DialogCommander:
 
     ##### MULTILINE INPUT TRACK NAMES AND TIMESTAMPS (hh:mm:ss)
     @classmethod
-    def track_information_type_dialog(cls, prediction=''):
+    def track_information_type_dialog(cls):
         """Returns a parser of track hh:mm:ss multiline string.
         
         Type of format (types: "Durations", "Timestamps") you prefer to input
         for providing the necessary information to segment an album
         """
-        if prediction == 'timestamps':
-            choices = ['Timestamps (predicted)', 'Durations']
-        elif prediction == 'durations':
-            choices = ['Durations (predicted)', 'Timestamps']
-        else:
-            choices = ['Timestamps', 'Durations']
+        choices = ['Timestamps', 'Durations']
         questions = [
             {
                 'type': 'list',  # navigate with arrows through choices
