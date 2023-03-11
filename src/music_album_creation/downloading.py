@@ -1,6 +1,8 @@
 import logging
+import os
 import re
 import subprocess
+from typing import Optional
 import sys
 from abc import ABCMeta, abstractmethod
 from time import sleep
@@ -60,6 +62,7 @@ class AbstractYoutubeDL(AbstractYoutubeDownloader):
 class CMDYoutubeDownloader(AbstractYoutubeDL):
     _args = ['youtube-dl', '--extract-audio', '--audio-quality', '0', '--audio-format', 'mp3', '-o', '%(title)s.%(ext)s']
     __instance = None
+    youtube_dl_executable: Optional[str] = None
 
     def __new__(cls, *args, **kwargs):
         if not cls.__instance:
@@ -72,7 +75,17 @@ class CMDYoutubeDownloader(AbstractYoutubeDL):
     @classmethod
     def _download(cls, video_url, directory, **kwargs):
         template = kwargs.get('template', '%(title)s.%(ext)s')
-        args = ['youtube-dl', '--extract-audio', '--audio-quality', '0', '--audio-format', 'mp3', '-o', '{}/{}'.format(directory, template), video_url]
+        print("\nSANITY", os.environ.get('YOUTUBE_DL', 'youtube-dl'))
+        args = [
+            os.environ.get('YOUTUBE_DL', 'youtube-dl'),
+            '--extract-audio',
+            '--audio-quality',
+            '0',
+            '--audio-format',
+            'mp3',
+            '-o',
+            '{}/{}'.format(directory, template), video_url
+        ]
         # If suppress HTTPS certificate validation
         if kwargs.get('suppress_certificate_validation', False):
             args.insert(1, '--no-check-certificate')
@@ -90,13 +103,13 @@ class CMDYoutubeDownloader(AbstractYoutubeDL):
         i = 0
         while i < times - 1:
             try:
-                self.download(video_url, directory, **kwargs)
+                self._download(video_url, directory, **kwargs)
                 return
             except TooManyRequestsError as e:
                 logger.info(e)
                 i += 1
                 sleep(delay)
-        self.download(video_url, directory, **kwargs)
+        self._download(video_url, directory, **kwargs)
 
 
 class YoutubeDownloaderErrorFactory(object):
@@ -106,7 +119,9 @@ class YoutubeDownloaderErrorFactory(object):
 
     @staticmethod
     def create_from_stderr(stderror, video_url):
-        exception_classes = (TokenParameterNotInVideoInfoError, InvalidUrlError, UnavailableVideoError, TooManyRequestsError, CertificateVerificationError, HTTPForbiddenError)
+        exception_classes = (
+            UploaderIDExtractionError,
+            TokenParameterNotInVideoInfoError, InvalidUrlError, UnavailableVideoError, TooManyRequestsError, CertificateVerificationError, HTTPForbiddenError)
         for subclass in exception_classes:
             if subclass.reg.search(stderror):
                 return subclass(video_url, stderror)
@@ -186,4 +201,12 @@ class HTTPForbiddenError(Exception, AbstractYoutubeDownloaderError):
 
     def __init__(self, video_url, stderror):
         AbstractYoutubeDownloaderError.__init__(self, video_url, stderror, msg="HTTP 403 Forbidden for some reason.".format(video_url))
+        Exception.__init__(self, self._msg)
+
+
+class UploaderIDExtractionError(Exception, AbstractYoutubeDownloaderError):
+    reg = re.compile(r"ERROR: Unable to extract uploader id")
+
+    def __init__(self, video_url, stderror):
+        AbstractYoutubeDownloaderError.__init__(self, video_url, stderror, msg="Maybe update the youtube-dl binary/executable.".format(video_url))
         Exception.__init__(self, self._msg)
