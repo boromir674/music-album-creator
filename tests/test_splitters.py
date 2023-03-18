@@ -79,12 +79,10 @@ class TestSplitters:
         assert StringParser().parse_album_info(video_title) == {'artist': artist, 'album': album, 'year': year}
 
     @pytest.mark.parametrize("track_file, track_number, track_name", [
-        ("Thievery Corporation/The Cosmic Game (2005)/14 - The Supreme Illusion (Feat- Gunjan).mp3", '14',
-         'The Supreme Illusion (Feat- Gunjan)'),
+        ("Thievery Corporation/The Cosmic Game (2005)/14 - The Supreme Illusion (Feat- Gunjan).mp3", '14', 'The Supreme Illusion (Feat- Gunjan)'),
         ("Monster Magnet/Dopes to Infinity (Single) 1995/02 - Forbidden Planet.mp3", '02', 'Forbidden Planet'),
         ("Monster Magnet/Greatest Hits 2003/02 - Medicine.mp3", '02', 'Medicine'),
-        ("Porcupine Tree/On The Sunday Of Life/07 - Message Form A Self-Destructing Turnip.mp3", '07',
-         'Message Form A Self-Destructing Turnip'),
+        ("Porcupine Tree/On The Sunday Of Life/07 - Message Form A Self-Destructing Turnip.mp3", '07', 'Message Form A Self-Destructing Turnip'),
         ("Rotor/Rotor 2001/06 A Madrugada.mp3", '06', 'A Madrugada'),
         ("Karma To Burn/Arc Stanton 2014/02 56.mp3", '02', '56'),
         ("Cesaria Evora/Cesaria Evora - Cabo Verde/06-Mar e Morada De Sodade.mp3", '06', 'Mar e Morada De Sodade'),
