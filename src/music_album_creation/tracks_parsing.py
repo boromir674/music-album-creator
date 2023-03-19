@@ -7,6 +7,7 @@ import time
 
 class StringToDictParser(object):
     """Parses album information out of video title string"""
+
     check = re.compile(r'^s([1-9]\d*)$')
 
     def __init__(self, entities, separators):
@@ -18,9 +19,16 @@ class StringToDictParser(object):
     def __call__(self, *args, **kwargs):
         title = args[0]
         design = kwargs['design']
-        if not all(0 <= len(x) <= len(self.entities) + len(self.separators) and all(type(y) == str for y in x) for x in design):
+        if not all(
+            0 <= len(x) <= len(self.entities) + len(self.separators)
+            and all(type(y) == str for y in x)
+            for x in design
+        ):
             raise RuntimeError
-        if not all(all(StringToDictParser.check.match(y) for y in x if y.startswith('s')) for x in design):
+        if not all(
+            all(StringToDictParser.check.match(y) for y in x if y.startswith('s'))
+            for x in design
+        ):
             raise RuntimeError
         rregs = [RegexSequence([_ for _ in self._yield_reg_comp(d)]) for d in design]
         return max([r.search_n_dict(title) for r in rregs], key=lambda x: len(x))
@@ -31,6 +39,7 @@ class StringToDictParser(object):
                 yield self.separators[int(StringToDictParser.check.match(k).group(1)) - 1]
             else:
                 yield self.entities[k]
+
 
 class AlbumInfoEntity(object):
     def __init__(self, name, reg):
@@ -47,18 +56,33 @@ class RegexSequence(object):
         self._regex = r'{}'.format(''.join(str(d) for d in data))
 
     def search_n_dict(self, string):
-        return dict(_ for _ in zip(self._keys, list(getattr(re.search(self._regex, string), 'groups', lambda: len(self._keys)*[''])())) if _[1])
+        return dict(
+            _
+            for _ in zip(
+                self._keys,
+                list(
+                    getattr(
+                        re.search(self._regex, string),
+                        'groups',
+                        lambda: len(self._keys) * [''],
+                    )()
+                ),
+            )
+            if _[1]
+        )
 
 
 class StringParser(object):
     __instance = None
-    regexes = {'track_number': r'\d{1,2}',
-               'sep1': r"(?: [\t\ ]* [\.\-\)]+ )? [\t ]*",
-               'track_word': r"\(?[\wα-ωΑ-Ω'\x86-\xce\u0384-\u03CE][\w\-’':!\xc3\xa8α-ωΑ\-Ω\x86-\xce\u0384-\u03CE]*\)?",
-               'track_sep': r'[\t\ ,]+',
-               'sep2': r'(?: [\t\ ]* [\-.]+ [\t\ ]* | [\t\ ]+ )',
-               'extension': r'\.mp3',
-               'hhmmss': r'(?:\d?\d:)*\d?\d'}
+    regexes = {
+        'track_number': r'\d{1,2}',
+        'sep1': r"(?: [\t\ ]* [\.\-\)]+ )? [\t ]*",
+        'track_word': r"\(?[\wα-ωΑ-Ω'\x86-\xce\u0384-\u03CE][\w\-’':!\xc3\xa8α-ωΑ\-Ω\x86-\xce\u0384-\u03CE]*\)?",
+        'track_sep': r'[\t\ ,]+',
+        'sep2': r'(?: [\t\ ]* [\-.]+ [\t\ ]* | [\t\ ]+ )',
+        'extension': r'\.mp3',
+        'hhmmss': r'(?:\d?\d:)*\d?\d',
+    }
 
     ## to parse from youtube video title string
     sep1 = r'[\t ]*[\-\.][\t ]*'
@@ -67,12 +91,16 @@ class StringParser(object):
     art = r'([\w ]*\w)'
     alb = r'([\w ]*\w)'
 
-    album_info_parser = StringToDictParser({'artist': art, 'album': alb, 'year': year}, [sep1, sep2])
+    album_info_parser = StringToDictParser(
+        {'artist': art, 'album': alb, 'year': year}, [sep1, sep2]
+    )
 
     def __new__(cls, *args, **kwargs):
         if not cls.__instance:
             cls.__instance = super(cls, StringParser).__new__(cls)
-            cls.regexes['track_name'] = r'{track_word}(?:{track_sep}{track_word})*'.format(**cls.regexes)
+            cls.regexes['track_name'] = r'{track_word}(?:{track_sep}{track_word})*'.format(
+                **cls.regexes
+            )
         return cls.__instance
 
     ## STRING TO DICT
@@ -88,17 +116,35 @@ class StringParser(object):
         :return: the exracted values as a dictionary having maximally keys: {'artist', 'album', 'year'}
         :rtype: dict
         """
-        return cls.album_info_parser(video_title, design=[['artist', 's1', 'album', 's2', 'year'],
-                                                          ['artist', 's1', 'album'],
-                                                          ['album', 's2', 'year'],
-                                                          ['album']])
+        return cls.album_info_parser(
+            video_title,
+            design=[
+                ['artist', 's1', 'album', 's2', 'year'],
+                ['artist', 's1', 'album'],
+                ['album', 's2', 'year'],
+                ['album'],
+            ],
+        )
+
     # PARSE filenames
     @classmethod
     def parse_track_number_n_name(cls, file_name):
         """Call this method to get a dict like {'track_number': 'number', 'track_name': 'name'} from input file name with format like '1. - Loyal to the Pack.mp3'; number must be included!"""
-        return dict(zip(['track_number', 'track_name'], list(
-            re.compile(r"(?: ({track_number}) {sep1})? ( {track_name} ) {extension}$".format(**cls.regexes), re.X).search(
-                os.path.basename(file_name)).groups())))
+        return dict(
+            zip(
+                ['track_number', 'track_name'],
+                list(
+                    re.compile(
+                        r"(?: ({track_number}) {sep1})? ( {track_name} ) {extension}$".format(
+                            **cls.regexes
+                        ),
+                        re.X,
+                    )
+                    .search(os.path.basename(file_name))
+                    .groups()
+                ),
+            )
+        )
         # return dict(zip(['track_number', 'track_name'], list(re.compile(r'({}){}({}){}$'.format(cls.track_number, cls.sep2, cls.track_name, cls.extension)).search(file_name).groups())))
 
     # PARSE tracks info multiline
@@ -123,7 +169,11 @@ class StringParser(object):
             try:
                 yield cls._parse_track_line(line)
             except AttributeError as e:
-                print("Couldn't parse line {}: '{}'. Please use a format as 'trackname - 3:45'".format(i + 1, line))
+                print(
+                    "Couldn't parse line {}: '{}'. Please use a format as 'trackname - 3:45'".format(
+                        i + 1, line
+                    )
+                )
                 raise e
 
     @classmethod
@@ -139,7 +189,12 @@ class StringParser(object):
         #                             (?:[\t ]+|[\t ]*[\-\.]+[\t ]*)            # separator between name and time
         #                             ((?:\d?\d:)*\d?\d)$                       # time in hh:mm:ss format""", re.X)
         # regex = re.compile(r"^(?:{}{})?({}){}({})$".format(cls.track_number, cls.number_name_sep, cls.track_name, cls.sep, cls.hhmmss))
-        regex = re.compile(r"(?: {track_number} {sep1})? ( {track_name} ) {sep2} ({hhmmss})".format(**cls.regexes), re.X)
+        regex = re.compile(
+            r"(?: {track_number} {sep1})? ( {track_name} ) {sep2} ({hhmmss})".format(
+                **cls.regexes
+            ),
+            re.X,
+        )
         return list(regex.search(track_line.strip()).groups())
 
     # CONVERT durations to timestamps tuples (segmentation start-end pair)
@@ -155,7 +210,7 @@ class StringParser(object):
         i = 1
         timestamps = ['0:00']
         while i < len(lines):
-            timestamps.append(cls.add(timestamps[i-1], lines[i-1][-1]))
+            timestamps.append(cls.add(timestamps[i - 1], lines[i - 1][-1]))
             i += 1
         return timestamps
 

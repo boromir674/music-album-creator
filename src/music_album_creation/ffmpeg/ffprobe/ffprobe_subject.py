@@ -9,6 +9,7 @@ __all__ = ['FFProbeSubject']
 # Our implementation of the Subject class (see the Proxy pattern)
 class FFProbeSubject(metaclass=Singleton):
     """The standard FFProbe Subject class proxies the ffprobe CLI."""
+
     def __init__(self, ffprobe_binary: str):
         self.ffprobe_binary = ffprobe_binary
 

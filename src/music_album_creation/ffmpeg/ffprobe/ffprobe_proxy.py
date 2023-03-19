@@ -17,14 +17,18 @@ class CLIResult(Protocol):
 
 
 class FFProbeSubjectType(Protocol):
-    def __init__(self, ffprobe_binary: str): ...
+    def __init__(self, ffprobe_binary: str):
+        ...
 
-    def __call__(self, *ffprobe_cli_args, **subprocess_settings) -> CLIResult: ...
+    def __call__(self, *ffprobe_cli_args, **subprocess_settings) -> CLIResult:
+        ...
 
 
 class FFProbeProxy(Proxy[FFProbeSubjectType]):
     """Proxy class for the ffprobe CLI."""
 
     def __call__(self, *ffprobe_cli_args: str, **subprocess_settings: Any) -> CLIResult:
-        logger.info("Running ffmpeg: %s", json.dumps(list(ffprobe_cli_args), indent=4, sort_keys=True))
+        logger.info(
+            "Running ffmpeg: %s", json.dumps(list(ffprobe_cli_args), indent=4, sort_keys=True)
+        )
         return self._proxy_subject(*ffprobe_cli_args, **subprocess_settings)

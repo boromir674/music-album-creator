@@ -27,22 +27,32 @@ def _generate_segmentation_spans(tracks_info):
     :returns: 3-element tuples with track_file_path, starting_timestamp, ending_timestamp
     :rtype: tuple
     """
-    track_index_generator = iter((lambda x: str(x) if 9 < x else '0' + str(x))(_) for _ in range(1, len(tracks_info) + 1))
-    for i in range(len(tracks_info)-1):
+    track_index_generator = iter(
+        (lambda x: str(x) if 9 < x else '0' + str(x))(_)
+        for _ in range(1, len(tracks_info) + 1)
+    )
+    for i in range(len(tracks_info) - 1):
         if Timestamp(tracks_info[i + 1][1]) <= Timestamp(tracks_info[i][1]):
             raise TrackTimestampsSequenceError(
                 "Track '{} - {}' starting timestamp '{}' should be 'bigger' than track's '{} - {}'; '{}'".format(
-                    i + 2, tracks_info[i + 1][0], tracks_info[i + 1][1],
-                    i + 1, tracks_info[i][0], tracks_info[i][1]))
+                    i + 2,
+                    tracks_info[i + 1][0],
+                    tracks_info[i + 1][1],
+                    i + 1,
+                    tracks_info[i][0],
+                    tracks_info[i][1],
+                )
+            )
         yield (
             '{} - {}'.format(next(track_index_generator), tracks_info[i][0]),
             str(int(Timestamp(tracks_info[i][1]))),
-            str(int(Timestamp(tracks_info[i + 1][1])))
+            str(int(Timestamp(tracks_info[i + 1][1]))),
         )
     yield (
         '{} - {}'.format(next(track_index_generator), tracks_info[-1][0]),
         str(int(Timestamp(tracks_info[-1][1]))),
     )
+
 
 def to_timestamps_info(tracks_durations_info):
     """Call this method to transform a list of 2-legnth lists of track_name - duration_hhmmss pairs to the equivalent list of lists but with starting timestamps in hhmmss format inplace of the durations.\n
@@ -64,27 +74,35 @@ def _gen_timestamp_data(tracks_duration_info):
     yield tracks_duration_info[0][0], str(p)
     while i < len(tracks_duration_info):
         try:
-            yield tracks_duration_info[i][0], str(p + Timestamp(tracks_duration_info[i - 1][1]))
+            yield tracks_duration_info[i][0], str(
+                p + Timestamp(tracks_duration_info[i - 1][1])
+            )
         except WrongTimestampFormat as e:
             raise e
         p += Timestamp(tracks_duration_info[i - 1][1])
         i += 1
 
+
 ##############################################
 @attr.s
 class SegmentationInformation(object):
     """Encapsulates per track: ['track-name', 'start-timestamp', 'end-timestamp']. Last entry does not have 'end-timestamp' because the end of the album is implied."""
+
     tracks_info = attr.ib(init=True)
 
     @classmethod
     def from_tracks_information(cls, tracks_information, hhmmss_type):
         if hhmmss_type.lower().startswith('timestamp'):
             return SegmentationInformation(segmentation_information(list(tracks_information)))
-        return SegmentationInformation(segmentation_information(to_timestamps_info(list(tracks_information))))
+        return SegmentationInformation(
+            segmentation_information(to_timestamps_info(list(tracks_information)))
+        )
 
     @classmethod
     def from_multiline(cls, string, hhmmss_type):
-        return cls.from_tracks_information(TracksInformation.from_multiline(string), hhmmss_type)
+        return cls.from_tracks_information(
+            TracksInformation.from_multiline(string), hhmmss_type
+        )
 
     def __len__(self):
         return len(self.tracks_info)
@@ -92,12 +110,20 @@ class SegmentationInformation(object):
     def __getitem__(self, item):
         return self.tracks_info[item]
 
+
 @attr.s
 class TracksInformation(object):
     """Encapsulates per track: ['track-name', 'hhmmss']"""
+
     tracks_data = attr.ib(init=True)
-    track_names = attr.ib(init=False, default=attr.Factory(lambda self: [x[0] for x in self.tracks_data], takes_self=True))
-    hhmmss_list = attr.ib(init=False, default=attr.Factory(lambda self: [x[1] for x in self.tracks_data], takes_self=True))
+    track_names = attr.ib(
+        init=False,
+        default=attr.Factory(lambda self: [x[0] for x in self.tracks_data], takes_self=True),
+    )
+    hhmmss_list = attr.ib(
+        init=False,
+        default=attr.Factory(lambda self: [x[1] for x in self.tracks_data], takes_self=True),
+    )
 
     @classmethod
     def from_multiline(cls, string):
@@ -112,6 +138,7 @@ class TracksInformation(object):
 
     def __getitem__(self, item):
         return self.tracks_data[item]
+
 
 ##########################################################
 class Timestamp(object):
@@ -134,10 +161,14 @@ class Timestamp(object):
         hhmmss = args[0]
         m = re.compile(r'^(?:(\d?\d):){0,2}(\d?\d)$').search(hhmmss)
         if not m:
-            raise WrongTimestampFormat("Timestamp given: '{}'. Please use the 'hh:mm:ss' format.".format(hhmmss))
+            raise WrongTimestampFormat(
+                "Timestamp given: '{}'. Please use the 'hh:mm:ss' format.".format(hhmmss)
+            )
         groups = hhmmss.split(':')
         if not all([0 <= int(_) <= 60 for _ in groups]):
-            raise WrongTimestampFormat("Timestamp given: '{}'. Please use the 'hh:mm:ss' format.".format(hhmmss))
+            raise WrongTimestampFormat(
+                "Timestamp given: '{}'. Please use the 'hh:mm:ss' format.".format(hhmmss)
+            )
 
         ind = cls.__pos(groups)
         if len(groups) == 1:
@@ -145,7 +176,9 @@ class Timestamp(object):
         elif len(groups) - ind - 1 < 2:
             minlength_string = '{}:{}'.format(int(groups[-2]), cls.__str(groups[-1]))
         else:
-            minlength_string = ':'.join([str(int(groups[ind]))] + [y for y in groups[ind + 1:]])
+            minlength_string = ':'.join(
+                [str(int(groups[ind]))] + [y for y in groups[ind + 1 :]]
+            )
         stripped_string = ':'.join((str(int(_)) for _ in minlength_string.split(':')))
 
         if stripped_string in cls.instances:
@@ -154,7 +187,7 @@ class Timestamp(object):
         x.__minlength_string = minlength_string
         x._a = 'gg'
         x.__stripped_string = stripped_string
-        x.__s = sum([60 ** i * int(gr) for i, gr in enumerate(reversed(groups))])
+        x.__s = sum([60**i * int(gr) for i, gr in enumerate(reversed(groups))])
         cls.instances[x.__stripped_string] = x
         return x
 
@@ -199,5 +232,9 @@ class Timestamp(object):
         return Timestamp.from_duration(int(self) - int(other))
 
 
-class WrongTimestampFormat(Exception): pass
-class TrackTimestampsSequenceError(Exception): pass
+class WrongTimestampFormat(Exception):
+    pass
+
+
+class TrackTimestampsSequenceError(Exception):
+    pass

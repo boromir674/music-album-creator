@@ -27,21 +27,23 @@ from .downloading import (
 from .ffmpeg import FFMPEG
 from .music_master import MusicMaster
 
-ffmpeg = FFMPEG(
-    os.environ.get('MUSIC_FFMPEG', 'ffmpeg')
-)
+ffmpeg = FFMPEG(os.environ.get('MUSIC_FFMPEG', 'ffmpeg'))
 
 if os.name == 'nt':
     from pyreadline import Readline
+
     readline = Readline()
 
 this_dir = os.path.dirname(os.path.realpath(__file__))
 logger = logging.getLogger(__name__)
 
+
 def music_lib_directory(verbose=True):
     music_dir = os.getenv('MUSIC_LIB_ROOT', None)
     if music_dir is None:
-        print("Please set the environment variable MUSIC_LIB_ROOT to point to a directory that stores music.")
+        print(
+            "Please set the environment variable MUSIC_LIB_ROOT to point to a directory that stores music."
+        )
         sys.exit(0)
     if not os.path.isdir(music_dir):
         try:
@@ -56,18 +58,35 @@ def music_lib_directory(verbose=True):
 
 @click.command()
 @click.option(
-    '--tracks_info', '-t_i',
+    '--tracks_info',
+    '-t_i',
     type=click.File('r'),
     help='File in which there is tracks information necessary to segment a music ablum into tracks.'
-         'If not provided, a prompt will allow you to type the input tracks information.',
+    'If not provided, a prompt will allow you to type the input tracks information.',
 )
-@click.option('--track_name/--no-track_name', default=True, show_default=True, help='Whether to extract the track names from the mp3 files and write them as metadata correspondingly')
-@click.option('--track_number/--no-track_number', default=True, show_default=True, help='Whether to extract the track numbers from the mp3 files and write them as metadata correspondingly')
-@click.option('--artist', '-a', help="If given, then value shall be used as the PTE1 tag: 'Lead performer(s)/Soloist(s)'.  In the music player 'clementine' it corresponds to the 'artist' column (and not the 'Album artist column) ")
-@click.option('--album_artist', help="If given, then value shall be used as the TPE2 tag: 'Band/orchestra/accompaniment'.  In the music player 'clementine' it corresponds to the 'Album artist' column")
+@click.option(
+    '--track_name/--no-track_name',
+    default=True,
+    show_default=True,
+    help='Whether to extract the track names from the mp3 files and write them as metadata correspondingly',
+)
+@click.option(
+    '--track_number/--no-track_number',
+    default=True,
+    show_default=True,
+    help='Whether to extract the track numbers from the mp3 files and write them as metadata correspondingly',
+)
+@click.option(
+    '--artist',
+    '-a',
+    help="If given, then value shall be used as the PTE1 tag: 'Lead performer(s)/Soloist(s)'.  In the music player 'clementine' it corresponds to the 'artist' column (and not the 'Album artist column) ",
+)
+@click.option(
+    '--album_artist',
+    help="If given, then value shall be used as the TPE2 tag: 'Band/orchestra/accompaniment'.  In the music player 'clementine' it corresponds to the 'Album artist' column",
+)
 @click.option('--video_url', '-u', help='the youtube video url')
 def main(tracks_info, track_name, track_number, artist, album_artist, video_url):
-
     music_dir = music_lib_directory(verbose=True)
     print("Music library: {}".format(music_dir))
     logger.error("Music library: {}".format(str(music_dir)))
@@ -87,7 +106,9 @@ def main(tracks_info, track_name, track_number, artist, album_artist, video_url)
     ## DOWNLOAD
     while 1:
         try:
-            album_file = music_master.url2mp3(video_url, suppress_certificate_validation=False, force_download=False)
+            album_file = music_master.url2mp3(
+                video_url, suppress_certificate_validation=False, force_download=False
+            )
             break
         except TokenParameterNotInVideoInfoError as e:
             print(e, '\n')
@@ -109,17 +130,27 @@ def main(tracks_info, track_name, track_number, artist, album_artist, video_url)
         tracks_info = TracksInformation.from_multiline(tracks_info.read().strip())
     else:  # Interactive track type input
         sleep(0.5)
-        tracks_info = TracksInformation.from_multiline(inout.interactive_track_info_input_dialog().strip())
+        tracks_info = TracksInformation.from_multiline(
+            inout.interactive_track_info_input_dialog().strip()
+        )
         print()
 
     # Ask user if the input represents song timestamps (withing the whole playtime) OR
     # if the input represents song durations (that sum up to the total playtime)
     answer = inout.track_information_type_dialog()
 
-    segmentation_info = SegmentationInformation.from_tracks_information(tracks_info, hhmmss_type=answer.lower())
+    segmentation_info = SegmentationInformation.from_tracks_information(
+        tracks_info, hhmmss_type=answer.lower()
+    )
 
     try:  # SEGMENTATION
-        audio_file_paths = audio_segmenter.segment(album_file, segmentation_info, supress_stdout=True, supress_stderr=True, sleep_seconds=0)
+        audio_file_paths = audio_segmenter.segment(
+            album_file,
+            segmentation_info,
+            supress_stdout=True,
+            supress_stderr=True,
+            sleep_seconds=0,
+        )
     except TrackTimestampsSequenceError as e:
         print(e)
         sys.exit(1)
@@ -127,10 +158,7 @@ def main(tracks_info, track_name, track_number, artist, album_artist, video_url)
         # in order to put the above statement outside of while loop
 
     # TODO re-implement the below using the ffmpeg proxy
-    durations = [ffmpeg(
-
-    )
-    ]
+    durations = [ffmpeg()]
     # durations = [StringParser.hhmmss_format(getattr(mutagen.File(t).info, 'length', 0)) for t in audio_file_paths]
     # max_row_length = max(len(_[0]) + len(_[1]) for _ in zip(audio_file_paths, durations))
     # print("\n\nThese are the tracks created.\n")
@@ -152,29 +180,47 @@ def main(tracks_info, track_name, track_number, artist, album_artist, video_url)
             print("The selected destination directory '{}' is not valid.".format(album_dir))
             continue
         except PermissionError:
-            print("You don't have permision to create a directory in path '{}'".format(album_dir))
+            print(
+                "You don't have permision to create a directory in path '{}'".format(album_dir)
+            )
             continue
         try:
             for track in audio_file_paths:
                 destination_file_path = os.path.join(album_dir, os.path.basename(track))
                 if os.path.isfile(destination_file_path):
-                    print(" File '{}' already exists. in '{}'. Skipping".format(os.path.basename(track), album_dir))
+                    print(
+                        " File '{}' already exists. in '{}'. Skipping".format(
+                            os.path.basename(track), album_dir
+                        )
+                    )
                 else:
                     shutil.copyfile(track, destination_file_path)
             print("Album tracks reside in '{}'".format(album_dir))
             break
         except PermissionError:
-            print("Can't copy tracks to '{}' folder. You don't have write permissions in this directory".format(album_dir))
+            print(
+                "Can't copy tracks to '{}' folder. You don't have write permissions in this directory".format(
+                    album_dir
+                )
+            )
 
     ### WRITE METADATA
     md = MetadataDealer()
     answers = inout.interactive_metadata_dialogs(**music_master.guessed_info)
-    md.set_album_metadata(album_dir, track_number=track_number, track_name=track_name, artist=answers['artist'],
-                          album_artist=answers['album-artist'], album=answers['album'], year=answers['year'])
+    md.set_album_metadata(
+        album_dir,
+        track_number=track_number,
+        track_name=track_name,
+        artist=answers['artist'],
+        album_artist=answers['album-artist'],
+        album=answers['album'],
+        year=answers['year'],
+    )
 
 
 class TabCompleter:
     """A tab completer that can either complete from the filesystem or from a list."""
+
     def pathCompleter(self, text, state):
         """This is the tab completer for systems paths. Only tested on *nix systems"""
         _ = readline.get_line_buffer().split()
@@ -186,6 +232,7 @@ class TabCompleter:
         function can't be given a list to complete from a closure is used to create the listCompleter function with a
         list to complete from.
         """
+
         def listCompleter(text, state):
             line = readline.get_line_buffer()
             if not line:

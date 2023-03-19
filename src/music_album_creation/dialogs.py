@@ -26,7 +26,6 @@ ask_input = InputFactory()
 
 
 class DialogCommander:
-
     @classmethod
     def logo(cls):
         print(
@@ -34,11 +33,14 @@ class DialogCommander:
 ╔═╗╦  ╔╗ ╦ ╦╔╦╗  ╔═╗╦═╗╔═╗╔═╗╔╦╗╔═╗╦═╗\n\
 ╠═╣║  ╠╩╗║ ║║║║  ║  ╠╦╝║╣ ╠═╣ ║ ║ ║╠╦╝\n\
 ╩ ╩╩═╝╚═╝╚═╝╩ ╩  ╚═╝╩╚═╚═╝╩ ╩ ╩ ╚═╝╩╚═\
-            ")
+            "
+        )
 
     @classmethod
     def input_youtube_url_dialog(cls):
-        return ask_input('Please input a url corresponding to a music album uploaded as a youtube video.\n   video url: ')
+        return ask_input(
+            'Please input a url corresponding to a music album uploaded as a youtube video.\n   video url: '
+        )
 
     ## HANDLE Token Error with update youtube-dl and retry download same url dialog
     @classmethod
@@ -54,12 +56,11 @@ class DialogCommander:
         answer = prompt(questions)
         return answer
 
-
     ##### MULTILINE INPUT TRACK NAMES AND TIMESTAMPS (hh:mm:ss)
     @classmethod
     def track_information_type_dialog(cls):
         """Returns a parser of track hh:mm:ss multiline string.
-        
+
         Type of format (types: "Durations", "Timestamps") you prefer to input
         for providing the necessary information to segment an album
         """
@@ -77,8 +78,10 @@ class DialogCommander:
 
     @classmethod
     def interactive_track_info_input_dialog(cls):
-        print("Enter/Paste your 'track_name - hh:mm:ss' pairs. Each line should represent a single track with format 'trackname - hh:mm:ss'. "
-              "The assumption is that each track is defined either in terms of a timestamp correspoding to the starting point within the full album, or in terms of its actuall playtime length. Then navigate one line below your last track and press Ctrl-D (or Ctrl-Z on windows) to save it.\n")
+        print(
+            "Enter/Paste your 'track_name - hh:mm:ss' pairs. Each line should represent a single track with format 'trackname - hh:mm:ss'. "
+            "The assumption is that each track is defined either in terms of a timestamp correspoding to the starting point within the full album, or in terms of its actuall playtime length. Then navigate one line below your last track and press Ctrl-D (or Ctrl-Z on windows) to save it.\n"
+        )
 
         def input_lines(prompt_=None):
             """Yields input lines from user until EOFError is raised."""
@@ -93,8 +96,8 @@ class DialogCommander:
         def multiline_input(prompt_=None):
             """Reads a multi-line input from the user."""
             return os.linesep.join(input_lines(prompt_=prompt_))
-        return multiline_input()  # '\n' separable string
 
+        return multiline_input()  # '\n' separable string
 
     ####################################################################
 
@@ -104,17 +107,31 @@ class DialogCommander:
             album = '{} ({})'.format(album, year)
         else:
             album = album
-        return prompt([{'type': 'input',
-                        'name': 'create-album-dir',
-                        'message': 'Please give album directory path',
-                        'default': os.path.join(music_lib, artist, album)}])['create-album-dir']
+        return prompt(
+            [
+                {
+                    'type': 'input',
+                    'name': 'create-album-dir',
+                    'message': 'Please give album directory path',
+                    'default': os.path.join(music_lib, artist, album),
+                }
+            ]
+        )['create-album-dir']
 
     @classmethod
     def confirm_copy_tracks_dialog(cls, destination_directory):
-        return prompt([{'type': 'confirm',
-                        'name': 'copy-in-existant-dir',
-                        'message': "Directory '{}' exists. Copy the tracks there?".format(destination_directory),
-                        'default': True}])['copy-in-existant-dir']
+        return prompt(
+            [
+                {
+                    'type': 'confirm',
+                    'name': 'copy-in-existant-dir',
+                    'message': "Directory '{}' exists. Copy the tracks there?".format(
+                        destination_directory
+                    ),
+                    'default': True,
+                }
+            ]
+        )['copy-in-existant-dir']
 
     @classmethod
     def interactive_metadata_dialogs(cls, artist='', album='', year=''):
@@ -131,15 +148,9 @@ class DialogCommander:
                 'message': 'Infer from audio files',
                 'when': lambda answers: bool(answers['add-metadata']),
                 'choices': [
-                    {
-                        'name': 'track numbers',
-                        'checked': True
-                    },
-                    {
-                        'name': 'track names',
-                        'checked': True
-                    }
-                ]
+                    {'name': 'track numbers', 'checked': True},
+                    {'name': 'track names', 'checked': True},
+                ],
             },
             {
                 'type': 'input',
@@ -151,7 +162,7 @@ class DialogCommander:
                 'type': 'input',
                 'name': 'album-artist',
                 'message': "'album artist' tag",
-                'default': lambda x: x['artist']
+                'default': lambda x: x['artist'],
             },
             {
                 'type': 'input',
@@ -178,5 +189,5 @@ class NumberValidator(Validator):
                 int(document.text)
             except ValueError:
                 raise ValidationError(
-                    message='Please enter a number',
-                    cursor_position=len(document.text))  # Move cursor to end
+                    message='Please enter a number', cursor_position=len(document.text)
+                )  # Move cursor to end
