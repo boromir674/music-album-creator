@@ -21,7 +21,10 @@ def integration_data():
 @pytest.mark.runner_setup(mix_stderr=False)
 @mock.patch('music_album_creation.create_album.inout')
 @mock.patch('music_album_creation.create_album.music_lib_directory')
-def test_integration(mock_music_lib_directory, mock_inout, tmpdir, isolated_cli_runner, valid_youtube_videos):
+def test_integration(
+    mock_music_lib_directory,
+    mock_inout,
+    tmpdir, isolated_cli_runner, valid_youtube_videos):
     target_directory = str(tmpdir.mkdir('temp-music-library'))
 
     mock_music_lib_directory.return_value = target_directory

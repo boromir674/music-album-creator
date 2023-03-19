@@ -1,90 +1,32 @@
+from abc import ABC
 import logging
-import os
 import re
 import json
 from pathlib import Path
-import subprocess
-from typing import Optional
-import sys
-from abc import ABCMeta, abstractmethod
+from typing import Union
 from time import sleep
 from pytube import YouTube
-from music_album_creation.ffmpeg import FFMPEG
 
 
 logger = logging.getLogger(__name__)
 
 
-ffmpeg = FFMPEG(
-    os.environ.get('MUSIC_FFMPEG', 'ffmpeg')
-)
 
-
-class AbstractYoutubeDownloader(object):
-    __metaclass__ = ABCMeta
-    @abstractmethod
-    def download(self, video_url, directory, **kwargs):
-        raise NotImplementedError
-
-
-class AbstractYoutubeDL(AbstractYoutubeDownloader):
-    update_command_args = ('sudo', 'python' '-m', 'pip', 'install', '--upgrade', 'youtube-dl')
-    update_backend_command = ' '.join(update_command_args)
-
-    already_up_to_date_reg = re.compile(r'python\d[\d.]*/(site-packages \(\d[\d.]*\))',)
-    updated_reg = re.compile(r'Collecting [\w\-_]+==(\d[\d.]*)')
-
-    def download(self, video_url, directory, **kwargs):
-        raise NotImplementedError
-
-    # @classmethod
-    # def update_backend(cls):
-    #     args = ['python', '-m', 'pip', 'install', '--user', '--upgrade', 'youtube-dl']
-    #     output = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    #     stdout = str(output.stdout, encoding='utf-8')
-    #     if output.returncode == 0:
-    #         match = cls.requirement_dir_reg.search(stdout)
-    #         if match:
-    #             logger.info("Backend 'youtube-dl' already up-to-date in '{}'".format(match.group(1)))
-    #         else:
-    #             logger.info("Updated with command '{}' to version {}".format(' '.join(args), cls.updated_reg.search(stdout)))
-    #     else:
-    #         logging.error("Something not documented happened while attempting to update youtube_dl: {}".format(str(output.stderr, encoding='utf-8')))
-
-
-class CMDYoutubeDownloader(AbstractYoutubeDL):
-    _args = ['youtube-dl', '--extract-audio', '--audio-quality', '0', '--audio-format', 'mp3', '-o', '%(title)s.%(ext)s']
+class CMDYoutubeDownloader:
     __instance = None
-    youtube_dl_executable: Optional[str] = None
 
     def __new__(cls, *args, **kwargs):
         if not cls.__instance:
             cls.__instance = super(CMDYoutubeDownloader, cls).__new__(cls)
         return cls.__instance
 
-    def download(self, video_url, directory, suppress_certificate_validation=False, **kwargs):
-        self._download(video_url, directory, suppress_certificate_validation=suppress_certificate_validation)
+    def download(self, video_url: str, directory: Union[str, Path], **kwargs):
+        self._download(video_url, directory)
 
     @classmethod
-    def _download(cls, video_url, directory, **kwargs):
+    def _download(cls, video_url, directory):
         # output dir where to store the stream
         output_dir = Path(directory)
-
-        # https://www.youtube.com/watch?v=FVLHDm8xZBo
-        # args = [
-        #     os.environ.get('YOUTUBE_DL', 'youtube-dl'),
-        #     '--extract-audio',
-        #     '--audio-quality',
-        #     '0',
-        #     '--audio-format',
-        #     'mp3',
-        #     '-o',
-        #     '{}/{}'.format(directory, template), video_url
-        # ]
-        # # If suppress HTTPS certificate validation
-        # if kwargs.get('suppress_certificate_validation', False):
-        #     args.insert(1, '--no-check-certificate')
-        # logger.info("Executing '{}'".format(' '.join(args)))
 
         yt = YouTube(video_url)
         
@@ -111,67 +53,24 @@ class CMDYoutubeDownloader(AbstractYoutubeDL):
             filename_prefix=None,
             skip_existing=True,  # Skip existing files, defaults to True
             timeout=None,  # Request timeout length in seconds. Uses system default
-            max_retries=0  # Number of retries to attempt after socket timeout. Defaults to 0
+            max_retries=3  # Number of retries to attempt after socket timeout. Defaults to 0
         )
         logger.error("Downloaded from Youtube: %s", json.dumps({
             'title': yt.title,
             'local_file' : str(local_file),
         }, indent=4, sort_keys=True))
-
-        # LEGACY CODE
-        # process = subprocess.Popen(args, stderr=subprocess.PIPE)  # stdout gets streamed in terminal
-        # stdout, stderr = process.communicate()
-        # if process.returncode != 0:
-        #     if 2 < sys.version_info[0]:
-        #         stderr = str(stderr, encoding='utf-8')
-        #     else:
-        #         stderr = str(stderr)
-        #     raise YoutubeDownloaderErrorFactory.create_from_stderr(stderr, video_url)
-
-        # manually convert webm to mp3 (ffmpeg)
-        # TODO delegate this to a separate module
-        """
-        Audio options:
-        -aframes number     set the number of audio frames to output
-        -aq quality         set audio quality (codec-specific)
-        -ar rate            set audio sampling rate (in Hz)
-        -ac channels        set number of audio channels
-        -an                 disable audio
-        -acodec codec       force audio codec ('copy' to copy stream)
-        -vol volume         change audio volume (256=normal)
-        -af filter_graph    set audio filters
-        """
-        print('-- HERE --')
-        # result = ffmpeg(
-        #     '-y',  # force file overwrite if exists
-        #     '-i',
-        #     str(local_file),
-        #     '-vn',  # disable video (keep only audio even though we expect to receive only audio)
-        #     '-acodec',
-        #     # we do not use the full ffmpeg pipeline (encode -> decode frames -> ecnode data packets ...)
-        #     'copy',   # we make sure we discarded the video stream and copy the audio stream as is
-        #     str(Path(f'{output_dir}/{yt.title}.mp4'))
-        # )
-        # print(result.stdout)
-        # if result.exit_code != 0:
-        #     logger.error("Ffmpeg exit code: %s", result.exit_code)
-        #     logger.error("Ffmpeg stdout: %s", result.stdout)
-        #     logger.error("Ffmpeg error: %s", result.stderr)
-        #     raise Exception(result.stderr)
-        #     # raise YoutubeDownloaderErrorFactory.create_from_stderr(result.stderr, video_url)
-
         return local_file
 
     def download_trials(self, video_url, directory, times=10, delay=1, **kwargs):
         i = 0
         while i < times - 1:
             try:
-                return self._download(video_url, directory, **kwargs)
+                return self._download(video_url, directory)
             except TooManyRequestsError as e:
                 logger.info(e)
                 i += 1
                 sleep(delay)
-        return self._download(video_url, directory, **kwargs)
+        return self._download(video_url, directory)
 
 
 class YoutubeDownloaderErrorFactory(object):
@@ -193,8 +92,7 @@ class YoutubeDownloaderErrorFactory(object):
 
 #### EXCEPTIONS
 
-class AbstractYoutubeDownloaderError(object):
-    __metaclass__ = ABCMeta
+class AbstractYoutubeDownloaderError(ABC):
 
     def __init__(self, *args, **kwargs):
         super(AbstractYoutubeDownloaderError, self).__init__()

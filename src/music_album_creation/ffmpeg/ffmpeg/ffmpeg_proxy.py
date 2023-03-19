@@ -4,6 +4,8 @@ from typing import Any, Protocol
 
 from software_patterns import Proxy
 
+__all__ = ['FFProbeProxy']
+
 
 logger = logging.getLogger(__name__)
 

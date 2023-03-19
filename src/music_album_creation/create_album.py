@@ -19,6 +19,11 @@ from .dialogs import DialogCommander as inout
 from .downloading import (InvalidUrlError, TokenParameterNotInVideoInfoError,
                           UnavailableVideoError)
 from .music_master import MusicMaster
+from .ffmpeg import FFMPEG
+
+ffmpeg = FFMPEG(
+    os.environ.get('MUSIC_FFMPEG', 'ffmpeg')
+)
 
 if os.name == 'nt':
     from pyreadline import Readline
@@ -59,7 +64,7 @@ def main(tracks_info, track_name, track_number, artist, album_artist, video_url)
 
     music_dir = music_lib_directory(verbose=True)
     print("Music library: {}".format(music_dir))
-    logger.error("Music library: {}".format(music_dir))
+    logger.error("Music library: {}".format(str(music_dir)))
 
     ## Render Logo
     inout.logo()
@@ -68,7 +73,7 @@ def main(tracks_info, track_name, track_number, artist, album_artist, video_url)
     if not video_url:
         video_url = inout.input_youtube_url_dialog()
         print('\n')
-
+    logger.error(f"URL {video_url}")
     ## Init
     music_master = MusicMaster(music_dir)
     audio_segmenter = AudioSegmenter()
@@ -116,6 +121,10 @@ def main(tracks_info, track_name, track_number, artist, album_artist, video_url)
         # in order to put the above statement outside of while loop
 
     # TODO re-implement the below using the ffmpeg proxy
+    durations = [ffmpeg(
+
+    )
+    ]
     # durations = [StringParser.hhmmss_format(getattr(mutagen.File(t).info, 'length', 0)) for t in audio_file_paths]
     # max_row_length = max(len(_[0]) + len(_[1]) for _ in zip(audio_file_paths, durations))
     # print("\n\nThese are the tracks created.\n")

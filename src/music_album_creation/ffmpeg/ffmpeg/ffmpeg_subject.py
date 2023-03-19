@@ -1,7 +1,9 @@
 """FFMpeg Subject that runs ffmpeg in python subprocess."""
 from software_patterns import Singleton
 
-from .run_cli import execute_command_in_subprocess
+from ..run_cli import execute_command_in_subprocess
+
+__all__ = ['FFMpegSubject']
 
 
 # Our implementation of the Subject class (see the Proxy pattern)
