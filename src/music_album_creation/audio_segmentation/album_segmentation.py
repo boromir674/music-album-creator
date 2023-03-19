@@ -1,12 +1,12 @@
-from typing import Optional
 import logging
 import os
 import subprocess
 import tempfile
 import time
+from typing import Optional
 
-from music_album_creation.tracks_parsing import StringParser
 from music_album_creation.ffmpeg import FFMPEG
+from music_album_creation.tracks_parsing import StringParser
 
 from .data import SegmentationInformation
 

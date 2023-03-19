@@ -5,8 +5,9 @@ import re
 from collections import defaultdict
 
 import click
-from music_album_creation.tracks_parsing import StringParser
 from mutagen.id3 import ID3, TALB, TDRC, TIT2, TPE1, TPE2, TRCK
+
+from music_album_creation.tracks_parsing import StringParser
 
 # The main notable classes in mutagen are FileType, StreamInfo, Tags, Metadata and for error handling the MutagenError exception.
 

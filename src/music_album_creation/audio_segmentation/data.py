@@ -2,6 +2,7 @@ import re
 import time
 
 import attr
+
 from music_album_creation.tracks_parsing import StringParser
 
 

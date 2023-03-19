@@ -1,9 +1,10 @@
 import os
 import subprocess
-
 from unittest import mock
+
 import pytest
 from click.testing import CliRunner
+
 from music_album_creation.create_album import main
 
 

@@ -3,10 +3,13 @@ import sys
 
 import mutagen
 import pytest
+
 from music_album_creation import AudioSegmenter
 from music_album_creation.audio_segmentation.data import (
-    SegmentationInformation, TrackTimestampsSequenceError,
-    WrongTimestampFormat)
+    SegmentationInformation,
+    TrackTimestampsSequenceError,
+    WrongTimestampFormat,
+)
 
 this_dir = os.path.dirname(os.path.realpath(__file__))
 

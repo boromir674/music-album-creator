@@ -3,9 +3,10 @@ import os
 from glob import glob
 
 import pytest
+from mutagen.id3 import ID3
+
 from music_album_creation.metadata import MetadataDealer as MD
 from music_album_creation.tracks_parsing import StringParser
-from mutagen.id3 import ID3
 
 
 @pytest.fixture(scope='module')

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import pytest
+
 from music_album_creation.audio_segmentation import Timestamp
 from music_album_creation.audio_segmentation.data import to_timestamps_info
 from music_album_creation.tracks_parsing import StringParser

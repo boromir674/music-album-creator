@@ -2,7 +2,7 @@
 import os
 import sys
 
-from questionary import Validator, ValidationError, prompt
+from questionary import ValidationError, Validator, prompt
 
 
 class InputFactory(object):

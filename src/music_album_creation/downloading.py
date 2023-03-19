@@ -1,12 +1,12 @@
-from abc import ABC
+import json
 import logging
 import re
-import json
+from abc import ABC
 from pathlib import Path
-from typing import Union
 from time import sleep
-from pytube import YouTube
+from typing import Union
 
+from pytube import YouTube
 
 logger = logging.getLogger(__name__)
 

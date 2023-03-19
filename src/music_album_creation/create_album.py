@@ -1,25 +1,31 @@
 #!/usr/bin/env python3
 
 import glob
+import logging
 import os
 import shutil
 import sys
 from time import sleep
-import logging
 
 import click
-import mutagen
 
-from . import MetadataDealer, StringParser
-from .audio_segmentation import (AudioSegmenter, SegmentationInformation,
-                                 TracksInformation)
+from . import MetadataDealer
+from .audio_segmentation import (
+    AudioSegmenter,
+    SegmentationInformation,
+    TracksInformation,
+)
 from .audio_segmentation.data import TrackTimestampsSequenceError
+
 # 'front-end', interface, interactive dialogs are imported below
 from .dialogs import DialogCommander as inout
-from .downloading import (InvalidUrlError, TokenParameterNotInVideoInfoError,
-                          UnavailableVideoError)
-from .music_master import MusicMaster
+from .downloading import (
+    InvalidUrlError,
+    TokenParameterNotInVideoInfoError,
+    UnavailableVideoError,
+)
 from .ffmpeg import FFMPEG
+from .music_master import MusicMaster
 
 ffmpeg = FFMPEG(
     os.environ.get('MUSIC_FFMPEG', 'ffmpeg')
