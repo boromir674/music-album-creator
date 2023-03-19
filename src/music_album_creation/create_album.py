@@ -9,7 +9,7 @@ from time import sleep
 
 import click
 
-from . import MetadataDealer
+from .metadata import MetadataDealer
 from .audio_segmentation import (
     AudioSegmenter,
     SegmentationInformation,
@@ -24,10 +24,10 @@ from .downloading import (
     TokenParameterNotInVideoInfoError,
     UnavailableVideoError,
 )
-from .ffmpeg import FFMPEG
+from .ffmpeg.ffprobe import FFProbe
 from .music_master import MusicMaster
 
-ffmpeg = FFMPEG(os.environ.get('MUSIC_FFMPEG', 'ffmpeg'))
+ffprobe = FFProbe(os.environ.get('MUSIC_FFPROBE', 'ffprobe'))
 
 if os.name == 'nt':
     from pyreadline import Readline
@@ -158,7 +158,7 @@ def main(tracks_info, track_name, track_number, artist, album_artist, video_url)
         # in order to put the above statement outside of while loop
 
     # TODO re-implement the below using the ffmpeg proxy
-    durations = [ffmpeg()]
+    # durations = [ffmpeg()]
     # durations = [StringParser.hhmmss_format(getattr(mutagen.File(t).info, 'length', 0)) for t in audio_file_paths]
     # max_row_length = max(len(_[0]) + len(_[1]) for _ in zip(audio_file_paths, durations))
     # print("\n\nThese are the tracks created.\n")
