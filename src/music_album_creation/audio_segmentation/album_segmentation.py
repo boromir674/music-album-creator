@@ -1,3 +1,4 @@
+from typing import Optional
 import logging
 import os
 import subprocess
@@ -5,10 +6,16 @@ import tempfile
 import time
 
 from music_album_creation.tracks_parsing import StringParser
+from music_album_creation.ffmpeg import FFMPEG
 
 from .data import SegmentationInformation
 
 logger = logging.getLogger(__name__)
+
+
+ffmpeg = FFMPEG(
+    os.environ.get('MUSIC_FFMPEG', 'ffmpeg')
+)
 
 
 class AudioSegmenter(object):
@@ -26,7 +33,7 @@ class AudioSegmenter(object):
         self._dir = directory_path
 
     def _trans(self, track_info):
-        return [os.path.join(self._dir, '{}.mp3'.format(track_info[0]))] + track_info[1:]
+        return [os.path.join(self._dir, '{}.mp4'.format(track_info[0]))] + track_info[1:]
 
     def segment(self, album_file, data, supress_stdout=True, supress_stderr=True, sleep_seconds=0):
         """
@@ -42,14 +49,20 @@ class AudioSegmenter(object):
         i = 0
         while exit_code == 0 and i < len(data) - 1:
             time.sleep(sleep_seconds)
-            exit_code = self._segment(album_file, *self._trans(list(data[i])), supress_stdout=supress_stdout, supress_stderr=supress_stderr)
+            result = self._segment(album_file, *self._trans(list(data[i])), supress_stdout=supress_stdout, supress_stderr=supress_stderr)
             i += 1
-        if exit_code != 0:
+        if result.exit_code != 0:
+            logger.error("Fmmpeg exit code: %s", result.exit_code)
+            logger.error("Ffmpeg st out: %s", result.stdout)
+            logger.error("Fmmpeg stderr: %s", result.stderr)
             raise FfmpegCommandError("Command '{}' failed".format(' '.join(self._args)))
-        exit_code = self._segment(album_file, *self._trans(list(data[-1])), supress_stdout=supress_stdout, supress_stderr=supress_stderr)
-        if exit_code != 0:
+        result = self._segment(album_file, *self._trans(list(data[-1])), supress_stdout=supress_stdout, supress_stderr=supress_stderr)
+        if result.exit_code != 0:
+            logger.error("Fmmpeg exit code: %s", result.exit_code)
+            logger.error("Ffmpeg st out: %s", result.stdout)
+            logger.error("Fmmpeg stderr: %s", result.stderr)
             raise FfmpegCommandError("Command '{}' failed".format(' '.join(self._args)))
-        return [os.path.join(self._dir, '{}.mp3'.format(list(x)[0])) for x in data]
+        return [os.path.join(self._dir, '{}.mp4'.format(list(x)[0])) for x in data]
 
     def segment_from_list(self, album_file, data, supress_stdout=True, supress_stderr=True, sleep_seconds=0):
         """
@@ -71,13 +84,23 @@ class AudioSegmenter(object):
         i = 0
         while exit_code == 0 and i < len(data) - 1:
             time.sleep(sleep_seconds)
-            exit_code = self._segment(album_file, *data[i], supress_stdout=supress_stdout, supress_stderr=supress_stderr)
+            result = self._segment(album_file, *data[i], supress_stdout=supress_stdout, supress_stderr=supress_stderr)
+            if result.exit_code != 0:
+                logger.error("Fmmpeg exit code: %s", result.exit_code)
+                logger.error("Ffmpeg st out: %s", result.stdout)
+                logger.error("Fmmpeg stderr: %s", result.stderr)
+                raise FfmpegCommandError("Command '{}' failed".format(' '.join(self._args)))
             i += 1
-        if exit_code != 0:
-            raise FfmpegCommandError("Command '{}' failed".format(' '.join(self._args)))
-        exit_code = self._segment(album_file, *data[-1], supress_stdout=supress_stdout, supress_stderr=supress_stderr)
-        if exit_code != 0:
-            raise FfmpegCommandError("Command '{}' failed".format(' '.join(self._args)))
+        # if exit_code != 0:
+        #     raise FfmpegCommandError("Command '{}' failed".format(' '.join(self._args)))
+        result = self._segment(album_file, *data[-1], supress_stdout=supress_stdout, supress_stderr=supress_stderr)
+        if result.exit_code != 0:
+                logger.error("Fmmpeg exit code: %s", result.exit_code)
+                logger.error("Ffmpeg st out: %s", result.stdout)
+                logger.error("Fmmpeg stderr: %s", result.stderr)
+                raise FfmpegCommandError("Command '{}' failed".format(' '.join(self._args)))
+        # if exit_code != 0:
+        #     raise FfmpegCommandError("Command '{}' failed".format(' '.join(self._args)))
         return audio_file_paths
 
     def segment_from_file(self, album_file, tracks_file, hhmmss_type, supress_stdout=True, supress_stderr=True, sleep_seconds=0):
@@ -98,25 +121,42 @@ class AudioSegmenter(object):
     def _segment(self, *args, **kwargs):
         album_file = args[0]
         track_file = args[1]
-        supress_stdout = kwargs['supress_stdout']
-        supress_stderr = kwargs['supress_stderr']
+        # supress_stdout = kwargs['supress_stdout']
+        # supress_stderr = kwargs['supress_stderr']
 
-        start = args[2]
-        end = None
+        start = args[2]  # starting timestamp
+        end: Optional[str] = None  # end timestamp
+        # if it is the last segment then end timestamp is the end of the album
+        # and in that case the client code need to supply 3 arguments (not 4)
         if 3 < len(args):
             end = args[3]
-        args = ['ffmpeg', '-y', '-i', '-acodec', 'copy', '-ss']
-        self._args = args[:3] + ['{}'.format(album_file)] + args[3:] + [start] + (lambda: ['-to', str(end)] if end else [])() + ['{}'.format(track_file)]
-        logger.info("Segmenting: '{}'".format(' '.join(self._args)))
-        return subprocess.check_call(self._args, **self.__std_parameters(supress_stdout, supress_stderr))
+        
+        # args = ['ffmpeg', '-y', '-i', '-acodec', 'copy', '-ss']
+        # self._args = args[:3] + ['{}'.format(album_file)] + args[3:] + [start] + (lambda: ['-to', str(end)] if end else [])() + ['{}'.format(track_file)]
+        self._args = (
+            '-y',
+            '-i',
+            str(album_file),  # youtube downloaded audio steam (ie local mp4 file)
+            '-acodec',
+            'copy',
+            '-ss',
+            start,
+            *list((lambda: ['-to', str(end)] if end else [])()),
+            str(track_file),
+        )
+        logger.info("Segmenting: ffmpeg '{}'".format(' '.join(self._args)))
+        return ffmpeg(
+            *self._args,
+        )
+        # return subprocess.check_call(self._args, **self.__std_parameters(supress_stdout, supress_stderr))
         # ro = subprocess.run(self._args, **self.__std_parameters(supress_stdout, supress_stderr))
         # return ro.returncode
 
-    @classmethod
-    def __std_parameters(cls, std_out_flag, std_error_flag):
-        """If an input flag is True then the stream  (either 'out' or 'err') can be obtained ie obj = subprocess.run(..); str(obj.stdout, encoding='utf-8')).\n
-        If an input flag is False then the stream will be normally outputted; ie at the terminal"""
-        return {v: subprocess.PIPE for k, v in zip([std_out_flag, std_error_flag], ['stdout', 'stderr']) if k}
+    # @classmethod
+    # def __std_parameters(cls, std_out_flag, std_error_flag):
+    #     """If an input flag is True then the stream  (either 'out' or 'err') can be obtained ie obj = subprocess.run(..); str(obj.stdout, encoding='utf-8')).\n
+    #     If an input flag is False then the stream will be normally outputted; ie at the terminal"""
+    #     return {v: subprocess.PIPE for k, v in zip([std_out_flag, std_error_flag], ['stdout', 'stderr']) if k}
 
 
 class FfmpegCommandError(Exception): pass

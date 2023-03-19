@@ -5,6 +5,7 @@ import os
 import shutil
 import sys
 from time import sleep
+import logging
 
 import click
 import mutagen
@@ -24,7 +25,7 @@ if os.name == 'nt':
     readline = Readline()
 
 this_dir = os.path.dirname(os.path.realpath(__file__))
-
+logger = logging.getLogger(__name__)
 
 def music_lib_directory(verbose=True):
     music_dir = os.getenv('MUSIC_LIB_ROOT', None)
@@ -58,6 +59,7 @@ def main(tracks_info, track_name, track_number, artist, album_artist, video_url)
 
     music_dir = music_lib_directory(verbose=True)
     print("Music library: {}".format(music_dir))
+    logger.error("Music library: {}".format(music_dir))
 
     ## Render Logo
     inout.logo()
@@ -113,10 +115,12 @@ def main(tracks_info, track_name, track_number, artist, album_artist, video_url)
         # TODO capture ctrl-D to signal possible change of type from timestamp to durations and vice-versa...
         # in order to put the above statement outside of while loop
 
-    durations = [StringParser.hhmmss_format(getattr(mutagen.File(t).info, 'length', 0)) for t in audio_file_paths]
-    max_row_length = max(len(_[0]) + len(_[1]) for _ in zip(audio_file_paths, durations))
-    print("\n\nThese are the tracks created.\n")
-    print('\n'.join(sorted([' {}{}  {}'.format(t, (max_row_length - len(t) - len(d)) * ' ', d) for t, d in zip(audio_file_paths, durations)])), '\n')
+    # TODO re-implement the below using the ffmpeg proxy
+    # durations = [StringParser.hhmmss_format(getattr(mutagen.File(t).info, 'length', 0)) for t in audio_file_paths]
+    # max_row_length = max(len(_[0]) + len(_[1]) for _ in zip(audio_file_paths, durations))
+    # print("\n\nThese are the tracks created.\n")
+    # print('\n'.join(sorted([' {}{}  {}'.format(t, (max_row_length - len(t) - len(d)) * ' ', d) for t, d in zip(audio_file_paths, durations)])), '\n')
+    # TODO
 
     ### STORE TRACKS IN DIR in MUSIC LIBRARY ROOT
     while 1:

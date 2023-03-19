@@ -42,7 +42,9 @@ def test_integration(mock_music_lib_directory, mock_inout, tmpdir, isolated_cli_
         color=False,
         **{},
     )
+    print(result.stdout)
+    print(result.stderr)
     assert result.stderr == ''
+    assert result.exit_code == 0
     print("CAP\n{}\nCAP".format(result.output))
     # captured = capsys.readouterr()
-    assert result.exit_code == 0

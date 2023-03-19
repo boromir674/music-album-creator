@@ -34,9 +34,9 @@ duration_in_seconds = 223
 def download_trial():
     def _download_trial(url, directory, download_callback, nb_trials):
         try:
-            download_callback(url, directory, times=1, suppress_certificate_validation=False)
+            return download_callback(url, directory, times=1, suppress_certificate_validation=False)
         except CertificateVerificationError:
-            download_callback(url, directory, times=nb_trials, suppress_certificate_validation=True)
+            return download_callback(url, directory, times=nb_trials, suppress_certificate_validation=True)
     return _download_trial
 
 
@@ -44,6 +44,7 @@ def download_trial():
 #     ('https://www.youtube.com/watch?v=Q3dvbM6Pias', 'Rage Against The Machine - Testify (Official Video).mp3')])
 @pytest.mark.network_bound
 def test_downloading_valid_youtube_url(download_trial, tmp_path_factory, download, nb_download_trials):
+    from pathlib import Path
     target_directory = tmp_path_factory.mktemp("youtubedownloads")
     target_directory = str(target_directory)
     # for youtube_video in [('https://www.youtube.com/watch?v=UO2JIPOYhIk&list=OLAK5uy_k80e1ODmXyVy6K25BL6PS4wCFg1hwjkX0&index=3', 'The Witch')]:
@@ -52,11 +53,19 @@ def test_downloading_valid_youtube_url(download_trial, tmp_path_factory, downloa
         '20 Second Timer (Minimal)')]:
         
         url, title_name = youtube_video
-        download_trial(url, target_directory, download, nb_download_trials)
-        assert len(glob('{}/*'.format(target_directory))) == 2
+        downloaded_file = download_trial(url, target_directory, download, nb_download_trials)
 
-        assert os.path.isfile(os.path.join(target_directory, f'{title_name}.webm'))
-        assert os.path.isfile(os.path.join(target_directory, f'{title_name}.mp4'))
+        expected_downloaded_path: Path = Path(str(downloaded_file))
+
+        # THEN File has been downloaded
+        assert expected_downloaded_path.exists()
+        assert expected_downloaded_path.is_file()
+
+        # AND FILE has the expected name
+        assert expected_downloaded_path.name == f'{title_name}.mp4'
+
+        # AND file has extension mp4
+        assert expected_downloaded_path.suffix == '.mp4'
 
 
 @pytest.mark.network_bound

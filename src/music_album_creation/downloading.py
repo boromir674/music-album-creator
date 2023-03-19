@@ -70,7 +70,7 @@ class CMDYoutubeDownloader(AbstractYoutubeDL):
         # output dir where to store the stream
         output_dir = Path(directory)
 
-# https://www.youtube.com/watch?v=FVLHDm8xZBo
+        # https://www.youtube.com/watch?v=FVLHDm8xZBo
         # args = [
         #     os.environ.get('YOUTUBE_DL', 'youtube-dl'),
         #     '--extract-audio',
@@ -107,14 +107,15 @@ class CMDYoutubeDownloader(AbstractYoutubeDL):
         # Download the audio stream
         local_file = best_audio_stream.download(
             output_path=str(output_dir),
-            # filename=f'{yt.title}',
+            filename=f'{yt.title}.mp4',  # since this is an audio-only stream, the file will be mp4
             filename_prefix=None,
             skip_existing=True,  # Skip existing files, defaults to True
             timeout=None,  # Request timeout length in seconds. Uses system default
             max_retries=0  # Number of retries to attempt after socket timeout. Defaults to 0
         )
-        logger.info("Downloaded from Youtube: %s", json.dumps({
+        logger.error("Downloaded from Youtube: %s", json.dumps({
             'title': yt.title,
+            'local_file' : str(local_file),
         }, indent=4, sort_keys=True))
 
         # LEGACY CODE
@@ -140,35 +141,37 @@ class CMDYoutubeDownloader(AbstractYoutubeDL):
         -vol volume         change audio volume (256=normal)
         -af filter_graph    set audio filters
         """
-        result = ffmpeg(
-            '-y',  # force file overwrite if exists
-            '-i',
-            str(local_file),
-            '-vn',  # disable video (keep only audio even though we expect to receive only audio)
-            '-acodec',
-            # we do not use the full ffmpeg pipeline (encode -> decode frames -> ecnode data packets ...)
-            'copy',   # we make sure we discarded the video stream and copy the audio stream as is
-            str(Path(f'{output_dir}/{yt.title}.mp4'))
-        )
-        print(result.stdout)
-        if result.exit_code != 0:
-            logger.error("Ffmpeg exit code: %s", result.exit_code)
-            logger.error("Ffmpeg stdout: %s", result.stdout)
-            logger.error("Ffmpeg error: %s", result.stderr)
-            raise Exception(result.stderr)
-            # raise YoutubeDownloaderErrorFactory.create_from_stderr(result.stderr, video_url)
+        print('-- HERE --')
+        # result = ffmpeg(
+        #     '-y',  # force file overwrite if exists
+        #     '-i',
+        #     str(local_file),
+        #     '-vn',  # disable video (keep only audio even though we expect to receive only audio)
+        #     '-acodec',
+        #     # we do not use the full ffmpeg pipeline (encode -> decode frames -> ecnode data packets ...)
+        #     'copy',   # we make sure we discarded the video stream and copy the audio stream as is
+        #     str(Path(f'{output_dir}/{yt.title}.mp4'))
+        # )
+        # print(result.stdout)
+        # if result.exit_code != 0:
+        #     logger.error("Ffmpeg exit code: %s", result.exit_code)
+        #     logger.error("Ffmpeg stdout: %s", result.stdout)
+        #     logger.error("Ffmpeg error: %s", result.stderr)
+        #     raise Exception(result.stderr)
+        #     # raise YoutubeDownloaderErrorFactory.create_from_stderr(result.stderr, video_url)
+
+        return local_file
 
     def download_trials(self, video_url, directory, times=10, delay=1, **kwargs):
         i = 0
         while i < times - 1:
             try:
-                self._download(video_url, directory, **kwargs)
-                return
+                return self._download(video_url, directory, **kwargs)
             except TooManyRequestsError as e:
                 logger.info(e)
                 i += 1
                 sleep(delay)
-        self._download(video_url, directory, **kwargs)
+        return self._download(video_url, directory, **kwargs)
 
 
 class YoutubeDownloaderErrorFactory(object):

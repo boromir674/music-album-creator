@@ -44,12 +44,12 @@ class TestSegmenting:
             # segmenter.segment(test_audio_file_path, [['t1', '0:00'], ['t2', '1:a0'], ['t3', '1:35']], supress_stdout=True, verbose=False, sleep_seconds=0)
 
     @pytest.mark.parametrize("tracks_info, names, durations", [
-        ("1. tr1 - 0:00\n2. tr2 - 1:12\n3. tr3 - 2:00\n", ['01 - tr1.mp3', '02 - tr2.mp3', '03 - tr3.mp3'], [72, 48, 236]),
+        ("1. tr1 - 0:00\n2. tr2 - 1:12\n3. tr3 - 2:00\n", ['01 - tr1.mp4', '02 - tr2.mp4', '03 - tr3.mp4'], [72, 48, 236]),
         pytest.param("1. tr1 - 0:00\n2. tr2 - 1:12\n3. tr3 - 1:00\n",
-                     ['01 - tr1.mp3', '02 - tr2.mp3', '03 - tr3.mp3'],
+                     ['01 - tr1.mp4', '02 - tr2.mp4', '03 - tr3.mp4'],
                      [72, 48, 236], marks=pytest.mark.xfail),
         pytest.param("1. tr1 - 0:00\n2. tr2 - 1:72\n3. tr3 - 3:00\n",
-                     ['01 - tr1.mp3', '02 - tr2.mp3', '03 - tr3.mp3'],
+                     ['01 - tr1.mp4', '02 - tr2.mp4', '03 - tr3.mp4'],
                      [72, 48, 236], marks=pytest.mark.xfail),
     ])
     def test_valid_segmentation(self, tracks_info, names, durations, tmpdir, test_audio_file_path, segmenter):
