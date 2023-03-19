@@ -169,6 +169,7 @@ version_variable = "src/music_album_creation/__init__.py:__version__"
 
 
 ## SECURITY
+
 [tool.bandit]
 tests = []
 skips = [

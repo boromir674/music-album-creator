@@ -79,16 +79,16 @@ def test_downloading_valid_youtube_url(
 
 
 @pytest.mark.network_bound
-def test_downloading_false_youtube_url(download_trial, download, nb_download_trials):
+def test_downloading_false_youtube_url(download_trial, download, nb_download_trials, tmp_path_factory):
     from pytube.exceptions import VideoUnavailable
 
     with pytest.raises(VideoUnavailable):
-        download_trial(NON_EXISTANT_YOUTUBE_URL, '/tmp', download, nb_download_trials)
+        download_trial(NON_EXISTANT_YOUTUBE_URL, str(tmp_path_factory.mktemp("unit-test")), download, nb_download_trials)
 
 
 @pytest.mark.network_bound
-def test_downloading_invalid_url(download):
+def test_downloading_invalid_url(download, tmp_path_factory):
     from pytube.exceptions import RegexMatchError
 
     with pytest.raises(RegexMatchError):
-        download(INVALID_URL, '/tmp/', 1, False)
+        download(INVALID_URL, str(tmp_path_factory.mktemp("unit-test")), 1, False)
