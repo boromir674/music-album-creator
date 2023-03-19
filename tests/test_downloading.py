@@ -14,10 +14,12 @@ from music_album_creation.web_parsing import video_title
 def download():
     youtue = CMDYoutubeDownloader()
     return lambda url, target_directory, times, suppress_certificate_validation: youtue.download_trials(
-        url, target_directory,
+        url,
+        target_directory,
         times=times,
         suppress_certificate_validation=suppress_certificate_validation,
-        delay=0.8)
+        delay=0.8,
+    )
 
 
 @pytest.fixture(scope='module')
@@ -35,24 +37,31 @@ duration_in_seconds = 223
 def download_trial():
     def _download_trial(url, directory, download_callback, nb_trials):
         try:
-            return download_callback(url, directory, times=1, suppress_certificate_validation=False)
+            return download_callback(
+                url, directory, times=1, suppress_certificate_validation=False
+            )
         except CertificateVerificationError:
-            return download_callback(url, directory, times=nb_trials, suppress_certificate_validation=True)
+            return download_callback(
+                url, directory, times=nb_trials, suppress_certificate_validation=True
+            )
+
     return _download_trial
 
 
 # @pytest.mark.parametrize("url, target_file", [
 #     ('https://www.youtube.com/watch?v=Q3dvbM6Pias', 'Rage Against The Machine - Testify (Official Video).mp3')])
 @pytest.mark.network_bound
-def test_downloading_valid_youtube_url(download_trial, tmp_path_factory, download, nb_download_trials):
+def test_downloading_valid_youtube_url(
+    download_trial, tmp_path_factory, download, nb_download_trials
+):
     from pathlib import Path
+
     target_directory = tmp_path_factory.mktemp("youtubedownloads")
     target_directory = str(target_directory)
     # for youtube_video in [('https://www.youtube.com/watch?v=UO2JIPOYhIk&list=OLAK5uy_k80e1ODmXyVy6K25BL6PS4wCFg1hwjkX0&index=3', 'The Witch')]:
     for youtube_video in [
-        ('https://www.youtube.com/watch?v=bj1JRuyYeco',
-        '20 Second Timer (Minimal)')]:
-        
+        ('https://www.youtube.com/watch?v=bj1JRuyYeco', '20 Second Timer (Minimal)')
+    ]:
         url, title_name = youtube_video
         downloaded_file = download_trial(url, target_directory, download, nb_download_trials)
 
@@ -72,11 +81,14 @@ def test_downloading_valid_youtube_url(download_trial, tmp_path_factory, downloa
 @pytest.mark.network_bound
 def test_downloading_false_youtube_url(download_trial, download, nb_download_trials):
     from pytube.exceptions import VideoUnavailable
+
     with pytest.raises(VideoUnavailable):
         download_trial(NON_EXISTANT_YOUTUBE_URL, '/tmp', download, nb_download_trials)
+
 
 @pytest.mark.network_bound
 def test_downloading_invalid_url(download):
     from pytube.exceptions import RegexMatchError
+
     with pytest.raises(RegexMatchError):
         download(INVALID_URL, '/tmp/', 1, False)
