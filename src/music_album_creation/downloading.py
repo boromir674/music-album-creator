@@ -5,7 +5,7 @@ from abc import ABC
 from pathlib import Path
 from time import sleep
 from typing import Union
-
+from urllib.error import URLError
 from pytube import YouTube
 
 logger = logging.getLogger(__name__)
@@ -28,6 +28,11 @@ class CMDYoutubeDownloader:
         output_dir = Path(directory)
 
         yt = YouTube(video_url)
+        try:
+            title: str = yt.title
+        except Exception as error:
+            logger.exception(error)
+            title = 'failed-to-get-title'
 
         best_audio_stream = yt.streams.filter(only_audio=True).order_by('bitrate')[-1]
         
@@ -51,32 +56,59 @@ class CMDYoutubeDownloader:
         # best_audio_stream = yt.streams.filter(only_audio=True).order_by('bitrate')[-1]
 
         # Download the audio stream
-        local_file = best_audio_stream.download(
-            output_path=str(output_dir),
-            # filename=f'{yt.title}.mp3',  # since this is an audio-only stream, the file will be mp4
-            filename_prefix=None,
-            skip_existing=True,  # Skip existing files, defaults to True
-            timeout=None,  # Request timeout length in seconds. Uses system default
-            max_retries=3,  # Number of retries to attempt after socket timeout. Defaults to 0
-        )
-        logger.error(
-            "Downloaded from Youtube: %s",
-            json.dumps(
-                {
-                    'title': yt.title,
-                    'local_file': str(local_file),
-                },
-                indent=4,
-                sort_keys=True,
-            ),
-        )
+
+        try:
+            local_file = best_audio_stream.download(
+                output_path=str(output_dir),
+                # filename=f'{yt.title}.mp3',  # since this is an audio-only stream, the file will be mp4
+                filename_prefix=None,
+                skip_existing=True,  # Skip existing files, defaults to True
+                timeout=None,  # Request timeout length in seconds. Uses system default
+                max_retries=0,  # Number of retries to attempt after socket timeout. Defaults to 0
+            )
+        # Catch common bug on pytube (which is not too stable yet)
+        except URLError as error:
+            logger.error("Youtube Download Error: %s", json.dumps({
+                'url': str(video_url),
+                'title': title,
+            }, indent=4, sort_keys=True))
+            raise error
+        logger.info("Downloaded from Youtube: %s", json.dumps({
+                'title': title,
+                'local_file': str(local_file),
+            }, indent=4, sort_keys=True))
         return local_file
 
-    def download_trials(self, video_url, directory, times=10, delay=1, **kwargs):
+    def download_trials(self, video_url, directory, times=10, delay=0.5, **kwargs):
+        """Download with retries
+
+        Call this method to download a video with retries.
+
+        Note:
+            Designed for retrying when non-deterministic errors occur.
+
+        Args:
+            video_url ([type]): [description]
+            directory ([type]): [description]
+            times (int, optional): [description]. Defaults to 10.
+            delay (float, optional): [description]. Defaults to 0.5.
+
+        Raises:
+            error: [description]
+
+        Returns:
+            [type]: [description]
+        """
         i = 0
         while i < times - 1:
             try:
                 return self._download(video_url, directory)
+            except URLError as error:
+                if 'Network is unreachable' in str(error):
+                    sleep(delay)
+                    i += 1
+                else:
+                    raise error
             except TooManyRequestsError as e:
                 logger.info(e)
                 i += 1

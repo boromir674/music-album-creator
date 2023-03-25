@@ -35,10 +35,11 @@ class MusicMaster(object):
         return self._mp3s[url]
 
     def _download(self, url, suppress_certificate_validation=False):
-        downloaded_mp3 = self.youtube.download(
+        downloaded_mp3 = self.youtube.download_trials(
             url,
             self.download_dir,
-            suppress_certificate_validation=suppress_certificate_validation,
+            times=5,
+            delay=0.5
         )
         latest_mp3 = downloaded_mp3
         # latest_mp3 = max(glob("{}/*.mp4".format(self.download_dir)), key=os.path.getctime)
