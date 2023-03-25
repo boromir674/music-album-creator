@@ -4,7 +4,7 @@ import sys
 import mutagen
 import pytest
 
-from music_album_creation import AudioSegmenter
+from music_album_creation.audio_segmentation import AudioSegmenter
 from music_album_creation.audio_segmentation.data import (
     SegmentationInformation,
     TrackTimestampsSequenceError,
@@ -79,18 +79,32 @@ class TestSegmenting:
     def test_valid_segmentation(
         self, tracks_info, names, durations, tmpdir, test_audio_file_path, segmenter
     ):
+        from music_album_creation.audio_segmentation.data import SegmentationInformation
+
         segmenter.target_directory = str(tmpdir.mkdir('album'))
         tracks_file = tmpdir.join('tracks_info.txt')
         tracks_info = {2: u'{}'.format(tracks_info)}.get(sys.version_info[0], tracks_info)
         tracks_file.write_text(tracks_info, 'utf-8')
-        segmenter.segment_from_file(
+
+        with open(tracks_file, 'r') as f:
+            segmentation_info = SegmentationInformation.from_multiline(
+                f.read().strip(), 'timestamps',
+            )
+        segmenter.segment(
             test_audio_file_path,
-            str(tracks_file),
-            'timestamps',
-            supress_stdout=False,
-            supress_stderr=False,
+            segmentation_info,
             sleep_seconds=0,
         )
+
+
+        # segmenter.segment_from_file(
+        #     test_audio_file_path,
+        #     str(tracks_file),
+        #     'timestamps',
+        #     supress_stdout=False,
+        #     supress_stderr=False,
+        #     sleep_seconds=0,
+        # )
         file_names = sorted(os.listdir(segmenter.target_directory))
         assert file_names == names
         assert [

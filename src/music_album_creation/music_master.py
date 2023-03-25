@@ -35,12 +35,13 @@ class MusicMaster(object):
         return self._mp3s[url]
 
     def _download(self, url, suppress_certificate_validation=False):
-        self.youtube.download(
+        downloaded_mp3 = self.youtube.download(
             url,
             self.download_dir,
             suppress_certificate_validation=suppress_certificate_validation,
         )
-        latest_mp3 = max(glob("{}/*.mp4".format(self.download_dir)), key=os.path.getctime)
+        latest_mp3 = downloaded_mp3
+        # latest_mp3 = max(glob("{}/*.mp4".format(self.download_dir)), key=os.path.getctime)
         if os.path.basename(latest_mp3) == '_.mp3':
             self.guessed_info = StringParser().parse_album_info(video_title(url)[0])
             try:

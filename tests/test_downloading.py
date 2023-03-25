@@ -10,6 +10,21 @@ from music_album_creation.downloading import (
 from music_album_creation.web_parsing import video_title
 
 
+# @pytest.fixture
+# def download_trial():
+#     def _download_trial(url, directory, download_callback):
+#             return download_callback(
+#                 url, directory, times=1, suppress_certificate_validation=False
+#             )
+#     return _download_trial
+
+
+NON_EXISTANT_YOUTUBE_URL = 'https://www.youtube.com/watch?v=alpharegavgavasdfsh'
+INVALID_URL = 'gav'
+duration = '3:43'
+duration_in_seconds = 223
+
+
 @pytest.fixture(scope='module')
 def download():
     youtue = CMDYoutubeDownloader()
@@ -22,73 +37,81 @@ def download():
     )
 
 
-@pytest.fixture(scope='module')
-def nb_download_trials():
-    return 3
-
-
-NON_EXISTANT_YOUTUBE_URL = 'https://www.youtube.com/watch?v=alpharegavgavasdfsh'
-INVALID_URL = 'gav'
-duration = '3:43'
-duration_in_seconds = 223
-
-
-@pytest.fixture
-def download_trial():
-    def _download_trial(url, directory, download_callback, nb_trials):
-        try:
-            return download_callback(
-                url, directory, times=1, suppress_certificate_validation=False
-            )
-        except CertificateVerificationError:
-            return download_callback(
-                url, directory, times=nb_trials, suppress_certificate_validation=True
-            )
-
-    return _download_trial
-
-
-# @pytest.mark.parametrize("url, target_file", [
-#     ('https://www.youtube.com/watch?v=Q3dvbM6Pias', 'Rage Against The Machine - Testify (Official Video).mp3')])
 @pytest.mark.network_bound
+@pytest.mark.parametrize('url, target_file', [
+    (
+        'https://www.youtube.com/watch?v=Q3dvbM6Pias',
+        'Rage Against The Machine - Testify (Official HD Video).mp4'
+    ),
+    (
+        'https://www.youtube.com/watch?v=bj1JRuyYeco',
+        '20 Second Timer (Minimal).webm'
+    ),
+])
 def test_downloading_valid_youtube_url(
-    download_trial, tmp_path_factory, download, nb_download_trials
+    url, target_file,
+    tmp_path_factory
 ):
     from pathlib import Path
+    from music_album_creation.downloading import CMDYoutubeDownloader
 
     target_directory = tmp_path_factory.mktemp("youtubedownloads")
     target_directory = str(target_directory)
     # for youtube_video in [('https://www.youtube.com/watch?v=UO2JIPOYhIk&list=OLAK5uy_k80e1ODmXyVy6K25BL6PS4wCFg1hwjkX0&index=3', 'The Witch')]:
-    for youtube_video in [
-        ('https://www.youtube.com/watch?v=bj1JRuyYeco', '20 Second Timer (Minimal)')
-    ]:
-        url, title_name = youtube_video
-        downloaded_file = download_trial(url, target_directory, download, nb_download_trials)
+    # for youtube_video in [
+    #     ('https://www.youtube.com/watch?v=bj1JRuyYeco', '20 Second Timer (Minimal)')
+    # ]:
+    
+    expected_file_name = target_file
 
-        expected_downloaded_path: Path = Path(str(downloaded_file))
+    youtube = CMDYoutubeDownloader()
+    downloaded_file = youtube.download_trials(
+        url,
+        target_directory,
+        times=1,
+        delay=0.8,
+    )
 
-        # THEN File has been downloaded
-        assert expected_downloaded_path.exists()
-        assert expected_downloaded_path.is_file()
+    downloaded_path: Path = Path(str(downloaded_file))
 
-        # AND FILE has the expected name
-        assert expected_downloaded_path.name == f'{title_name}.mp4'
+    # THEN File has been downloaded
+    assert downloaded_path.exists()
+    assert downloaded_path.is_file()
 
-        # AND file has extension mp4
-        assert expected_downloaded_path.suffix == '.mp4'
+    # AND FILE has the expected name
+    assert downloaded_path.name == expected_file_name
 
+    # AND file has extension mp4
+    assert downloaded_path.suffix == '.' + expected_file_name.split('.')[-1]
+
+
+# Test that expected Exceptions are fired up
 
 @pytest.mark.network_bound
-def test_downloading_false_youtube_url(download_trial, download, nb_download_trials, tmp_path_factory):
+def test_downloading_false_youtube_url(tmp_path_factory):
     from pytube.exceptions import VideoUnavailable
+    from music_album_creation.downloading import CMDYoutubeDownloader
+    youtube = CMDYoutubeDownloader()
 
     with pytest.raises(VideoUnavailable):
-        download_trial(NON_EXISTANT_YOUTUBE_URL, str(tmp_path_factory.mktemp("unit-test")), download, nb_download_trials)
+        youtube.download_trials(
+            NON_EXISTANT_YOUTUBE_URL,
+            str(tmp_path_factory.mktemp("unit-test")),
+            times=3,
+            delay=0.8,
+        )
 
 
 @pytest.mark.network_bound
 def test_downloading_invalid_url(download, tmp_path_factory):
     from pytube.exceptions import RegexMatchError
+    from music_album_creation.downloading import CMDYoutubeDownloader
+    youtube = CMDYoutubeDownloader()
 
     with pytest.raises(RegexMatchError):
-        download(INVALID_URL, str(tmp_path_factory.mktemp("unit-test")), 1, False)
+        youtube.download_trials(
+            INVALID_URL,
+            str(tmp_path_factory.mktemp("unit-test")),
+            times=1,
+            delay=0.8,
+        )

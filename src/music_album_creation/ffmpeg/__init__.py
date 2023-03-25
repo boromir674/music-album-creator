@@ -1,4 +1,4 @@
-# from .ffmpeg import FFMPEG
-# from .ffprobe import FFProbe
+from .ffmpeg import FFMPEG
+from .ffprobe import FFProbe
 
-# __all__ = ['FFMPEG', 'FFProbe']
+__all__ = ['FFMPEG', 'FFProbe']

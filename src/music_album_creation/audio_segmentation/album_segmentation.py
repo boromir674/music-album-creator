@@ -2,10 +2,9 @@ import logging
 import os
 import tempfile
 import time
-from typing import Optional
+from typing import Optional, List
 
-from music_album_creation.ffmpeg.ffmpeg import FFMPEG
-from music_album_creation.tracks_parsing import StringParser
+from music_album_creation.ffmpeg import FFMPEG
 
 from .data import SegmentationInformation
 
@@ -29,10 +28,11 @@ class AudioSegmenter(object):
         self._dir = directory_path
 
     def _trans(self, track_info):
+        """Create (file) name of output track."""
         return [os.path.join(self._dir, '{}.mp4'.format(track_info[0]))] + track_info[1:]
 
     def segment(
-        self, album_file, data, supress_stdout=True, supress_stderr=True, sleep_seconds=0
+        self, album_file, data, sleep_seconds=0
     ):
         """
 
@@ -45,14 +45,14 @@ class AudioSegmenter(object):
         """
         exit_code = 0
         i = 0
+        track_files: List[str] = []
         while exit_code == 0 and i < len(data) - 1:
             time.sleep(sleep_seconds)
             result = self._segment(
                 album_file,
                 *self._trans(list(data[i])),
-                supress_stdout=supress_stdout,
-                supress_stderr=supress_stderr,
             )
+            track_files.append(list(data[i])[1])
             i += 1
         if result.exit_code != 0:
             logger.error("Fmmpeg exit code: %s", result.exit_code)
@@ -62,63 +62,16 @@ class AudioSegmenter(object):
         result = self._segment(
             album_file,
             *self._trans(list(data[-1])),
-            supress_stdout=supress_stdout,
-            supress_stderr=supress_stderr,
         )
         if result.exit_code != 0:
             logger.error("Fmmpeg exit code: %s", result.exit_code)
             logger.error("Ffmpeg st out: %s", result.stdout)
             logger.error("Fmmpeg stderr: %s", result.stderr)
             raise FfmpegCommandError("Command '{}' failed".format(' '.join(self._args)))
+        # TODO: remove the need to hard-code extension. should know from download module
+        # if we download youtube video as mp4 audio, then each track should probably be mp4 too
+        # if we download youtube video as mp3 audio, then each track should probably be mp3 too
         return [os.path.join(self._dir, '{}.mp4'.format(list(x)[0])) for x in data]
-
-    def segment_from_list(
-        self, album_file, data, supress_stdout=True, supress_stderr=True, sleep_seconds=0
-    ):
-        """
-        Given an album audio file and data structure with tracks information, segments the audio file into audio tracks which get stored in the 'self.target_directory' folder.\n
-        :param str album_file:
-        :param list data: list of lists. Each inner list must have 2 elements: track name and starting timestamp in hh:mm:ss
-        :param bool supress_stdout:
-        :param bool supress_stderr:
-        :param bool verbose:
-        :param float sleep_seconds:
-        :return: full paths to audio tracks
-        """
-        # if not re.search('0:00', data[0][1]):
-        #     raise NotStartingFromZeroTimestampError("First track ({}) is supposed to have a 0:00 timestamp. Instead {} found".format(data[0][0], data[0][1]))
-
-        exit_code = 0
-        data = StringParser().convert_tracks_data(data, album_file, target_directory=self._dir)
-        audio_file_paths = [x[0] for x in data]
-        i = 0
-        while exit_code == 0 and i < len(data) - 1:
-            time.sleep(sleep_seconds)
-            result = self._segment(
-                album_file,
-                *data[i],
-                supress_stdout=supress_stdout,
-                supress_stderr=supress_stderr,
-            )
-            if result.exit_code != 0:
-                logger.error("Fmmpeg exit code: %s", result.exit_code)
-                logger.error("Ffmpeg st out: %s", result.stdout)
-                logger.error("Fmmpeg stderr: %s", result.stderr)
-                raise FfmpegCommandError("Command '{}' failed".format(' '.join(self._args)))
-            i += 1
-        # if exit_code != 0:
-        #     raise FfmpegCommandError("Command '{}' failed".format(' '.join(self._args)))
-        result = self._segment(
-            album_file, *data[-1], supress_stdout=supress_stdout, supress_stderr=supress_stderr
-        )
-        if result.exit_code != 0:
-            logger.error("Fmmpeg exit code: %s", result.exit_code)
-            logger.error("Ffmpeg st out: %s", result.stdout)
-            logger.error("Fmmpeg stderr: %s", result.stderr)
-            raise FfmpegCommandError("Command '{}' failed".format(' '.join(self._args)))
-        # if exit_code != 0:
-        #     raise FfmpegCommandError("Command '{}' failed".format(' '.join(self._args)))
-        return audio_file_paths
 
     def segment_from_file(
         self,
@@ -154,11 +107,9 @@ class AudioSegmenter(object):
     def _segment(self, *args, **kwargs):
         album_file = args[0]
         track_file = args[1]
-        # supress_stdout = kwargs['supress_stdout']
-        # supress_stderr = kwargs['supress_stderr']
-
         start = args[2]  # starting timestamp
         end: Optional[str] = None  # end timestamp
+
         # if it is the last segment then end timestamp is the end of the album
         # and in that case the client code need to supply 3 arguments (not 4)
         if 3 < len(args):
@@ -215,3 +166,55 @@ if __name__ == '__main__':
     except Exception as e:
         print(e)
         sys.exit(1)
+
+
+
+## LEGACY
+
+    # def segment_from_list(
+    #     self, album_file, data, supress_stdout=True, supress_stderr=True, sleep_seconds=0
+    # ):
+    #     """
+    #     Given an album audio file and data structure with tracks information, segments the audio file into audio tracks which get stored in the 'self.target_directory' folder.\n
+    #     :param str album_file:
+    #     :param list data: list of lists. Each inner list must have 2 elements: track name and starting timestamp in hh:mm:ss
+    #     :param bool supress_stdout:
+    #     :param bool supress_stderr:
+    #     :param bool verbose:
+    #     :param float sleep_seconds:
+    #     :return: full paths to audio tracks
+    #     """
+    #     # if not re.search('0:00', data[0][1]):
+    #     #     raise NotStartingFromZeroTimestampError("First track ({}) is supposed to have a 0:00 timestamp. Instead {} found".format(data[0][0], data[0][1]))
+
+    #     exit_code = 0
+    #     data = StringParser().convert_tracks_data(data, album_file, target_directory=self._dir)
+    #     audio_file_paths = [x[0] for x in data]
+    #     i = 0
+    #     while exit_code == 0 and i < len(data) - 1:
+    #         time.sleep(sleep_seconds)
+    #         result = self._segment(
+    #             album_file,
+    #             *data[i],
+    #             supress_stdout=supress_stdout,
+    #             supress_stderr=supress_stderr,
+    #         )
+    #         if result.exit_code != 0:
+    #             logger.error("Fmmpeg exit code: %s", result.exit_code)
+    #             logger.error("Ffmpeg st out: %s", result.stdout)
+    #             logger.error("Fmmpeg stderr: %s", result.stderr)
+    #             raise FfmpegCommandError("Command '{}' failed".format(' '.join(self._args)))
+    #         i += 1
+    #     # if exit_code != 0:
+    #     #     raise FfmpegCommandError("Command '{}' failed".format(' '.join(self._args)))
+    #     result = self._segment(
+    #         album_file, *data[-1], supress_stdout=supress_stdout, supress_stderr=supress_stderr
+    #     )
+    #     if result.exit_code != 0:
+    #         logger.error("Fmmpeg exit code: %s", result.exit_code)
+    #         logger.error("Ffmpeg st out: %s", result.stdout)
+    #         logger.error("Fmmpeg stderr: %s", result.stderr)
+    #         raise FfmpegCommandError("Command '{}' failed".format(' '.join(self._args)))
+    #     # if exit_code != 0:
+    #     #     raise FfmpegCommandError("Command '{}' failed".format(' '.join(self._args)))
+    #     return audio_file_paths

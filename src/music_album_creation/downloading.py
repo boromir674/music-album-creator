@@ -19,25 +19,30 @@ class CMDYoutubeDownloader:
             cls.__instance = super(CMDYoutubeDownloader, cls).__new__(cls)
         return cls.__instance
 
-    def download(self, video_url: str, directory: Union[str, Path], **kwargs):
-        self._download(video_url, directory)
+    def download(self, video_url: str, directory: Union[str, Path], **kwargs) -> str:
+        return self._download(video_url, directory)
 
     @classmethod
-    def _download(cls, video_url, directory):
+    def _download(cls, video_url, directory) -> str:
         # output dir where to store the stream
         output_dir = Path(directory)
 
         yt = YouTube(video_url)
 
+        best_audio_stream = yt.streams.filter(only_audio=True).order_by('bitrate')[-1]
+        
         # get avaialbe streams
-        streams = yt.streams
+        # streams = yt.streams
 
-        # filter streams by audio only
-        audio_streams = streams.filter(only_audio=True)
+        # # filter streams by audio only
+        # audio_streams = streams.filter(only_audio=True)
 
-        # find highest quality audio stream
-        # we currently judge quality by bitrate (higher is better)
-        best_audio_stream = audio_streams.order_by('bitrate')[-1]
+        # assert audio_streams, "No audio streams found"
+        # assert len(audio_streams) > 0, "No audio streams found"
+
+        # # find highest quality audio stream
+        # # we currently judge quality by bitrate (higher is better)
+        # best_audio_stream = audio_streams.order_by('bitrate')[-1]
 
         # highest_quality_audio_stream = audio_streams.order_by('abr').desc().first()
 
@@ -48,7 +53,7 @@ class CMDYoutubeDownloader:
         # Download the audio stream
         local_file = best_audio_stream.download(
             output_path=str(output_dir),
-            filename=f'{yt.title}.mp4',  # since this is an audio-only stream, the file will be mp4
+            # filename=f'{yt.title}.mp3',  # since this is an audio-only stream, the file will be mp4
             filename_prefix=None,
             skip_existing=True,  # Skip existing files, defaults to True
             timeout=None,  # Request timeout length in seconds. Uses system default

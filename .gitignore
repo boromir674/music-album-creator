@@ -24,3 +24,4 @@ package.json
 package-lock.json
 .vscode/
 .ipynb_checkpoints/
+pydeps/

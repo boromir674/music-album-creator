@@ -74,12 +74,25 @@ class RegexSequence(object):
 
 class StringParser(object):
     __instance = None
+    # we take care of compiling the below regexes with the re.X flag
+    # because they contain whitespaces on purpose for better readability
+    # VERBOSE = X = sre_compile.SRE_FLAG_VERBOSE # ignore whitespace and comments
+    
+    # r"(?: {track_number} {sep1})? ( {track_name} ) {sep2} ({hhmmss})"
     regexes = {
-        'track_number': r'\d{1,2}',
-        'sep1': r"(?: [\t\ ]* [\.\-\)]+ )? [\t ]*",
-        'track_word': r"\(?[\wα-ωΑ-Ω'\x86-\xce\u0384-\u03CE][\w\-’':!\xc3\xa8α-ωΑ\-Ω\x86-\xce\u0384-\u03CE]*\)?",
+        'track_number': r'\d{1,2}',  # we know this will try to match as many as possible with back-tracking ;-)
+        
+        'sep1': r"(?: [\t\ ]* [\.\-\,)]+ )? [\t ]*",
+        
+        'track_word_first_char': r"[\wα-ωΑ-Ω'\x86-\xce\u0384-\u03CE]",
+        'track_word_char': r"[\.\w\-’':!\xc3\xa8α-ωΑ\-Ω\x86-\xce\u0384-\u03CE]",
+        
+        # 'track_word': r"\(?[\wα-ωΑ-Ω'\x86-\xce\u0384-\u03CE][\w\-’':!\xc3\xa8α-ωΑ\-Ω\x86-\xce\u0384-\u03CE]*\)?",
+
         'track_sep': r'[\t\ ,]+',
+
         'sep2': r'(?: [\t\ ]* [\-.]+ [\t\ ]* | [\t\ ]+ )',
+
         'extension': r'\.mp3',
         'hhmmss': r'(?:\d?\d:)*\d?\d',
     }
@@ -98,6 +111,9 @@ class StringParser(object):
     def __new__(cls, *args, **kwargs):
         if not cls.__instance:
             cls.__instance = super(cls, StringParser).__new__(cls)
+            cls.regexes['track_word'] = r'\(?{track_word_first_char}{track_word_char}*\)?'.format(
+                **cls.regexes
+            )
             cls.regexes['track_name'] = r'{track_word}(?:{track_sep}{track_word})*'.format(
                 **cls.regexes
             )
@@ -126,6 +142,7 @@ class StringParser(object):
             ],
         )
 
+    # Uses the cls.regexes
     # PARSE filenames
     @classmethod
     def parse_track_number_n_name(cls, file_name):
@@ -138,7 +155,8 @@ class StringParser(object):
                         r"(?: ({track_number}) {sep1})? ( {track_name} ) {extension}$".format(
                             **cls.regexes
                         ),
-                        re.X,
+                        re.X,  # VERBOSE = X = sre_compile.SRE_FLAG_VERBOSE # ignore whitespace and comments
+
                     )
                     .search(os.path.basename(file_name))
                     .groups()
@@ -146,6 +164,28 @@ class StringParser(object):
             )
         )
         # return dict(zip(['track_number', 'track_name'], list(re.compile(r'({}){}({}){}$'.format(cls.track_number, cls.sep2, cls.track_name, cls.extension)).search(file_name).groups())))
+
+    # Uses the cls.regexes
+    @classmethod
+    def _parse_track_line(cls, track_line):
+        """
+        Parses a string line such as '01. Doteru 3:45' into ['Doteru', '3:45']\n
+        :param track_line:
+        :return: the parsed items
+        :rtype: list
+        """
+        # regex = re.compile(r"""^(?:\d{1,2}(?:[\ \t]*[\.\-,][\ \t]*|[\t\ ]+))?  # potential track number (eg 01) included is ignored
+        #                             ([\w\'\(\) \-’]*[\w)])                       # track name
+        #                             (?:[\t ]+|[\t ]*[\-\.]+[\t ]*)            # separator between name and time
+        #                             ((?:\d?\d:)*\d?\d)$                       # time in hh:mm:ss format""", re.X)
+        # regex = re.compile(r"^(?:{}{})?({}){}({})$".format(cls.track_number, cls.number_name_sep, cls.track_name, cls.sep, cls.hhmmss))
+        regex = re.compile(
+            r"(?: {track_number} {sep1})? ( {track_name} ) {sep2} ({hhmmss})".format(
+                **cls.regexes
+            ),
+            re.X,
+        )
+        return list(regex.search(track_line.strip()).groups())
 
     # PARSE tracks info multiline
     @classmethod
@@ -176,26 +216,6 @@ class StringParser(object):
                 )
                 raise e
 
-    @classmethod
-    def _parse_track_line(cls, track_line):
-        """
-        Parses a string line such as '01. Doteru 3:45' into ['Doteru', '3:45']\n
-        :param track_line:
-        :return: the parsed items
-        :rtype: list
-        """
-        # regex = re.compile(r"""^(?:\d{1,2}(?:[\ \t]*[\.\-,][\ \t]*|[\t\ ]+))?  # potential track number (eg 01) included is ignored
-        #                             ([\w\'\(\) \-’]*[\w)])                       # track name
-        #                             (?:[\t ]+|[\t ]*[\-\.]+[\t ]*)            # separator between name and time
-        #                             ((?:\d?\d:)*\d?\d)$                       # time in hh:mm:ss format""", re.X)
-        # regex = re.compile(r"^(?:{}{})?({}){}({})$".format(cls.track_number, cls.number_name_sep, cls.track_name, cls.sep, cls.hhmmss))
-        regex = re.compile(
-            r"(?: {track_number} {sep1})? ( {track_name} ) {sep2} ({hhmmss})".format(
-                **cls.regexes
-            ),
-            re.X,
-        )
-        return list(regex.search(track_line.strip()).groups())
 
     # CONVERT durations to timestamps tuples (segmentation start-end pair)
     @classmethod

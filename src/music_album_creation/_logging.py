@@ -26,14 +26,15 @@ Usage:
 """
 import logging
 
-DCR_LOGS_FILE = 'dcr.log'
+DCR_LOGS_FILE = 'mac.log'
 
 #### FILE LOGGING
 # set up logging to file for DEBUG Level and above
+# basically log ALL events to a file
 logging.basicConfig(
     level=logging.DEBUG,
     format='%(asctime)s %(name)-12s %(levelname)-8s %(message)s',
-    datefmt='%m-%d %H:%M',
+    datefmt='%m-%d %H:%M GGG',
     filename=DCR_LOGS_FILE,
     filemode='w',
 )

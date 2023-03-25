@@ -17,11 +17,9 @@ class CLIResult(Protocol):
 
 
 class FFProbeSubjectType(Protocol):
-    def __init__(self, ffprobe_binary: str):
-        ...
+    def __init__(self, ffprobe_binary: str): ...
 
-    def __call__(self, *ffprobe_cli_args, **subprocess_settings) -> CLIResult:
-        ...
+    def __call__(self, *ffprobe_cli_args, **subprocess_settings) -> CLIResult: ...
 
 
 class FFProbeProxy(Proxy[FFProbeSubjectType]):

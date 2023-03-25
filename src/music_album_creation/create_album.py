@@ -24,7 +24,7 @@ from .downloading import (
     TokenParameterNotInVideoInfoError,
     UnavailableVideoError,
 )
-from .ffmpeg.ffprobe import FFProbe
+from .ffmpeg import FFProbe
 from .music_master import MusicMaster
 
 ffprobe = FFProbe(os.environ.get('MUSIC_FFPROBE', 'ffprobe'))
@@ -101,6 +101,7 @@ def main(tracks_info, track_name, track_number, artist, album_artist, video_url)
     logger.error(f"URL {video_url}")
     ## Init
     music_master = MusicMaster(music_dir)
+    # Segments Audio files into tracks and stores them in the system's temp dir (ie /tmp on Debian)
     audio_segmenter = AudioSegmenter()
 
     ## DOWNLOAD
@@ -142,13 +143,12 @@ def main(tracks_info, track_name, track_number, artist, album_artist, video_url)
     segmentation_info = SegmentationInformation.from_tracks_information(
         tracks_info, hhmmss_type=answer.lower()
     )
-
-    try:  # SEGMENTATION
+    
+    # SEGMENTATION
+    try:  
         audio_file_paths = audio_segmenter.segment(
             album_file,
             segmentation_info,
-            supress_stdout=True,
-            supress_stderr=True,
             sleep_seconds=0,
         )
     except TrackTimestampsSequenceError as e:
