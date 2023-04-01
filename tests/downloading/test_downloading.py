@@ -48,7 +48,7 @@ def test_downloading_audio_stream_without_specifying_output(url, tmp_path_factor
     cp = subprocess.run(  # pylint: disable=W1510
         ['ffprobe', '-v', 'error',
         '-show_entries', 'stream_tags=rotate:format=size,duration:stream=codec_name,bit_rate,sample_rate,channels,nb_frames',
-        '-of', 'default=noprint_wrappers=1', str(runtime_file)],
+        '-of', 'default=noprint_wrappers=1', '-show_format', '-print_format', 'json', str(runtime_file)],
         capture_output=True,  # capture stdout and stderr separately
         # cwd=project_directory,
         check=True,
@@ -56,38 +56,20 @@ def test_downloading_audio_stream_without_specifying_output(url, tmp_path_factor
 
     res: str = str(cp.stdout, encoding='utf-8')
     print(res)
-    data = dict(x.split('=') for x in res.strip().split('\n'))
-
-    # AND the audio stream has the expected Sample Rate (Hz)
-    assert data['sample_rate'] == '48000'
-
-    # AND the audio stream has the expected codec
-    assert data['codec_name'] == 'opus'
-
-    # AND the audio stream has the expected number of channels
-    assert data['channels'] == '2'
-
-    # # AND size reported by ffprobe is the same
-    # assert data['size'] == str(expected_bytes_size)
-
-    # # AND the audio stream has the expected duration
-    # assert data['duration'] == '393.161000'
-
-    # # AND the audio stream has the expected bitrate
-    # assert data['bit_rate'] == 'N/A'
-
-    # # AND the audio stream has the expected number of frames
-    # assert data['nb_frames'] == 'N/A'
-
-    cp = subprocess.run(
-        ['ffprobe', '-hide_banner', '-loglevel', 'fatal', '-show_error', '-show_format', '-print_format', 'json', str(runtime_file)],
-        capture_output=True,
-        check=True,
-    )
-    res: str = str(cp.stdout, encoding='utf-8')
-    print(res)
     import json
     data = json.loads(res)
+    
+    assert data['programs'] == []
+    assert len(data['streams']) == 1
+
+    # AND the audio stream has the expected Sample Rate (Hz)
+    assert data['streams'][0]['sample_rate'] == '48000'
+
+    # AND the audio stream has the expected codec
+    assert data['streams'][0]['codec_name'] == 'opus'
+
+    # AND the audio stream has the expected number of channels
+    assert data['streams'][0]['channels'] == 2
 
     assert data['format']['format_name'] == 'matroska,webm'
     assert data['format']['format_long_name'] == 'Matroska / WebM'
