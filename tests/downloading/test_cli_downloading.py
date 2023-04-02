@@ -10,14 +10,6 @@ from music_album_creation.downloading import (
 from music_album_creation.web_parsing import video_title
 
 
-# @pytest.fixture
-# def download_trial():
-#     def _download_trial(url, directory, download_callback):
-#             return download_callback(
-#                 url, directory, times=1, suppress_certificate_validation=False
-#             )
-#     return _download_trial
-
 
 NON_EXISTANT_YOUTUBE_URL = 'https://www.youtube.com/watch?v=alpharegavgavasdfsh'
 INVALID_URL = 'gav'
@@ -57,18 +49,14 @@ def test_downloading_valid_youtube_url(
 
     target_directory = tmp_path_factory.mktemp("youtubedownloads")
     target_directory = str(target_directory)
-    # for youtube_video in [('https://www.youtube.com/watch?v=UO2JIPOYhIk&list=OLAK5uy_k80e1ODmXyVy6K25BL6PS4wCFg1hwjkX0&index=3', 'The Witch')]:
-    # for youtube_video in [
-    #     ('https://www.youtube.com/watch?v=bj1JRuyYeco', '20 Second Timer (Minimal)')
-    # ]:
-    
+
     expected_file_name = target_file
 
     youtube = CMDYoutubeDownloader()
     downloaded_file = youtube.download_trials(
         url,
         target_directory,
-        times=1,
+        times=5,
         delay=0.8,
     )
 
@@ -80,8 +68,6 @@ def test_downloading_valid_youtube_url(
 
     # AND FILE has the expected name
     assert downloaded_path.name == expected_file_name
-
-    # AND file has extension mp4
     assert downloaded_path.suffix == '.' + expected_file_name.split('.')[-1]
 
 

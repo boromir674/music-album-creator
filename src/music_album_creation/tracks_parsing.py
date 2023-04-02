@@ -93,7 +93,7 @@ class StringParser(object):
 
         'sep2': r'(?: [\t\ ]* [\-.]+ [\t\ ]* | [\t\ ]+ )',
 
-        'extension': r'\.mp3',
+        'extension': r'\.mp[34]',
         'hhmmss': r'(?:\d?\d:)*\d?\d',
     }
 

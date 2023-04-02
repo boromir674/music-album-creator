@@ -23,49 +23,31 @@ class CMDYoutubeDownloader:
         return self._download(video_url, directory)
 
     @classmethod
-    def _download(cls, video_url, directory) -> str:
+    def _download(cls, video_url, output_dir, **kwargs) -> str:
         # output dir where to store the stream
-        output_dir = Path(directory)
-
         yt = YouTube(video_url)
+        download_parameters = dict({
+            'output_path': str(output_dir),
+            # 'filename':f'{yt.title}.mp3',  # since this is an audio-only stream, the file will be mp4
+            # 'filename': f'{title}.mp3',
+            'filename_prefix': None,
+            'skip_existing': True,  # Skip existing files, defaults to True
+            'timeout': None,  # Request timeout length in seconds. Uses system default
+            'max_retries': 0,  # Number of retries to attempt after socket timeout. Defaults to 0
+        }, **kwargs)
         try:
             title: str = yt.title
         except Exception as error:
             logger.exception(error)
             title = 'failed-to-get-title'
 
-        best_audio_stream = yt.streams.filter(only_audio=True).order_by('bitrate')[-1]
-        
-        # get avaialbe streams
-        # streams = yt.streams
-
-        # # filter streams by audio only
-        # audio_streams = streams.filter(only_audio=True)
-
-        # assert audio_streams, "No audio streams found"
-        # assert len(audio_streams) > 0, "No audio streams found"
-
         # # find highest quality audio stream
         # # we currently judge quality by bitrate (higher is better)
-        # best_audio_stream = audio_streams.order_by('bitrate')[-1]
-
-        # highest_quality_audio_stream = audio_streams.order_by('abr').desc().first()
-
-        # find highest quality audio stream
-        # find audio only stream with highest reported kbps (as quality measure)
-        # best_audio_stream = yt.streams.filter(only_audio=True).order_by('bitrate')[-1]
+        best_audio_stream = yt.streams.filter(only_audio=True).order_by('bitrate')[-1]
 
         # Download the audio stream
-
         try:
-            local_file = best_audio_stream.download(
-                output_path=str(output_dir),
-                # filename=f'{yt.title}.mp3',  # since this is an audio-only stream, the file will be mp4
-                filename_prefix=None,
-                skip_existing=True,  # Skip existing files, defaults to True
-                timeout=None,  # Request timeout length in seconds. Uses system default
-                max_retries=0,  # Number of retries to attempt after socket timeout. Defaults to 0
-            )
+            local_file = best_audio_stream.download(**download_parameters)
         # Catch common bug on pytube (which is not too stable yet)
         except URLError as error:
             logger.error("Youtube Download Error: %s", json.dumps({
@@ -88,33 +70,35 @@ class CMDYoutubeDownloader:
             Designed for retrying when non-deterministic errors occur.
 
         Args:
-            video_url ([type]): [description]
-            directory ([type]): [description]
-            times (int, optional): [description]. Defaults to 10.
-            delay (float, optional): [description]. Defaults to 0.5.
+            video_url (str): the youtube video url
+            directory (str): the directory to store the downloaded file
+            times (int, optional): Number of retries for non-deterministic bugs. Defaults to 10.
+            delay (float, optional): Delay between retries to no stress youtube server. Defaults to 0.5.
 
         Raises:
-            error: [description]
+            URLError: if the download fails after all retries
 
         Returns:
             [type]: [description]
         """
         i = 0
-        while i < times - 1:
+        while i < times:
             try:
-                return self._download(video_url, directory)
+                return self._download(video_url, directory, **kwargs)
             except URLError as error:
                 if 'Network is unreachable' in str(error):
-                    sleep(delay)
                     i += 1
+                    sleep(delay)
                 else:
                     raise error
             except TooManyRequestsError as e:
-                logger.info(e)
                 i += 1
                 sleep(delay)
-        return self._download(video_url, directory)
+        raise RetriesFailedError
 
+
+class RetriesFailedError(Exception):
+    pass
 
 class YoutubeDownloaderErrorFactory(object):
     @staticmethod

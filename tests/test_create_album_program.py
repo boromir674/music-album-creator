@@ -96,7 +96,22 @@ def test_integration(
 
     # AND the album directory should contain the expected tracks
     expected_tracks = {
-        '01 - Gasoline.mp4',
-        '02 - Man vs. God.mp4',
+        '01 - Gasoline.mp3',
+        '02 - Man vs. God.mp3',
     }
     assert set(os.listdir(expected_album_dir)) == expected_tracks
+
+    # AND the tracks should be encoded as mp3
+
+    # AND the tracks should have the expected metadata
+
+    # AND the tracks should have the expected duration
+
+    # AND the tracks should have the expected filesize
+
+    # AND the tracks should have the expected bitrate
+
+    # AND the tracks should have the expected sample rate
+
+    # AND the tracks should have the expected channels
+

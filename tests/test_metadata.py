@@ -40,10 +40,12 @@ def tags_from_file_name():
     }  # 4.2.1   TIT2    [#TIT2 Title/songname/content description]
 
 
-@pytest.mark.parametrize(
-    "year", [('2000'), (''), pytest.param('a_year', marks=pytest.mark.xfail)]
-)
-def test_writting_album_metadata(test_album_dir, album_info, tags_from_file_name, year):
+@pytest.mark.parametrize("year", [
+    ('2000'),
+    (''),
+    pytest.param('a_year', marks=pytest.mark.xfail),
+])
+def test_writting_album_metadata(year, test_album_dir, album_info, tags_from_file_name):
     MD.set_album_metadata(
         test_album_dir,
         track_number=True,
@@ -56,7 +58,7 @@ def test_writting_album_metadata(test_album_dir, album_info, tags_from_file_name
     for file_path in glob(test_album_dir + '/*'):
         c = StringParser().parse_track_number_n_name(os.path.basename(file_path))
         audio = ID3(file_path)
-        # this is tru because when trying to set the year metadata with '' the tag s do not change and so remain to the '2000' value set in the first test in line
+        # this is true because when trying to set the year metadata with '' the tag s do not change and so remain to the '2000' value set in the first test in line
         # assert all([str(audio.get(album_info[k][1]) == album_info[k][0] for k in ['artist', 'album-artist', 'album'])]) and str(audio.get(album_info['year'][1])) == album_info
         # for k, v in tags_from_file_name.items():
         #     print("TAG SET: {}={}, requested: {}={}".format(v, str(audio.get(v)), k, c[k]))

@@ -59,7 +59,7 @@ class TestSegmenting:
         [
             (
                 "1. tr1 - 0:00\n2. tr2 - 1:12\n3. tr3 - 2:00\n",
-                ['01 - tr1.mp4', '02 - tr2.mp4', '03 - tr3.mp4'],
+                ['01 - tr1.mp3', '02 - tr2.mp3', '03 - tr3.mp3'],
                 [72, 48, 236],
             ),
             pytest.param(

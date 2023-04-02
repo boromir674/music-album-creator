@@ -29,4 +29,6 @@ class FFMPEGProxy(Proxy[FFMpegSubjectType]):
         logger.error(
             "Running ffmpeg: %s", json.dumps(list(ffmpeg_cli_args), indent=4, sort_keys=True)
         )
-        return self._proxy_subject(*ffmpeg_cli_args, **subprocess_settings)
+        res = self._proxy_subject(*ffmpeg_cli_args, **subprocess_settings)
+        # logger.info("FFMPEG:\n%s", res.stderr)
+        return res
