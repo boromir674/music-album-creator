@@ -6,6 +6,7 @@ import os
 import shutil
 import sys
 from time import sleep
+import time
 
 import click
 
@@ -24,10 +25,14 @@ from .downloading import (
     TokenParameterNotInVideoInfoError,
     UnavailableVideoError,
 )
+from music_album_creation.ffprobe_client import FFProbeClient
+
 from .ffmpeg import FFProbe
 from .music_master import MusicMaster
 
 ffprobe = FFProbe(os.environ.get('MUSIC_FFPROBE', 'ffprobe'))
+ffprobe_client = FFProbeClient(ffprobe)
+
 
 if os.name == 'nt':
     from pyreadline import Readline
@@ -124,7 +129,7 @@ def main(tracks_info, track_name, track_number, artist, album_artist, video_url)
             print('\n')
     print('\n')
 
-    print("Album file: {}".format(os.path.basename(album_file)))
+    print("Album file: {}".format(album_file))
 
     ### RECEIVE TRACKS INFORMATION
     if tracks_info:
@@ -143,7 +148,7 @@ def main(tracks_info, track_name, track_number, artist, album_artist, video_url)
     segmentation_info = SegmentationInformation.from_tracks_information(
         tracks_info, hhmmss_type=answer.lower()
     )
-    
+
     # SEGMENTATION
     try:  
         audio_file_paths = audio_segmenter.segment(
@@ -158,11 +163,12 @@ def main(tracks_info, track_name, track_number, artist, album_artist, video_url)
         # in order to put the above statement outside of while loop
 
     # TODO re-implement the below using the ffmpeg proxy
-    # durations = [ffmpeg()]
+    durations = [time.strftime('%H:%M:%S', time.gmtime(int(float(ffprobe_client.get_stream_info(f)['format']['duration'])))) for f in audio_file_paths]
+
     # durations = [StringParser.hhmmss_format(getattr(mutagen.File(t).info, 'length', 0)) for t in audio_file_paths]
-    # max_row_length = max(len(_[0]) + len(_[1]) for _ in zip(audio_file_paths, durations))
-    # print("\n\nThese are the tracks created.\n")
-    # print('\n'.join(sorted([' {}{}  {}'.format(t, (max_row_length - len(t) - len(d)) * ' ', d) for t, d in zip(audio_file_paths, durations)])), '\n')
+    max_row_length = max(len(_[0]) + len(_[1]) for _ in zip(audio_file_paths, durations))
+    print("\n\nThese are the tracks created.\n")
+    print('\n'.join(sorted([' {}{}  {}'.format(t, (max_row_length - len(t) - len(d)) * ' ', d) for t, d in zip(audio_file_paths, durations)])), '\n')
     # TODO
 
     ### STORE TRACKS IN DIR in MUSIC LIBRARY ROOT
