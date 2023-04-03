@@ -10,6 +10,7 @@ Featuring
 - Cross-platform support (Linux/Windows)
 
 ::
+
     export MUSIC_LIB_ROOT=your_local_directory_path
     docker run -it --rm -e MUSIC_LIB_ROOT boromir674/create-album
 
