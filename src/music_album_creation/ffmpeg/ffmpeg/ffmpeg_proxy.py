@@ -17,9 +17,11 @@ class CLIResult(Protocol):
 
 
 class FFMpegSubjectType(Protocol):
-    def __init__(self, ffmpeg_binary: str): ...
+    def __init__(self, ffmpeg_binary: str):
+        ...
 
-    def __call__(self, *ffmpeg_cli_args, **subprocess_settings) -> CLIResult: ...
+    def __call__(self, *ffmpeg_cli_args, **subprocess_settings) -> CLIResult:
+        ...
 
 
 class FFMPEGProxy(Proxy[FFMpegSubjectType]):

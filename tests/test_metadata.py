@@ -40,11 +40,14 @@ def tags_from_file_name():
     }  # 4.2.1   TIT2    [#TIT2 Title/songname/content description]
 
 
-@pytest.mark.parametrize("year", [
-    ('2000'),
-    (''),
-    pytest.param('a_year', marks=pytest.mark.xfail),
-])
+@pytest.mark.parametrize(
+    "year",
+    [
+        ('2000'),
+        (''),
+        pytest.param('a_year', marks=pytest.mark.xfail),
+    ],
+)
 def test_writting_album_metadata(year, test_album_dir, album_info, tags_from_file_name):
     MD.set_album_metadata(
         test_album_dir,

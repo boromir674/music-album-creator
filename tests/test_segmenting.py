@@ -88,14 +88,14 @@ class TestSegmenting:
 
         with open(tracks_file, 'r') as f:
             segmentation_info = SegmentationInformation.from_multiline(
-                f.read().strip(), 'timestamps',
+                f.read().strip(),
+                'timestamps',
             )
         segmenter.segment(
             test_audio_file_path,
             segmentation_info,
             sleep_seconds=0,
         )
-
 
         # segmenter.segment_from_file(
         #     test_audio_file_path,

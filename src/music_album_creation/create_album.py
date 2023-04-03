@@ -150,7 +150,7 @@ def main(tracks_info, track_name, track_number, artist, album_artist, video_url)
     )
 
     # SEGMENTATION
-    try:  
+    try:
         audio_file_paths = audio_segmenter.segment(
             album_file,
             segmentation_info,
@@ -163,12 +163,28 @@ def main(tracks_info, track_name, track_number, artist, album_artist, video_url)
         # in order to put the above statement outside of while loop
 
     # TODO re-implement the below using the ffmpeg proxy
-    durations = [time.strftime('%H:%M:%S', time.gmtime(int(float(ffprobe_client.get_stream_info(f)['format']['duration'])))) for f in audio_file_paths]
+    durations = [
+        time.strftime(
+            '%H:%M:%S',
+            time.gmtime(int(float(ffprobe_client.get_stream_info(f)['format']['duration']))),
+        )
+        for f in audio_file_paths
+    ]
 
     # durations = [StringParser.hhmmss_format(getattr(mutagen.File(t).info, 'length', 0)) for t in audio_file_paths]
     max_row_length = max(len(_[0]) + len(_[1]) for _ in zip(audio_file_paths, durations))
     print("\n\nThese are the tracks created.\n")
-    print('\n'.join(sorted([' {}{}  {}'.format(t, (max_row_length - len(t) - len(d)) * ' ', d) for t, d in zip(audio_file_paths, durations)])), '\n')
+    print(
+        '\n'.join(
+            sorted(
+                [
+                    ' {}{}  {}'.format(t, (max_row_length - len(t) - len(d)) * ' ', d)
+                    for t, d in zip(audio_file_paths, durations)
+                ]
+            )
+        ),
+        '\n',
+    )
     # TODO
 
     ### STORE TRACKS IN DIR in MUSIC LIBRARY ROOT

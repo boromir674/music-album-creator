@@ -15,6 +15,7 @@ ffmpeg = FFMPEG(os.environ.get('MUSIC_FFMPEG', 'ffmpeg'))
 
 EXT = 'mp3'
 
+
 class AudioSegmenter(object):
     def __init__(self, target_directory=tempfile.gettempdir()):
         self._dir = target_directory
@@ -32,9 +33,7 @@ class AudioSegmenter(object):
         """Create (file) name of output track."""
         return [os.path.join(self._dir, f'{track_info[0]}.{EXT}')] + track_info[1:]
 
-    def segment(
-        self, album_file, data, sleep_seconds=0
-    ):
+    def segment(self, album_file, data, sleep_seconds=0):
         """
         :param album_file:
         :param data:
@@ -131,14 +130,13 @@ class AudioSegmenter(object):
             # 'libmp3lame',
             # '-qscale:a',
             # '9',  # max quality
-            
             # '-ab',
             # '133k',
-
             '-ss',
             start,
             *list((lambda: ['-to', str(end)] if end else [])()),
-            '-f', 'mp3',
+            '-f',
+            'mp3',
             str(track_file),
         )
         # self._args = (

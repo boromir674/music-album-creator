@@ -4,16 +4,21 @@ import pytest
 @pytest.fixture
 def download_video():
     from music_album_creation.downloading import CMDYoutubeDownloader
+
     yd = CMDYoutubeDownloader()
     return yd.download_trials
 
 
 @pytest.mark.network_bound
-@pytest.mark.parametrize('url', [
-    'https://www.youtube.com/watch?v=OvC-4BixxkY',
-])
-def test_downloading_audio_stream_without_specifying_output(url, tmp_path_factory, download_video):
-
+@pytest.mark.parametrize(
+    'url',
+    [
+        'https://www.youtube.com/watch?v=OvC-4BixxkY',
+    ],
+)
+def test_downloading_audio_stream_without_specifying_output(
+    url, tmp_path_factory, download_video
+):
     # GIVEN a youtube video url
     runtime_url: str = url
 
@@ -24,6 +29,7 @@ def test_downloading_audio_stream_without_specifying_output(url, tmp_path_factor
 
     # THEN the audio stream is downloaded
     from pathlib import Path
+
     runtime_file = Path(local_file)
     assert runtime_file.exists()
 
@@ -38,7 +44,7 @@ def test_downloading_audio_stream_without_specifying_output(url, tmp_path_factor
     # AND the audio stream has the expected size
     expected_bytes_size = 6560225
     assert runtime_file.stat().st_size == expected_bytes_size  # 6.26 MB
-    assert 6,256318092 - expected_bytes_size / 1024.0 / 1024.0 < 0.1
+    assert 6, 256318092 - expected_bytes_size / 1024.0 / 1024.0 < 0.1
     """
     ffprobe -v error -show_entries stream_tags=rotate:format=size,duration:stream=codec_name,bit_rate -of default=noprint_wrappers=1 ./Burning.webm
     """
@@ -46,12 +52,14 @@ def test_downloading_audio_stream_without_specifying_output(url, tmp_path_factor
 
     from music_album_creation.ffmpeg import FFProbe
     from music_album_creation.ffprobe_client import FFProbeClient
+
     ffprobe = FFProbe(os.environ.get('MUSIC_FFPROBE', 'ffprobe'))
     ffprobe_client = FFProbeClient(ffprobe)
 
     # Query Media File to get metadata information
     data = ffprobe_client.get_stream_info(str(runtime_file))
     import json
+
     print(json.dumps(data, indent=4, sort_keys=True))
 
     assert data['programs'] == []
@@ -75,20 +83,23 @@ def test_downloading_audio_stream_without_specifying_output(url, tmp_path_factor
     assert data['format']['size'] == str(expected_bytes_size)
     assert data['format']['bit_rate'] == '133486'  # bits per second
     assert data['format']['probe_score'] == 100
-    assert data['format']['tags']['encoder'] == 'google/video-file'   
+    assert data['format']['tags']['encoder'] == 'google/video-file'
 
 
 @pytest.mark.network_bound
-@pytest.mark.parametrize('url', [
-    'https://www.youtube.com/watch?v=OvC-4BixxkY',
-])
+@pytest.mark.parametrize(
+    'url',
+    [
+        'https://www.youtube.com/watch?v=OvC-4BixxkY',
+    ],
+)
 def test_downloading_audio_stream_specifying_mp3_output(url, tmp_path_factory):
-
     # GIVEN a youtube video url
     runtime_url: str = url
 
     # WHEN downloading the audio stream
     from pytube import YouTube
+
     output_directory = tmp_path_factory.mktemp("youtubedownloads")
 
     youtube_video = YouTube(runtime_url)
@@ -98,7 +109,9 @@ def test_downloading_audio_stream_specifying_mp3_output(url, tmp_path_factory):
         print(error)
         title = 'Burning'
 
-    highest_bitrate_audio_stream = youtube_video.streams.filter(only_audio=True).order_by('bitrate')[-1]
+    highest_bitrate_audio_stream = youtube_video.streams.filter(only_audio=True).order_by(
+        'bitrate'
+    )[-1]
 
     local_file = highest_bitrate_audio_stream.download(
         output_path=str(output_directory),
@@ -111,6 +124,7 @@ def test_downloading_audio_stream_specifying_mp3_output(url, tmp_path_factory):
 
     # THEN the audio stream is downloaded
     from pathlib import Path
+
     runtime_file = Path(local_file)
     assert runtime_file.exists()
 
@@ -122,11 +136,10 @@ def test_downloading_audio_stream_specifying_mp3_output(url, tmp_path_factory):
     # AND the audio stream has the expected extension
     assert runtime_file.suffix == '.mp3'
 
-
     # AND the audio stream has the expected size
     expected_bytes_size = 6560225
     assert runtime_file.stat().st_size == expected_bytes_size  # 6.26 MB
-    assert 6,256318092 - expected_bytes_size / 1024.0 / 1024.0 < 0.1
+    assert 6, 256318092 - expected_bytes_size / 1024.0 / 1024.0 < 0.1
     """
     ffprobe -v error -show_entries stream_tags=rotate:format=size,duration:stream=codec_name,bit_rate -of default=noprint_wrappers=1 ./Burning.webm
     """
@@ -134,9 +147,16 @@ def test_downloading_audio_stream_specifying_mp3_output(url, tmp_path_factory):
 
     # Query Media File to get metadata information
     cp = subprocess.run(  # pylint: disable=W1510
-        ['ffprobe', '-v', 'error',
-        '-show_entries', 'stream_tags=rotate:format=size,duration:stream=codec_name,bit_rate,sample_rate,channels,nb_frames',
-        '-of', 'default=noprint_wrappers=1', str(runtime_file)],
+        [
+            'ffprobe',
+            '-v',
+            'error',
+            '-show_entries',
+            'stream_tags=rotate:format=size,duration:stream=codec_name,bit_rate,sample_rate,channels,nb_frames',
+            '-of',
+            'default=noprint_wrappers=1',
+            str(runtime_file),
+        ],
         capture_output=True,  # capture stdout and stderr separately
         # cwd=project_directory,
         check=True,

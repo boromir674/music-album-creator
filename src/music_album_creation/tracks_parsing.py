@@ -77,22 +77,16 @@ class StringParser(object):
     # we take care of compiling the below regexes with the re.X flag
     # because they contain whitespaces on purpose for better readability
     # VERBOSE = X = sre_compile.SRE_FLAG_VERBOSE # ignore whitespace and comments
-    
+
     # r"(?: {track_number} {sep1})? ( {track_name} ) {sep2} ({hhmmss})"
     regexes = {
         'track_number': r'\d{1,2}',  # we know this will try to match as many as possible with back-tracking ;-)
-        
         'sep1': r"(?: [\t\ ]* [\.\-\,)]+ )? [\t ]*",
-        
         'track_word_first_char': r"[\wα-ωΑ-Ω'\x86-\xce\u0384-\u03CE]",
         'track_word_char': r"[\.\w\-’':!\xc3\xa8α-ωΑ\-Ω\x86-\xce\u0384-\u03CE]",
-        
         # 'track_word': r"\(?[\wα-ωΑ-Ω'\x86-\xce\u0384-\u03CE][\w\-’':!\xc3\xa8α-ωΑ\-Ω\x86-\xce\u0384-\u03CE]*\)?",
-
         'track_sep': r'[\t\ ,]+',
-
         'sep2': r'(?: [\t\ ]* [\-.]+ [\t\ ]* | [\t\ ]+ )',
-
         'extension': r'\.mp[34]',
         'hhmmss': r'(?:\d?\d:)*\d?\d',
     }
@@ -111,9 +105,9 @@ class StringParser(object):
     def __new__(cls, *args, **kwargs):
         if not cls.__instance:
             cls.__instance = super(cls, StringParser).__new__(cls)
-            cls.regexes['track_word'] = r'\(?{track_word_first_char}{track_word_char}*\)?'.format(
-                **cls.regexes
-            )
+            cls.regexes[
+                'track_word'
+            ] = r'\(?{track_word_first_char}{track_word_char}*\)?'.format(**cls.regexes)
             cls.regexes['track_name'] = r'{track_word}(?:{track_sep}{track_word})*'.format(
                 **cls.regexes
             )
@@ -156,7 +150,6 @@ class StringParser(object):
                             **cls.regexes
                         ),
                         re.X,  # VERBOSE = X = sre_compile.SRE_FLAG_VERBOSE # ignore whitespace and comments
-
                     )
                     .search(os.path.basename(file_name))
                     .groups()
@@ -215,7 +208,6 @@ class StringParser(object):
                     )
                 )
                 raise e
-
 
     # CONVERT durations to timestamps tuples (segmentation start-end pair)
     @classmethod

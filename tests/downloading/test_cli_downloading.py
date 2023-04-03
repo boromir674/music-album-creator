@@ -28,20 +28,17 @@ def download():
 
 
 @pytest.mark.network_bound
-@pytest.mark.parametrize('url, target_file', [
-    (
-        'https://www.youtube.com/watch?v=Q3dvbM6Pias',
-        'Rage Against The Machine - Testify (Official HD Video).mp4'
-    ),
-    (
-        'https://www.youtube.com/watch?v=bj1JRuyYeco',
-        '20 Second Timer (Minimal).webm'
-    ),
-])
-def test_downloading_valid_youtube_url(
-    url, target_file,
-    tmp_path_factory
-):
+@pytest.mark.parametrize(
+    'url, target_file',
+    [
+        (
+            'https://www.youtube.com/watch?v=Q3dvbM6Pias',
+            'Rage Against The Machine - Testify (Official HD Video).mp4',
+        ),
+        ('https://www.youtube.com/watch?v=bj1JRuyYeco', '20 Second Timer (Minimal).webm'),
+    ],
+)
+def test_downloading_valid_youtube_url(url, target_file, tmp_path_factory):
     from pathlib import Path
 
     from music_album_creation.downloading import CMDYoutubeDownloader
@@ -72,11 +69,13 @@ def test_downloading_valid_youtube_url(
 
 # Test that expected Exceptions are fired up
 
+
 @pytest.mark.network_bound
 def test_downloading_false_youtube_url(tmp_path_factory):
     from pytube.exceptions import VideoUnavailable
 
     from music_album_creation.downloading import CMDYoutubeDownloader
+
     youtube = CMDYoutubeDownloader()
 
     with pytest.raises(VideoUnavailable):
@@ -93,6 +92,7 @@ def test_downloading_invalid_url(download, tmp_path_factory):
     from pytube.exceptions import RegexMatchError
 
     from music_album_creation.downloading import CMDYoutubeDownloader
+
     youtube = CMDYoutubeDownloader()
 
     with pytest.raises(RegexMatchError):

@@ -27,15 +27,18 @@ class CMDYoutubeDownloader:
     def _download(cls, video_url, output_dir, **kwargs) -> str:
         # output dir where to store the stream
         yt = YouTube(video_url)
-        download_parameters = dict({
-            'output_path': str(output_dir),
-            # 'filename':f'{yt.title}.mp3',  # since this is an audio-only stream, the file will be mp4
-            # 'filename': f'{title}.mp3',
-            'filename_prefix': None,
-            'skip_existing': True,  # Skip existing files, defaults to True
-            'timeout': None,  # Request timeout length in seconds. Uses system default
-            'max_retries': 0,  # Number of retries to attempt after socket timeout. Defaults to 0
-        }, **kwargs)
+        download_parameters = dict(
+            {
+                'output_path': str(output_dir),
+                # 'filename':f'{yt.title}.mp3',  # since this is an audio-only stream, the file will be mp4
+                # 'filename': f'{title}.mp3',
+                'filename_prefix': None,
+                'skip_existing': True,  # Skip existing files, defaults to True
+                'timeout': None,  # Request timeout length in seconds. Uses system default
+                'max_retries': 0,  # Number of retries to attempt after socket timeout. Defaults to 0
+            },
+            **kwargs
+        )
         try:
             title: str = yt.title
         except Exception as error:
@@ -51,15 +54,29 @@ class CMDYoutubeDownloader:
             local_file = best_audio_stream.download(**download_parameters)
         # Catch common bug on pytube (which is not too stable yet)
         except URLError as error:
-            logger.error("Youtube Download Error: %s", json.dumps({
-                'url': str(video_url),
-                'title': title,
-            }, indent=4, sort_keys=True))
+            logger.error(
+                "Youtube Download Error: %s",
+                json.dumps(
+                    {
+                        'url': str(video_url),
+                        'title': title,
+                    },
+                    indent=4,
+                    sort_keys=True,
+                ),
+            )
             raise error
-        logger.info("Downloaded from Youtube: %s", json.dumps({
-                'title': title,
-                'local_file': str(local_file),
-            }, indent=4, sort_keys=True))
+        logger.info(
+            "Downloaded from Youtube: %s",
+            json.dumps(
+                {
+                    'title': title,
+                    'local_file': str(local_file),
+                },
+                indent=4,
+                sort_keys=True,
+            ),
+        )
         return local_file
 
     def download_trials(self, video_url, directory, times=10, delay=0.5, **kwargs):
@@ -100,6 +117,7 @@ class CMDYoutubeDownloader:
 
 class RetriesFailedError(Exception):
     pass
+
 
 class YoutubeDownloaderErrorFactory(object):
     @staticmethod

@@ -11,7 +11,8 @@ class CLIResult(Protocol):
 
 
 class FFProbeCallable(Protocol):
-    def __call__(self, *args: str) -> CLIResult: ...
+    def __call__(self, *args: str) -> CLIResult:
+        ...
 
 
 @define
@@ -29,7 +30,7 @@ class FFProbeClient:
             '-show_format',
             '-print_format',
             'json',
-            str(file_path)
+            str(file_path),
         )
         if cli_result.exit_code != 0:
             raise RuntimeError(f"ffprobe failed with exit code {cli_result.exit_code}")
