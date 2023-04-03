@@ -104,6 +104,10 @@ jobs:
         echo "==== $PARSED_VERSION  -->  $WHEEL_VERSION"
         echo "PKG_VERSION=$WHEEL_VERSION" >> $GITHUB_ENV  # to be used in the next step
         echo "SEMVER_PIP_FORMAT=$WHEEL_VERSION" >> $GITHUB_OUTPUT  # to be used in other jobs
+
+    - name: Install external dependencies at runtime (todo move to build-time inside a custom image runner)
+      run: sudo apt-get install -y --install-recommends ffmpeg
+
     - name: Run Unit Tests
       run: tox -vv -s false
       env:
