@@ -8,7 +8,10 @@ Featuring
 - Automatically downloading and converting to mp3 from youtube
 - Segmenting albums into tracks and automatically adding metadata information (ie for 'artist', 'album', 'track_name' fields)
 - Cross-platform support (Linux/Windows)
-- Cross-python support (Python2.7 or newer)
+
+::
+    export MUSIC_LIB_ROOT=your_local_directory_path
+    docker run -it --rm -e MUSIC_LIB_ROOT boromir674/create-album
 
 
 ========
