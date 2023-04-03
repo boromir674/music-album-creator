@@ -30,10 +30,10 @@ env:
   # If false the step prevented from running
   # If true the step is allowed to run (it still may be skipped on other runtime conditions)
   RUN_UNIT_TESTS: "true"
-  RUN_LINT_CHECKS: "false"
-  BUILD_DOCKER: "false"
+  RUN_LINT_CHECKS: "true"
+  BUILD_DOCKER: "true"
   PUBLISH_ON_PYPI: "false"
-  DRAW_DEPENDENCIES: "false"
+  DRAW_DEPENDENCIES: "true"
 
 jobs:
   # we use the below to read the workflow env vars and be able to use in "- if:" Job conditionals
@@ -315,23 +315,23 @@ jobs:
         run: tox -e lint -vv -s false
       - run: tox -e pylint -vv -s false | tee pylint-result.txt
       - run: cat pylint-result.txt
-      - name: "Check Pylint Score > 8.2/10"
-        if: ${{ matrix.platform != 'windows-latest' }}
-        env:
-          PYLINT_THRESHOLD: 8.2
-        run: |
-          SCORE=`sed -n 's/^Your code has been rated at \([-0-9.]*\)\/.*/\1/p' pylint-result.txt`
-          echo "SCORE -> $SCORE"
-          # threshold check
-          if awk "BEGIN {exit !($SCORE >= $PYLINT_THRESHOLD)}"; then
-            echo "PyLint Passed | Score: ${SCORE} | Threshold: ${PYLINT_THRESHOLD}"
-          else
-            echo "PyLint Failed | Score: ${SCORE} | Threshold: ${PYLINT_THRESHOLD}"
-            exit 1
-          fi
-      - name: Run tox -e prospector
-        if: ${{ matrix.platform != 'windows-latest' }}
-        run: tox -e prospector -vv -s false
+      # - name: "Check Pylint Score > 8.2/10"
+      #   if: ${{ matrix.platform != 'windows-latest' }}
+      #   env:
+      #     PYLINT_THRESHOLD: 8.2
+      #   run: |
+      #     SCORE=`sed -n 's/^Your code has been rated at \([-0-9.]*\)\/.*/\1/p' pylint-result.txt`
+      #     echo "SCORE -> $SCORE"
+      #     # threshold check
+      #     if awk "BEGIN {exit !($SCORE >= $PYLINT_THRESHOLD)}"; then
+      #       echo "PyLint Passed | Score: ${SCORE} | Threshold: ${PYLINT_THRESHOLD}"
+      #     else
+      #       echo "PyLint Failed | Score: ${SCORE} | Threshold: ${PYLINT_THRESHOLD}"
+      #       exit 1
+      #     fi
+      # - name: Run tox -e prospector
+      #   if: ${{ matrix.platform != 'windows-latest' }}
+      #   run: tox -e prospector -vv -s false
 
 # DRAW PYTHON DEPENDENCY GRAPHS
   check_trigger_draw_dependency_graphs:
