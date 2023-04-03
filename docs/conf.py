@@ -23,12 +23,15 @@ project = 'Music Album Creator'
 year = '2019'
 author = 'Konstantinos Lampridis'
 copyright = '{0}, {1}'.format(year, author)
-try:
-    from pkg_resources import get_distribution
-    version = release = get_distribution('music_album_creation').version
-except Exception:
-    traceback.print_exc()
-    version = release = '0.0.0'
+# try:
+#     from pkg_resources import get_distribution
+#     version = release = get_distribution('music_album_creation').version
+# except Exception:
+#     traceback.print_exc()
+
+# The full version, including alpha/beta/rc tags
+release = '1.7.5'
+version = release
 
 pygments_style = 'trac'
 templates_path = ['.']

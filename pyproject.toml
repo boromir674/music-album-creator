@@ -1,0 +1,181 @@
+# PIP
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+# POETRY
+[tool.poetry]
+name = "music-album-creation"
+version = "1.4.0"
+description = "A CLI application intending to automate offline music library building"
+authors = ["Konstantinos Lampridis <k.lampridis@hotmail.com>"]
+license = "AGPL-3.0-only"
+readme = "README.rst"
+packages = [{ include = "music_album_creation", from = "src" }]
+
+homepage = "https://github.com/boromir674/music-album-creator"
+repository = "https://github.com/boromir674/music-album-creator"
+documentation = "https://music-album-creator.readthedocs.io"
+
+keywords = [
+    "youtube",
+    "download",
+    "music",
+    "automation",
+    "metadata",
+    "cli",
+    "python package",
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "Intended Audience :: End Users/Desktop",
+    "License :: OSI Approved :: GNU Affero General Public License v3",
+    "Natural Language :: English",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: POSIX :: Linux",
+    "Operating System :: Unix",
+    "Programming Language :: Python :: 2",
+    "Programming Language :: Python :: 2.7",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.5",
+    "Programming Language :: Python :: 3.6",
+    "Programming Language :: Python :: 3.7",
+    "Topic :: Home Automation",
+    "Topic :: Multimedia :: Video :: Conversion",
+    "Topic :: Multimedia :: Sound/Audio",
+    "Topic :: Software Development",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: System :: Software Distribution",
+    "Typing :: Typed"
+]
+
+# Caret  ^
+# ^1.2.3 >=1.2.3 <2.0.0
+# ^1.2	 >=1.2.0 <2.0.0
+# ^1	 >=1.0.0 <2.0.0
+# ^0.2.3 >=0.2.3 <0.3.0
+
+# Tilde  ~
+# ~1.2.3 >=1.2.3 <1.3.0
+# ~1.2	 >=1.2.0 <1.3.0
+# ~1	 >=1.0.0 <2.0.0
+
+# Start *
+# *	    >=0.0.0
+# 1.*	>=1.0.0 <2.0.0
+# 1.2.*	>=1.2.0 <1.3.0
+
+[tool.poetry.dependencies]
+python = "^3.8"
+youtube_dl = "^2021.12.17"
+click = "^8.1.3"
+attrs = "^22.1.0"
+tqdm = "^4.64.1"
+mutagen = "^1.46.0"
+pyreadline = "^2.1"
+questionary = "^1.10.0"
+pytube = "^12.1.2"
+
+pytest = { version = "^7.2.0", optional = true }
+pytest-cov = { version = "^4.0.0", optional = true }
+pytest-explicit = { version = "^1.0.1", optional = true }
+pytest-click = { version = "^1.1.0", optional = true }
+pytest-xdist = {version = "^3.1.0", optional = true}
+pytest-run-subprocess = { version = "^0.10.0", optional = true }
+pytest-object-getter = { version = "^1.0.2", optional = true }
+
+jupyter = { version = "^1.0.0", optional = true }
+prompt-toolkit = { version = "^3.0.33", optional = true}
+matplotlib = {version = "^3.6.2", optional = true}
+
+# Type Checking Dependencies
+mypy = { version = "^1.1.1", optional = true }
+software-patterns = "^2.0.0"
+
+[tool.poetry.extras]
+test = [
+    "pytest",
+    "pytest-cov",
+    "pytest-xdist",
+    "pytest-explicit",
+    "pytest-click",
+    "pytest-run-subprocess",
+    "pytest-object-getter",
+]
+docs = [
+    "sphinx",
+    "sphinx-autodoc-typehints",
+    "sphinx-rtd-theme",
+    "sphinxcontrib-spelling",
+]
+typing = [
+    "mypy",
+]
+notebook = [
+    "jupyter",
+    "matplotlib",
+    "prompt-toolkit",
+]
+
+[tool.poetry.scripts]
+create-album = 'music_album_creation.create_album:main'
+
+# PYPI
+[tool.poetry.urls]
+"Bug Tracker" = "https://github.com/boromir674/music-album-creator/issues"
+"CI: Github Actions" = "https://github.com/boromir674/music-album-creator/actions"
+"Documentation" = "https://music-album-creator.readthedocs.io/"
+"Source Code" = "https://github.com/boromir674/music-album-creator"
+# TODO Improve: add changelog.rst in the docs folder and use that the link here below for the "Changelog" value
+# https://cookiecutter-python-package.readthedocs.io/en/stable/changelog.html
+"Changelog" = "https://github.com/boromir674/music-album-creator/blob/master/CHANGELOG.rst"
+"Code of Conduct" = "https://github.com/boromir674/music-album-creator/blob/master/CONTRIBUTING.rst"
+# Mailing lists =
+
+# TOOLS
+
+## TEST RUNNER
+[tool.pytest.ini_options]
+minversion = "6.2"
+addopts = "--strict-markers"
+markers = [
+    "integration: Tests applicable to a newly Generated Project, running with tox",
+    "network_bound: Require internet connection",
+]
+testpaths = [
+    "tests",
+]
+explicit-only = [
+    "integration",
+    "network_bound",
+]
+
+## LINTING (opinionated)
+[tool.black]
+line-length = 95
+include = '\.pyi?$'
+extend-exclude = '''
+# A regex preceeded with ^/ will apply only to files and directories
+# in the root of the project.
+# ^/foo.py  # exclude a file named foo.py in the root of the project (in addition to the defaults)
+tests/smoke_test.py|
+hooks/post_gen_project.py
+'''
+
+## IMPORT SORT
+[tool.isort]
+profile = 'black'
+
+## SEMANTIC RELEASE
+[tool.software-release]
+version_variable = "src/music_album_creation/__init__.py:__version__"
+
+
+## SECURITY
+
+[tool.bandit]
+tests = []
+skips = [
+    "B101",
+]

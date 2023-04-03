@@ -29,14 +29,19 @@ class MusicMaster(object):
 
     def url2mp3(self, url, suppress_certificate_validation=False, force_download=False):
         if force_download or url not in self._mp3s:
-            self._download(url, suppress_certificate_validation=suppress_certificate_validation)
+            self._download(
+                url, suppress_certificate_validation=suppress_certificate_validation
+            )
         return self._mp3s[url]
 
     def _download(self, url, suppress_certificate_validation=False):
-        self.youtube.download(url, self.download_dir, suppress_certificate_validation=suppress_certificate_validation)
-        latest_mp3 = max(glob("{}/*.mp3".format(self.download_dir)), key=os.path.getctime)
+        downloaded_mp3 = self.youtube.download_trials(
+            url, self.download_dir, times=5, delay=0.5
+        )
+        latest_mp3 = downloaded_mp3
+        # latest_mp3 = max(glob("{}/*.mp4".format(self.download_dir)), key=os.path.getctime)
         if os.path.basename(latest_mp3) == '_.mp3':
-            self.guessed_info = StringParser.parse_album_info(video_title(url)[0])
+            self.guessed_info = StringParser().parse_album_info(video_title(url)[0])
             try:
                 new_file = os.path.join(self.download_dir, self.guessed_info['artist'])
                 os.rename(latest_mp3, new_file)
@@ -45,5 +50,5 @@ class MusicMaster(object):
                 print(e)
                 self._mp3s[url] = latest_mp3
         else:
-            self.guessed_info = StringParser.parse_album_info(latest_mp3)
+            self.guessed_info = StringParser().parse_album_info(latest_mp3)
             self._mp3s[url] = latest_mp3
