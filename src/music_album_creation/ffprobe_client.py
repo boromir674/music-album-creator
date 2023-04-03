@@ -1,6 +1,7 @@
 import json
+from typing import Any, Dict, Protocol
+
 from attr import define
-from typing import Protocol, Dict, Any
 
 
 class CLIResult(Protocol):

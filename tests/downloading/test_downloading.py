@@ -1,5 +1,6 @@
 import pytest
 
+
 @pytest.fixture
 def download_video():
     from music_album_creation.downloading import CMDYoutubeDownloader
@@ -41,9 +42,10 @@ def test_downloading_audio_stream_without_specifying_output(url, tmp_path_factor
     """
     ffprobe -v error -show_entries stream_tags=rotate:format=size,duration:stream=codec_name,bit_rate -of default=noprint_wrappers=1 ./Burning.webm
     """
+    import os
+
     from music_album_creation.ffmpeg import FFProbe
     from music_album_creation.ffprobe_client import FFProbeClient
-    import os
     ffprobe = FFProbe(os.environ.get('MUSIC_FFPROBE', 'ffprobe'))
     ffprobe_client = FFProbeClient(ffprobe)
 

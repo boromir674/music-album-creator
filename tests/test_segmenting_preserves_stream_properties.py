@@ -1,11 +1,12 @@
 
 def test_segmenting_webm_preserves_stream_qualities(tmp_path_factory):
-    from typing import List
     import os
     from pathlib import Path
+    from typing import List
+
+    from music_album_creation.audio_segmentation import AudioSegmenter
     from music_album_creation.ffmpeg import FFProbe
     from music_album_creation.ffprobe_client import FFProbeClient
-    from music_album_creation.audio_segmentation import AudioSegmenter
     ffprobe = FFProbe(os.environ.get('MUSIC_FFPROBE', 'ffprobe'))
     ffprobe_client = FFProbeClient(ffprobe)
 

@@ -5,12 +5,13 @@ import logging
 import os
 import shutil
 import sys
-from time import sleep
 import time
+from time import sleep
 
 import click
 
-from .metadata import MetadataDealer
+from music_album_creation.ffprobe_client import FFProbeClient
+
 from .audio_segmentation import (
     AudioSegmenter,
     SegmentationInformation,
@@ -25,9 +26,8 @@ from .downloading import (
     TokenParameterNotInVideoInfoError,
     UnavailableVideoError,
 )
-from music_album_creation.ffprobe_client import FFProbeClient
-
 from .ffmpeg import FFProbe
+from .metadata import MetadataDealer
 from .music_master import MusicMaster
 
 ffprobe = FFProbe(os.environ.get('MUSIC_FFPROBE', 'ffprobe'))

@@ -6,6 +6,7 @@ from pathlib import Path
 from time import sleep
 from typing import Union
 from urllib.error import URLError
+
 from pytube import YouTube
 
 logger = logging.getLogger(__name__)

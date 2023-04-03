@@ -2,7 +2,7 @@ import logging
 import os
 import tempfile
 import time
-from typing import Optional, List
+from typing import List, Optional
 
 from music_album_creation.ffmpeg import FFMPEG
 

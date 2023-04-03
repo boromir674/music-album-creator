@@ -20,6 +20,7 @@ def parsable_track_lines(request):
 def test_parsing_track_line(parsable_track_lines):
     """Test parsing a track line."""
     from typing import List
+
     from music_album_creation.tracks_parsing import StringParser
     parser = StringParser()
     track_name, parsed_time = parser._parse_track_line(parsable_track_lines['track_line'])
