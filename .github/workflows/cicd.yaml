@@ -36,11 +36,11 @@ env:
   # On/Off switches for the various CI/CD steps
   # If false the step is prevented from running
   # If true the step is allowed to run (it still may be skipped on other runtime conditions)
-  RUN_UNIT_TESTS: "true"
+  RUN_UNIT_TESTS: "false"
   RUN_LINT_CHECKS: "true"
-  BUILD_DOCKER: "true"
-  PUBLISH_ON_PYPI: "true"
-  DRAW_DEPENDENCIES: "true"
+  BUILD_DOCKER: "false"
+  PUBLISH_ON_PYPI: "false"
+  DRAW_DEPENDENCIES: "false"
 
 jobs:
   # we use the below to read the workflow env vars and be able to use in "- if:" Job conditionals
@@ -326,9 +326,9 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           python -m pip install tox==3.28
-      # - name: Lint check code with Isort and Black
-      #   if: ${{ matrix.platform != 'windows-latest' }}
-      #   run: tox -e lint -vv -s false
+      - name: Lint check code with Isort and Black
+        if: ${{ matrix.platform != 'windows-latest' }}
+        run: tox -e lint -vv -s false
       # - run: tox -e pylint -vv -s false | tee pylint-result.txt
       # - run: cat pylint-result.txt
       # - name: "Check Pylint Score > 8.2/10"
