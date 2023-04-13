@@ -31,7 +31,8 @@ env:
   TEST_STRATEGY: "{\"platform\":[\"ubuntu-latest\", \"macos-latest\", \"windows-latest\"], \"python-version\":[\"3.9\"]}"
 
   # Lint Matrix
-  LINT_MATRIX: "{\"platform\":[\"ubuntu-latest\", \"macos-latest\", \"windows-latest\"], \"python-version\":[\"3.10\"]}"
+  # LINT_MATRIX: "{\"platform\":[\"ubuntu-latest\", \"macos-latest\", \"windows-latest\"], \"python-version\":[\"3.10\"]}"
+  LINT_MATRIX: "{\"platform\":[\"ubuntu-latest\", \"macos-latest\"], \"python-version\":[\"3.10\"]}"
 
   # On/Off switches for the various CI/CD steps
   # If false the step is prevented from running
@@ -329,25 +330,25 @@ jobs:
       - name: Lint check code with Isort and Black
         if: ${{ matrix.platform != 'windows-latest' }}
         run: tox -e lint -vv -s false
-      # - run: tox -e pylint -vv -s false | tee pylint-result.txt
-      # - run: cat pylint-result.txt
-      # - name: "Check Pylint Score > 8.2/10"
-      #   if: ${{ matrix.platform != 'windows-latest' }}
-      #   env:
-      #     PYLINT_THRESHOLD: 8.2
-      #   run: |
-      #     SCORE=`sed -n 's/^Your code has been rated at \([-0-9.]*\)\/.*/\1/p' pylint-result.txt`
-      #     echo "SCORE -> $SCORE"
-      #     # threshold check
-      #     if awk "BEGIN {exit !($SCORE >= $PYLINT_THRESHOLD)}"; then
-      #       echo "PyLint Passed | Score: ${SCORE} | Threshold: ${PYLINT_THRESHOLD}"
-      #     else
-      #       echo "PyLint Failed | Score: ${SCORE} | Threshold: ${PYLINT_THRESHOLD}"
-      #       exit 1
-      #     fi
-      # - name: Run tox -e prospector
-      #   if: ${{ matrix.platform != 'windows-latest' }}
-      #   run: tox -e prospector -vv -s false
+      - run: tox -e pylint -vv -s false | tee pylint-result.txt
+      - run: cat pylint-result.txt
+      - name: "Check Pylint Score > 8.2/10"
+        if: ${{ matrix.platform != 'windows-latest' }}
+        env:
+          PYLINT_THRESHOLD: 8.2
+        run: |
+          SCORE=`sed -n 's/^Your code has been rated at \([-0-9.]*\)\/.*/\1/p' pylint-result.txt`
+          echo "SCORE -> $SCORE"
+          # threshold check
+          if awk "BEGIN {exit !($SCORE >= $PYLINT_THRESHOLD)}"; then
+            echo "PyLint Passed | Score: ${SCORE} | Threshold: ${PYLINT_THRESHOLD}"
+          else
+            echo "PyLint Failed | Score: ${SCORE} | Threshold: ${PYLINT_THRESHOLD}"
+            exit 1
+          fi
+      - name: Run tox -e prospector
+        if: ${{ matrix.platform != 'windows-latest' }}
+        run: tox -e prospector -vv -s false
 
 # DRAW PYTHON DEPENDENCY GRAPHS
   check_trigger_draw_dependency_graphs:
