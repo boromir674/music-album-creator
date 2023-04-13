@@ -338,14 +338,26 @@ jobs:
           PYLINT_THRESHOLD: 8.2
         run: |
           SCORE=`sed -n 's/^Your code has been rated at \([-0-9.]*\)\/.*/\1/p' pylint-result.txt`
-          echo "SCORE -> $SCORE"
-          # threshold check
-          if awk "BEGIN {exit !($SCORE >= $PYLINT_THRESHOLD)}"; then
-            echo "PyLint Passed | Score: ${SCORE} | Threshold: ${PYLINT_THRESHOLD}"
+          echo "SCORE: $SCORE"
+          if [ "$SCORE" -gt "$PYLINT_THRESHOLD" ]; then
+            echo "PyLint Passed: Score: ${SCORE}/10 >= Threshold: ${PYLINT_THRESHOLD}/10"
           else
-            echo "PyLint Failed | Score: ${SCORE} | Threshold: ${PYLINT_THRESHOLD}"
+            echo "PyLint Failed: Score: ${SCORE}/10 < Threshold: ${PYLINT_THRESHOLD}/10"
             exit 1
           fi
+
+          # if [ $(echo "$SCORE > $PYLINT_THRESHOLD" | bc) -eq 1 ]; then
+          #   echo "Pylint score is $SCORE/10, which is greater than the threshold of $PYLINT_THRESHOLD/10"
+          # else
+          #   echo "Pylint score is $SCORE/10, which is less than the threshold of $PYLINT_THRESHOLD/10"
+          #   exit 1
+          # fi
+          # if awk "BEGIN {exit !($SCORE >= $PYLINT_THRESHOLD)}"; then
+          #   echo "PyLint Passed | Score: ${SCORE} | Threshold: ${PYLINT_THRESHOLD}"
+          # else
+          #   echo "PyLint Failed | Score: ${SCORE} | Threshold: ${PYLINT_THRESHOLD}"
+          #   exit 1
+          # fi
       - name: Run tox -e prospector
         if: ${{ matrix.platform != 'windows-latest' }}
         run: tox -e prospector -vv -s false
