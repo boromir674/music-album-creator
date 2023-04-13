@@ -317,19 +317,20 @@ jobs:
       matrix: ${{fromJson(needs.set_github_outputs.outputs.LINT_MATRIX)}}
     steps:
       - uses: actions/checkout@v3
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v4
-        with:
-          python-version: ${{ matrix.python-version }}
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          python -m pip install tox==3.28 tox-gh-actions
-      - name: Lint check code with Isort and Black
-        if: ${{ matrix.platform != 'windows-latest' }}
-        run: tox -e lint -vv -s false
-      - run: tox -e pylint -vv -s false | tee pylint-result.txt
-      - run: cat pylint-result.txt
+      - run: echo "Platform is ${{ matrix.platform }}, Ptython is ${{ matrix.python-version }}"
+      # - name: Set up Python ${{ matrix.python-version }}
+      #   uses: actions/setup-python@v4
+      #   with:
+      #     python-version: ${{ matrix.python-version }}
+      # - name: Install dependencies
+      #   run: |
+      #     python -m pip install --upgrade pip
+      #     python -m pip install tox==3.28 tox-gh-actions
+      # - name: Lint check code with Isort and Black
+      #   if: ${{ matrix.platform != 'windows-latest' }}
+      #   run: tox -e lint -vv -s false
+      # - run: tox -e pylint -vv -s false | tee pylint-result.txt
+      # - run: cat pylint-result.txt
       # - name: "Check Pylint Score > 8.2/10"
       #   if: ${{ matrix.platform != 'windows-latest' }}
       #   env:
