@@ -339,10 +339,10 @@ jobs:
         run: |
           SCORE=`sed -n 's/^Your code has been rated at \([-0-9.]*\)\/.*/\1/p' pylint-result.txt`
           echo "SCORE: $SCORE"
-          if [ "$(awk 'BEGIN{ print "'$SCORE' > '$PYLINT_THRESHOLD'" }')" -eq 1 ]; then
-            echo "PyLint Passed: Score: ${SCORE}/10 >= Threshold: ${PYLINT_THRESHOLD}/10"
+          if awk "BEGIN {exit !($SCORE >= $PYLINT_THRESHOLD)}"; then
+            echo "PyLint Passed | Score: ${SCORE} | Threshold: ${PYLINT_THRESHOLD}"
           else
-            echo "PyLint Failed: Score: ${SCORE}/10 < Threshold: ${PYLINT_THRESHOLD}/10"
+            echo "PyLint Failed | Score: ${SCORE} | Threshold: ${PYLINT_THRESHOLD}"
             exit 1
           fi
       - name: Run tox -e prospector
