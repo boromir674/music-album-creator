@@ -339,7 +339,7 @@ jobs:
         run: |
           SCORE=`sed -n 's/^Your code has been rated at \([-0-9.]*\)\/.*/\1/p' pylint-result.txt`
           echo "SCORE: $SCORE"
-          if [ $(echo "$SCORE > $PYLINT_THRESHOLD" | bc) -eq 1 ]; then
+          if [ "$(echo "$SCORE > $PYLINT_THRESHOLD" | bc)" -eq 1 ]; then
             echo "PyLint Passed: Score: ${SCORE}/10 >= Threshold: ${PYLINT_THRESHOLD}/10"
           else
             echo "PyLint Failed: Score: ${SCORE}/10 < Threshold: ${PYLINT_THRESHOLD}/10"
