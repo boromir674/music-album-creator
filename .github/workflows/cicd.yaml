@@ -3,7 +3,10 @@ name: CI/CD Pipeline
 
 # Triggers on all branches and tags starting with v
 
-# Full Job Matrix for Stress Testing is activated on 'master', 'dev' and tags
+# Full Job Matrix for Stress Testing is activated on:
+# - branches 'master', 'main', 'stress-test'
+# - tags =~ v*
+
 ## We Test factoring Platforms and Python versions
 
 # For other branches only one Job is spawned for Running (Unit) Tests
