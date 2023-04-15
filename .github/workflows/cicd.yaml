@@ -41,10 +41,10 @@ env:
   # If false the step is prevented from running
   # If true the step is allowed to run (it still may be skipped on other runtime conditions)
   RUN_UNIT_TESTS: "true"
-  RUN_LINT_CHECKS: "false"
-  BUILD_DOCKER: "false"
-  PUBLISH_ON_PYPI: "false"
-  DRAW_DEPENDENCIES: "false"
+  RUN_LINT_CHECKS: "true"
+  BUILD_DOCKER: "true"
+  PUBLISH_ON_PYPI: "true"
+  DRAW_DEPENDENCIES: "true"
 
 jobs:
   # we use the below to read the workflow env vars and be able to use in "- if:" Job conditionals
@@ -68,7 +68,7 @@ jobs:
           # set the matrix strategy to Full Matrix Stress Test if on master/main or stress-test branch or any tag
           BRANCH_NAME=${GITHUB_REF_NAME}
           if [[ $BRANCH_NAME == "master" || $BRANCH_NAME == "main" || $BRANCH_NAME == "stress-test" || $GITHUB_REF == refs/tags/* ]]; then
-            echo "matrix=$TEST_STRATEGY" >> $GITHUB_OUTPUT
+            echo "matrix=$FULL_MATRIX_STRATEGY" >> $GITHUB_OUTPUT
           else
             echo "matrix=$UBUNTU_PY310_STRATEGY" >> $GITHUB_OUTPUT
           fi
