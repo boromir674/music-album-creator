@@ -6,7 +6,7 @@ build-backend = "poetry.core.masonry.api"
 # POETRY
 [tool.poetry]
 name = "music-album-creation"
-version = "1.4.1"
+version = "1.4.1-rc.2"
 description = "A CLI application intending to automate offline music library building"
 authors = ["Konstantinos Lampridis <k.lampridis@hotmail.com>"]
 license = "AGPL-3.0-only"
