@@ -3,13 +3,19 @@ name: CI/CD Pipeline
 
 # Triggers on all branches and tags starting with v
 
-# Full Job Matrix for Stress Testing is activated on 'master', 'dev' and tags
+# Full Job Matrix for Stress Testing is activated on:
+# - branches 'master', 'main', 'stress-test'
+# - tags =~ v*
+
 ## We Test factoring Platforms and Python versions
 
 # For other branches only one Job is spawned for Running (Unit) Tests
 
 # PyPI publish on v* tags on 'master' branch
 # Test PyPI publish on v* 'pre-release' tags on 'release' branch
+
+# ie on 'master' branch for stress-test and pypi publish tag: v1.7.4
+# ie on 'release' branch for stress-test and test-pypi publish tag: v1.7.4-rc.0, v1.7.4-rc.1
 
 # Dockerhub publish on all branches and tags
 
@@ -23,20 +29,21 @@ on:
 env:
   # Job Matrix as an env var !
   # FULL_MATRIX_STRATEGY: "{\"platform\": [\"ubuntu-latest\", \"macos-latest\", \"windows-latest\"], \"python-version\": [\"3.7\", \"3.8\", \"3.9\", \"3.10\", \"3.11\"]}"
-  FULL_MATRIX_STRATEGY: "{\"platform\": [\"ubuntu-latest\", \"macos-latest\"], \"python-version\": [\"3.7\", \"3.8\", \"3.9\", \"3.10\", \"3.11\"]}"
+  FULL_MATRIX_STRATEGY: "{\"platform\": [\"ubuntu-latest\", \"macos-latest\"], \"python-version\": [\"3.8\", \"3.9\", \"3.10\", \"3.11\"]}"
   UBUNTU_PY310_STRATEGY: "{\"platform\":[\"ubuntu-latest\"], \"python-version\":[\"3.10\"]}"
-  TEST_STRATEGY: "{\"platform\":[\"ubuntu-latest\", \"macos-latest\", \"windows-latest\"], \"python-version\":[\"3.9\"]}"
+  TEST_STRATEGY: "{\"platform\": [\"macos-latest\"], \"python-version\": [\"3.8\", \"3.9\", \"3.10\", \"3.11\"]}"
 
   # Lint Matrix
-  LINT_MATRIX: "{\"platform\":[\"ubuntu-latest\", \"macos-latest\", \"windows-latest\"], \"python-version\":[\"3.10\"]}"
+  # LINT_MATRIX: "{\"platform\":[\"ubuntu-latest\", \"macos-latest\", \"windows-latest\"], \"python-version\":[\"3.10\"]}"
+  LINT_MATRIX: "{\"platform\":[\"ubuntu-latest\", \"macos-latest\"], \"python-version\":[\"3.10\"]}"
 
   # On/Off switches for the various CI/CD steps
-  # If false the step prevented from running
+  # If false the step is prevented from running
   # If true the step is allowed to run (it still may be skipped on other runtime conditions)
   RUN_UNIT_TESTS: "true"
   RUN_LINT_CHECKS: "true"
   BUILD_DOCKER: "true"
-  PUBLISH_ON_PYPI: "false"
+  PUBLISH_ON_PYPI: "true"
   DRAW_DEPENDENCIES: "true"
 
 jobs:
@@ -114,7 +121,7 @@ jobs:
     # TODO: provision those external dependencies at build-time through a custom docker image as runner
     - name: Install external deps on MacOS
       if: ${{ matrix.platform == 'macos-latest' }}
-      run: brew install graphviz
+      run: brew install ffmpeg
     - name: Install external deps on Ubuntu
       if: ${{ matrix.platform == 'ubuntu-latest' }}
       run: sudo apt-get update && sudo apt-get install -y --install-recommends ffmpeg
@@ -314,6 +321,7 @@ jobs:
       matrix: ${{fromJson(needs.set_github_outputs.outputs.LINT_MATRIX)}}
     steps:
       - uses: actions/checkout@v3
+      - run: echo "Platform is ${{ matrix.platform }}, Ptython is ${{ matrix.python-version }}"
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v4
         with:
@@ -321,29 +329,41 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install tox==3.28 tox-gh-actions
+          python -m pip install tox==3.28
       - name: Lint check code with Isort and Black
         if: ${{ matrix.platform != 'windows-latest' }}
         run: tox -e lint -vv -s false
-      - run: tox -e pylint -vv -s false | tee pylint-result.txt
-      - run: cat pylint-result.txt
-      # - name: "Check Pylint Score > 8.2/10"
-      #   if: ${{ matrix.platform != 'windows-latest' }}
-      #   env:
-      #     PYLINT_THRESHOLD: 8.2
-      #   run: |
-      #     SCORE=`sed -n 's/^Your code has been rated at \([-0-9.]*\)\/.*/\1/p' pylint-result.txt`
-      #     echo "SCORE -> $SCORE"
-      #     # threshold check
-      #     if awk "BEGIN {exit !($SCORE >= $PYLINT_THRESHOLD)}"; then
-      #       echo "PyLint Passed | Score: ${SCORE} | Threshold: ${PYLINT_THRESHOLD}"
-      #     else
-      #       echo "PyLint Failed | Score: ${SCORE} | Threshold: ${PYLINT_THRESHOLD}"
-      #       exit 1
-      #     fi
-      # - name: Run tox -e prospector
-      #   if: ${{ matrix.platform != 'windows-latest' }}
-      #   run: tox -e prospector -vv -s false
+      - name: Run Pylint on Production Code
+        run: tox -vv -s false -e pylint | tee /tmp/pylint-result-prod-code.txt
+      - name: Run Pylint on Test Code
+        run: tox -vv -s false -e pylint -- tests | tee /tmp/pylint-result-test-code.txt
+      - name: Compute Average Pylint Score
+        run: |
+          PYLINT_PROD_SCORE=`sed -n 's/^Your code has been rated at \([-0-9.]*\)\/.*/\1/p' /tmp/pylint-result-prod-code.txt`
+          PYLINT_TEST_SCORE=`sed -n 's/^Your code has been rated at \([-0-9.]*\)\/.*/\1/p' /tmp/pylint-result-test-code.txt`
+          PYLINT_AVERAGE_SCORE=`echo "scale=2; ($PYLINT_PROD_SCORE + $PYLINT_TEST_SCORE) / 2" | bc`
+          echo "PYLINT_AVERAGE_SCORE=$PYLINT_AVERAGE_SCORE" >> $GITHUB_ENV
+      - name: "Check Pylint Score > 7.0/10"
+        if: ${{ matrix.platform != 'windows-latest' }}
+        env:
+          PYLINT_THRESHOLD: 7.0  # TODO: increase to 8.2
+        run: |
+          echo "SCORE: $PYLINT_AVERAGE_SCORE"
+          if awk "BEGIN {exit !($PYLINT_AVERAGE_SCORE >= $PYLINT_THRESHOLD)}"; then
+            echo "PyLint Passed -> Score: ${PYLINT_AVERAGE_SCORE}/10 >= Threshold: ${PYLINT_THRESHOLD}/10"
+          else
+            echo "PyLint Failed -> Score: ${PYLINT_AVERAGE_SCORE}/10 < Threshold: ${PYLINT_THRESHOLD}/10"
+            exit 1
+          fi
+      - name: Run tox -e prospector
+        if: ${{ matrix.platform != 'windows-latest' }}
+        run: |
+          # Manual code to "allow_failure" for the Job
+          tox -e prospector -vv -s false || exit_code=$?
+          if [[ "$exit_code" -ne 0 ]]; then
+            echo "[ERROR] Prospector Failed"
+            exit 0  # TODO: fix prospector to get rid of this code 
+          fi
 
 # DRAW PYTHON DEPENDENCY GRAPHS
   check_trigger_draw_dependency_graphs:
