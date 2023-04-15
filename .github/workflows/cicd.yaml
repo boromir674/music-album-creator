@@ -14,6 +14,9 @@ name: CI/CD Pipeline
 # PyPI publish on v* tags on 'master' branch
 # Test PyPI publish on v* 'pre-release' tags on 'release' branch
 
+# ie on 'master' branch for stress-test and pypi publish tag: v1.7.4
+# ie on 'release' branch for stress-test and test-pypi publish tag: v1.7.4-rc.0, v1.7.4-rc.1
+
 # Dockerhub publish on all branches and tags
 
 on:
