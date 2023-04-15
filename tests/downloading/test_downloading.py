@@ -119,7 +119,8 @@ def test_downloading_audio_stream_specifying_mp3_output(url, tmp_path_factory):
         filename_prefix=None,
         skip_existing=False,  # Skip existing files, defaults to True
         timeout=None,  # Request timeout length in seconds. Uses system default
-        max_retries=0,  # Number of retries to attempt after socket timeout. Defaults to 0
+        max_retries=3,  # Number of retries to attempt after socket timeout. Defaults to 0
+        # retry in case of urllib.error.URLError: <urlopen error [Errno 101] Network is unreachable>
     )
 
     # THEN the audio stream is downloaded

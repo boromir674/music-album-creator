@@ -1,4 +1,20 @@
-def test_segmenting_webm_preserves_stream_qualities(tmp_path_factory):
+import pytest
+
+
+@pytest.fixture
+def expected_ffmpeg_encoder_for_webm_data():
+    import platform
+
+    if str(platform.system()).lower() == 'linux':
+        return 'Lavf58.76.100'
+    elif str(platform.system()).lower() == 'darwin':
+        return 'Lavf59.27.100'
+    return 'Lavf58.76.100'
+
+
+def test_segmenting_webm_preserves_stream_qualities(
+    expected_ffmpeg_encoder_for_webm_data, tmp_path_factory
+):
     import os
     from pathlib import Path
     from typing import List
@@ -95,7 +111,7 @@ def test_segmenting_webm_preserves_stream_qualities(tmp_path_factory):
         assert data['format']['bit_rate'] == str(exp_bitrate)  # bits per second
         # assert data['format']['probe_score'] == 100
         assert data['format']['probe_score'] == 51
-        assert data['format']['tags']['encoder'] == 'Lavf58.76.100'
+        assert data['format']['tags']['encoder'] == expected_ffmpeg_encoder_for_webm_data
 
         # AND maths add up (size = track duration * bitrate)
         estimated_size = (
