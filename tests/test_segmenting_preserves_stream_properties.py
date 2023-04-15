@@ -1,8 +1,10 @@
 import pytest
 
+
 @pytest.fixture
 def expected_ffmpeg_encoder_for_webm_data():
     import platform
+
     if str(platform.system()).lower() == 'linux':
         return 'Lavf58.76.100'
     elif str(platform.system()).lower() == 'darwin':
@@ -11,8 +13,7 @@ def expected_ffmpeg_encoder_for_webm_data():
 
 
 def test_segmenting_webm_preserves_stream_qualities(
-    expected_ffmpeg_encoder_for_webm_data,
-    tmp_path_factory
+    expected_ffmpeg_encoder_for_webm_data, tmp_path_factory
 ):
     import os
     from pathlib import Path
