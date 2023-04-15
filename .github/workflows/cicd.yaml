@@ -37,8 +37,8 @@ env:
   # On/Off switches for the various CI/CD steps
   # If false the step is prevented from running
   # If true the step is allowed to run (it still may be skipped on other runtime conditions)
-  RUN_UNIT_TESTS: "false"
-  RUN_LINT_CHECKS: "true"
+  RUN_UNIT_TESTS: "true"
+  RUN_LINT_CHECKS: "false"
   BUILD_DOCKER: "false"
   PUBLISH_ON_PYPI: "false"
   DRAW_DEPENDENCIES: "false"
